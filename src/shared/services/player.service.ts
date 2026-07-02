@@ -1,4 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
+import { MediaSession } from '@jofr/capacitor-media-session';
 import { LibraryService } from './library.service';
 import { SongModel } from '../models/song.model';
 
@@ -102,28 +103,28 @@ export class PlayerService {
     await this.audio.play().catch(() => this._isPlaying.set(false));
   }
 
-  // --- MediaSession: lock-screen controls + background playback ---
+  // --- MediaSession: lock-screen / notification controls + background playback ---
+  // Uses @jofr/capacitor-media-session: a real Android MediaSession +
+  // media notification natively, and the Web MediaSession API on the browser.
 
   private setupMediaSession(): void {
-    if (!('mediaSession' in navigator)) return;
-    const ms = navigator.mediaSession;
     try {
-      ms.setActionHandler('play', () => this.toggle());
-      ms.setActionHandler('pause', () => this.toggle());
-      ms.setActionHandler('previoustrack', () => this.previous());
-      ms.setActionHandler('nexttrack', () => this.next());
-      ms.setActionHandler('seekto', details => {
+      MediaSession.setActionHandler({ action: 'play' }, () => this.toggle());
+      MediaSession.setActionHandler({ action: 'pause' }, () => this.toggle());
+      MediaSession.setActionHandler({ action: 'previoustrack' }, () => this.previous());
+      MediaSession.setActionHandler({ action: 'nexttrack' }, () => this.next());
+      MediaSession.setActionHandler({ action: 'seekto' }, details => {
         if (details.seekTime != null) this.seek(details.seekTime);
       });
       this.mediaSessionReady = true;
     } catch {
-      // Some actions may be unsupported on older WebViews — ignore.
+      // Ignore unsupported actions on older platforms.
     }
   }
 
   private updateMetadata(song: SongModel): void {
     if (!this.mediaSessionReady) return;
-    navigator.mediaSession.metadata = new MediaMetadata({
+    MediaSession.setMetadata({
       title: song.title,
       artist: song.artist,
       album: song.album,
@@ -133,16 +134,16 @@ export class PlayerService {
     });
   }
 
-  private setPlaybackState(state: MediaSessionPlaybackState): void {
-    if (this.mediaSessionReady) navigator.mediaSession.playbackState = state;
+  private setPlaybackState(state: 'playing' | 'paused' | 'none'): void {
+    if (this.mediaSessionReady) MediaSession.setPlaybackState({ playbackState: state });
   }
 
   private updatePositionState(): void {
-    if (!this.mediaSessionReady || typeof navigator.mediaSession.setPositionState !== 'function') return;
+    if (!this.mediaSessionReady) return;
     const duration = this.audio.duration;
     if (!isFinite(duration) || duration <= 0) return;
     try {
-      navigator.mediaSession.setPositionState({
+      MediaSession.setPositionState({
         duration,
         position: Math.min(this.audio.currentTime, duration),
         playbackRate: this.audio.playbackRate || 1,

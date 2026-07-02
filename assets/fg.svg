@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Orange "Hub" badge, centered within the adaptive-icon safe zone -->
+  <rect x="230" y="360" width="564" height="304" rx="70" fill="#ff9000"/>
+  <!-- Black eighth note -->
+  <g fill="#0d0d0d">
+    <rect x="545" y="420" width="30" height="150"/>
+    <path d="M545 420 C 615 432 660 460 655 528 C 640 486 598 462 545 468 Z"/>
+    <ellipse cx="497" cy="568" rx="66" ry="50" transform="rotate(-20 497 568)"/>
+  </g>
+</svg>
