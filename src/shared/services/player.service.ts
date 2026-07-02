@@ -8,6 +8,7 @@ export class PlayerService {
   private objectUrl: string | null = null;
   private queue: SongModel[] = [];
   private index = -1;
+  private mediaSessionReady = false;
 
   private _current = signal<SongModel | null>(null);
   current = this._current.asReadonly();
@@ -24,13 +25,30 @@ export class PlayerService {
   progress = computed(() => (this._duration() > 0 ? this._currentTime() / this._duration() : 0));
 
   constructor(private library: LibraryService) {
-    this.audio.addEventListener('timeupdate', () => this._currentTime.set(this.audio.currentTime));
-    this.audio.addEventListener('durationchange', () =>
-      this._duration.set(isFinite(this.audio.duration) ? this.audio.duration : 0)
-    );
-    this.audio.addEventListener('play', () => this._isPlaying.set(true));
-    this.audio.addEventListener('pause', () => this._isPlaying.set(false));
+    // Keep audio alive in the background: the WebView needs an explicit
+    // hint that this is media playback the user wants to continue.
+    this.audio.setAttribute('playsinline', '');
+    this.audio.preload = 'auto';
+
+    this.audio.addEventListener('timeupdate', () => {
+      this._currentTime.set(this.audio.currentTime);
+      this.updatePositionState();
+    });
+    this.audio.addEventListener('durationchange', () => {
+      this._duration.set(isFinite(this.audio.duration) ? this.audio.duration : 0);
+      this.updatePositionState();
+    });
+    this.audio.addEventListener('play', () => {
+      this._isPlaying.set(true);
+      this.setPlaybackState('playing');
+    });
+    this.audio.addEventListener('pause', () => {
+      this._isPlaying.set(false);
+      this.setPlaybackState('paused');
+    });
     this.audio.addEventListener('ended', () => this.next());
+
+    this.setupMediaSession();
   }
 
   async play(song: SongModel, queue?: SongModel[]): Promise<void> {
@@ -63,6 +81,7 @@ export class PlayerService {
 
   seek(time: number): void {
     this.audio.currentTime = time;
+    this.updatePositionState();
   }
 
   private async loadAndPlay(song: SongModel): Promise<void> {
@@ -79,6 +98,57 @@ export class PlayerService {
     }
     this._current.set(song);
     this.audio.src = src;
+    this.updateMetadata(song);
     await this.audio.play().catch(() => this._isPlaying.set(false));
+  }
+
+  // --- MediaSession: lock-screen controls + background playback ---
+
+  private setupMediaSession(): void {
+    if (!('mediaSession' in navigator)) return;
+    const ms = navigator.mediaSession;
+    try {
+      ms.setActionHandler('play', () => this.toggle());
+      ms.setActionHandler('pause', () => this.toggle());
+      ms.setActionHandler('previoustrack', () => this.previous());
+      ms.setActionHandler('nexttrack', () => this.next());
+      ms.setActionHandler('seekto', details => {
+        if (details.seekTime != null) this.seek(details.seekTime);
+      });
+      this.mediaSessionReady = true;
+    } catch {
+      // Some actions may be unsupported on older WebViews — ignore.
+    }
+  }
+
+  private updateMetadata(song: SongModel): void {
+    if (!this.mediaSessionReady) return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: song.title,
+      artist: song.artist,
+      album: song.album,
+      artwork: song.coverUrl
+        ? [{ src: song.coverUrl, sizes: '512x512', type: 'image/jpeg' }]
+        : [],
+    });
+  }
+
+  private setPlaybackState(state: MediaSessionPlaybackState): void {
+    if (this.mediaSessionReady) navigator.mediaSession.playbackState = state;
+  }
+
+  private updatePositionState(): void {
+    if (!this.mediaSessionReady || typeof navigator.mediaSession.setPositionState !== 'function') return;
+    const duration = this.audio.duration;
+    if (!isFinite(duration) || duration <= 0) return;
+    try {
+      navigator.mediaSession.setPositionState({
+        duration,
+        position: Math.min(this.audio.currentTime, duration),
+        playbackRate: this.audio.playbackRate || 1,
+      });
+    } catch {
+      // setPositionState throws if values are inconsistent — safe to skip.
+    }
   }
 }
