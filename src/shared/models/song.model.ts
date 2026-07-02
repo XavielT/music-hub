@@ -8,6 +8,7 @@ export interface SongModel {
   duration: number; // seconds
   source: SongSource;
   url?: string; // stream url when source is 'remote'
+  coverUrl?: string; // real cover art (e.g. YouTube thumbnail)
   coverColor: string;
   addedAt: number;
 }

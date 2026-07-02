@@ -1,6 +1,6 @@
 <div class="song-item" [class.active]="active" (click)="play.emit()">
   <div class="song-item-cover">
-    <app-cover [name]="song.artist" [color]="song.coverColor"></app-cover>
+    <app-cover [name]="song.artist" [color]="song.coverColor" [imageUrl]="song.coverUrl || null"></app-cover>
   </div>
   <div class="song-item-info">
     <span class="song-item-title">{{ song.title }}</span>

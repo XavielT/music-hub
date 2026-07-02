@@ -1,0 +1,69 @@
+import { Injectable } from '@angular/core';
+import type { Innertube } from 'youtubei.js';
+
+export interface YoutubeResult {
+  id: string;
+  title: string;
+  author: string;
+  duration: number;
+  thumbnail?: string;
+}
+
+// In-app YouTube client. Works on the phone thanks to CapacitorHttp
+// (native requests, no CORS) — in the browser preview it will fail.
+@Injectable({ providedIn: 'root' })
+export class YoutubeService {
+  private yt: Promise<Innertube> | null = null;
+
+  private client(): Promise<Innertube> {
+    if (!this.yt) {
+      this.yt = import('youtubei.js').then(m => m.Innertube.create({ retrieve_player: true }));
+    }
+    return this.yt;
+  }
+
+  parseVideoId(text: string): string | null {
+    const match = text.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/);
+    return match ? match[1] : null;
+  }
+
+  async search(query: string): Promise<YoutubeResult[]> {
+    const yt = await this.client();
+    const res = await yt.search(query, { type: 'video' });
+    return (res.videos ?? [])
+      .filter((v: any) => v.type === 'Video')
+      .slice(0, 15)
+      .map((v: any) => ({
+        id: v.video_id ?? v.id,
+        title: v.title?.text ?? String(v.title ?? ''),
+        author: v.author?.name ?? 'Unknown artist',
+        duration: v.duration?.seconds ?? 0,
+        thumbnail: v.thumbnails?.[0]?.url,
+      }));
+  }
+
+  async getResult(videoId: string): Promise<YoutubeResult> {
+    const yt = await this.client();
+    const info = await yt.getBasicInfo(videoId);
+    return {
+      id: videoId,
+      title: info.basic_info.title ?? videoId,
+      author: info.basic_info.author ?? 'Unknown artist',
+      duration: info.basic_info.duration ?? 0,
+      thumbnail: info.basic_info.thumbnail?.[0]?.url,
+    };
+  }
+
+  async downloadAudio(videoId: string): Promise<File> {
+    const yt = await this.client();
+    const stream = await yt.download(videoId, { type: 'audio', quality: 'best' });
+    const reader = stream.getReader();
+    const chunks: BlobPart[] = [];
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) chunks.push(value);
+    }
+    return new File([new Blob(chunks, { type: 'audio/mp4' })], `${videoId}.m4a`, { type: 'audio/mp4' });
+  }
+}

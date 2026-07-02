@@ -2,6 +2,38 @@
   <h1 class="add-music-title">Add music</h1>
   <p class="add-music-saved" *ngIf="savedMessage()">{{ savedMessage() }}</p>
 
+  <!-- From YouTube -->
+  <section class="add-music-section">
+    <h2 class="add-music-section-title">From YouTube</h2>
+    <div class="add-music-yt-search">
+      <input
+        type="text"
+        placeholder="Search a song or paste a YouTube link"
+        [(ngModel)]="ytQuery"
+        (keyup.enter)="ytSearch()"
+      />
+      <button class="add-music-yt-btn" (click)="ytSearch()" [disabled]="ytSearching()">
+        {{ ytSearching() ? '...' : '⌕' }}
+      </button>
+    </div>
+    <p class="add-music-error" *ngIf="ytError()">{{ ytError() }}</p>
+
+    <div class="add-music-yt-result" *ngFor="let r of ytResults()">
+      <img class="add-music-yt-thumb" *ngIf="r.thumbnail" [src]="r.thumbnail" alt="" loading="lazy" />
+      <div class="add-music-yt-info">
+        <span class="add-music-yt-title">{{ r.title }}</span>
+        <span class="add-music-yt-author">{{ r.author }} · {{ formatDuration(r.duration) }}</span>
+      </div>
+      <button
+        class="add-music-yt-download"
+        (click)="ytDownload(r)"
+        [disabled]="ytDownloading() !== null"
+      >
+        {{ ytDownloading() === r.id ? '⏳' : '⇩' }}
+      </button>
+    </div>
+  </section>
+
   <!-- From this device -->
   <section class="add-music-section">
     <h2 class="add-music-section-title">From this device</h2>
@@ -29,7 +61,7 @@
 
   <!-- From a URL -->
   <section class="add-music-section">
-    <h2 class="add-music-section-title">From a URL</h2>
+    <h2 class="add-music-section-title">From a direct audio URL</h2>
     <div class="add-music-remote">
       <input type="url" placeholder="Direct audio link (.mp3, .m4a...)" [(ngModel)]="remoteUrl" />
       <input type="text" placeholder="Title" [(ngModel)]="remoteTitle" />

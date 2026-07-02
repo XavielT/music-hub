@@ -1,7 +1,7 @@
 <!-- Mini player -->
 <div class="player-bar" *ngIf="player.current() as song" (click)="expanded.set(true)">
   <div class="player-bar-cover">
-    <app-cover [name]="song.artist" [color]="song.coverColor"></app-cover>
+    <app-cover [name]="song.artist" [color]="song.coverColor" [imageUrl]="song.coverUrl || null"></app-cover>
   </div>
   <div class="player-bar-info">
     <span class="player-bar-title">{{ song.title }}</span>
@@ -21,7 +21,7 @@
   <button class="player-full-close" (click)="expanded.set(false)">⌄</button>
 
   <div class="player-full-cover">
-    <app-cover [name]="song.artist" [color]="song.coverColor"></app-cover>
+    <app-cover [name]="song.artist" [color]="song.coverColor" [imageUrl]="song.coverUrl || null"></app-cover>
   </div>
 
   <div class="player-full-info">

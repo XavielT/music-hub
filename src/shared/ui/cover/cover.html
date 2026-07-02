@@ -1,3 +1,11 @@
 <div class="cover" [style.background]="'linear-gradient(135deg, ' + color + ' 0%, #1b1b1b 130%)'">
-  <span class="cover-letter">{{ initial }}</span>
+  <img
+    class="cover-img"
+    *ngIf="imageUrl && !imageFailed"
+    [src]="imageUrl"
+    alt=""
+    loading="lazy"
+    (error)="imageFailed = true"
+  />
+  <span class="cover-letter" *ngIf="!imageUrl || imageFailed">{{ initial }}</span>
 </div>

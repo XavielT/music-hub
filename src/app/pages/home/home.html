@@ -17,7 +17,7 @@
     <h2 class="home-section-title">Recently added</h2>
     <div class="home-recent">
       <div class="home-recent-card" *ngFor="let song of recent()" (click)="playSong(song)">
-        <app-cover [name]="song.artist" [color]="song.coverColor"></app-cover>
+        <app-cover [name]="song.artist" [color]="song.coverColor" [imageUrl]="song.coverUrl || null"></app-cover>
         <span class="home-recent-title">{{ song.title }}</span>
         <span class="home-recent-artist">{{ song.artist }}</span>
       </div>

@@ -33,13 +33,17 @@ export class LibraryService {
     // TODO: pull shared library from Supabase (HttpClient / supabase-js) and merge with local songs
   }
 
-  async addLocalSong(file: File, meta: { title: string; artist: string; album: string }): Promise<void> {
+  async addLocalSong(
+    file: File,
+    meta: { title: string; artist: string; album: string; coverUrl?: string; duration?: number }
+  ): Promise<void> {
     const song: SongModel = {
       id: crypto.randomUUID(),
       title: meta.title || file.name,
       artist: meta.artist || 'Unknown artist',
       album: meta.album || 'Unknown album',
-      duration: await this.readDuration(file),
+      coverUrl: meta.coverUrl,
+      duration: meta.duration || (await this.readDuration(file)),
       source: 'local',
       coverColor: this.pickColor(meta.artist + meta.title),
       addedAt: Date.now(),
