@@ -66,8 +66,14 @@ export class AddMusicComponent {
         duration: result.duration,
       });
       this.savedMessage.set(`"${result.title}" added to your library ✔`);
-    } catch {
-      this.ytError.set('Download failed. Try again in a moment.');
+    } catch (err: any) {
+      console.error('ytDownload error', err);
+      const msg = String(err?.message ?? err);
+      this.ytError.set(
+        msg.includes('decipher') || msg.includes('clients failed')
+          ? 'YouTube is currently blocking direct downloads (bot protection). Search still works — for now add songs from your device or a direct audio URL.'
+          : `Download failed: ${msg}`
+      );
     }
     this.ytDownloading.set(null);
   }

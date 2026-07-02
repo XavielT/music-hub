@@ -56,14 +56,32 @@ export class YoutubeService {
 
   async downloadAudio(videoId: string): Promise<File> {
     const yt = await this.client();
-    const stream = await yt.download(videoId, { type: 'audio', quality: 'best' });
-    const reader = stream.getReader();
-    const chunks: BlobPart[] = [];
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value) chunks.push(value);
+    // YouTube's WEB client no longer returns playable URLs (PoToken /
+    // signature protection). The internal mobile/TV clients still return
+    // direct audio URLs, so we try them in order until one gives a URL.
+    const clients: any[] = ['ANDROID', 'IOS', 'MWEB', 'TV_EMBEDDED', 'WEB'];
+    let lastErr: unknown = null;
+    for (const client of clients) {
+      try {
+        const info = await yt.getBasicInfo(videoId, client);
+        const format = info.chooseFormat({ type: 'audio', quality: 'best' });
+        let url: string | undefined = format.url;
+        if (!url && format.decipher) url = await format.decipher(yt.session.player);
+        if (!url) throw new Error('no url');
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return this.toFile([await res.blob()], videoId);
+      } catch (err) {
+        lastErr = err;
+        console.warn(`download via ${client} client failed`, err);
+      }
     }
-    return new File([new Blob(chunks, { type: 'audio/mp4' })], `${videoId}.m4a`, { type: 'audio/mp4' });
+    throw new Error(`All clients failed (${(lastErr as Error)?.message ?? lastErr})`);
+  }
+
+  private toFile(chunks: BlobPart[], videoId: string): File {
+    const blob = new Blob(chunks, { type: 'audio/mp4' });
+    if (blob.size < 10_000) throw new Error('Downloaded audio is empty');
+    return new File([blob], `${videoId}.m4a`, { type: 'audio/mp4' });
   }
 }
