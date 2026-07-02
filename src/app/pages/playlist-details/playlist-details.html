@@ -1,0 +1,32 @@
+<div class="playlist-details" *ngIf="playlist() as p">
+  <button class="playlist-details__back" (click)="back()">‹ Back</button>
+
+  <!-- Header -->
+  <header class="playlist-details__header">
+    <div class="playlist-details__cover">
+      <app-cover [name]="p.name" [color]="p.coverColor"></app-cover>
+    </div>
+    <div class="playlist-details__meta">
+      <h1 class="playlist-details__name">{{ p.name }}</h1>
+      <p class="playlist-details__count">{{ p.songIds.length }} songs</p>
+      <div class="playlist-details__actions">
+        <button class="playlist-details__play" (click)="playAll()" [disabled]="songs().length === 0">▶ Play</button>
+        <button class="playlist-details__delete" (click)="deletePlaylist()">Delete</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Songs -->
+  <div class="playlist-details__body">
+    <app-song-item
+      *ngFor="let song of songs()"
+      [song]="song"
+      [active]="player.current()?.id === song.id"
+      (play)="player.play(song, songs())"
+      (remove)="library.removeFromPlaylist(p.id, song.id)"
+    ></app-song-item>
+    <p class="playlist-details__empty" *ngIf="songs().length === 0">
+      This playlist is empty. Add songs from Search or Library with the ＋ button.
+    </p>
+  </div>
+</div>

@@ -1,0 +1,79 @@
+<div class="library">
+  <h1 class="library-title">Your library</h1>
+
+  <!-- Tabs -->
+  <div class="library-tabs">
+    <button
+      class="library-tab"
+      *ngFor="let t of tabs"
+      [class.active]="tab() === t"
+      (click)="setTab(t)"
+    >
+      {{ t }}
+    </button>
+  </div>
+
+  <!-- Songs tab -->
+  <div *ngIf="tab() === 'songs'">
+    <app-song-item
+      *ngFor="let song of library.songs()"
+      [song]="song"
+      [active]="player.current()?.id === song.id"
+      (play)="player.play(song, library.songs())"
+      (addToPlaylist)="pickerFor.set(song)"
+      (remove)="library.removeSong(song.id)"
+    ></app-song-item>
+    <p class="library-empty" *ngIf="library.songs().length === 0">No songs yet. Add some from the ＋ tab.</p>
+  </div>
+
+  <!-- Artists / Albums tabs -->
+  <div *ngIf="tab() === 'artists' || tab() === 'albums'">
+    <!-- Group list -->
+    <ng-container *ngIf="!selectedGroup()">
+      <button class="library-group" *ngFor="let g of groups()" (click)="selectedGroup.set(g)">
+        <div class="library-group-cover">
+          <app-cover [name]="g.name" [color]="g.songs[0].coverColor"></app-cover>
+        </div>
+        <span class="library-group-name">{{ g.name }}</span>
+        <span class="library-group-count">{{ g.songs.length }} songs</span>
+      </button>
+      <p class="library-empty" *ngIf="groups().length === 0">Nothing here yet.</p>
+    </ng-container>
+
+    <!-- Group detail -->
+    <ng-container *ngIf="selectedGroup() as group">
+      <button class="library-back" (click)="selectedGroup.set(null)">‹ Back</button>
+      <h2 class="library-group-title">{{ group.name }}</h2>
+      <app-song-item
+        *ngFor="let song of group.songs"
+        [song]="song"
+        [removable]="false"
+        [active]="player.current()?.id === song.id"
+        (play)="player.play(song, group.songs)"
+        (addToPlaylist)="pickerFor.set(song)"
+      ></app-song-item>
+    </ng-container>
+  </div>
+
+  <!-- Playlists tab -->
+  <div *ngIf="tab() === 'playlists'">
+    <div class="library-new-playlist">
+      <input type="text" placeholder="New playlist name" [(ngModel)]="newPlaylistName" (keyup.enter)="createPlaylist()" />
+      <button (click)="createPlaylist()">Create</button>
+    </div>
+    <a class="library-playlist" *ngFor="let p of library.playlists()" [routerLink]="['/playlist', p.id]">
+      <div class="library-playlist-cover">
+        <app-cover [name]="p.name" [color]="p.coverColor"></app-cover>
+      </div>
+      <span class="library-playlist-name">{{ p.name }}</span>
+      <span class="library-playlist-count">{{ p.songIds.length }} songs</span>
+    </a>
+  </div>
+
+  <!-- Playlist picker overlay -->
+  <app-playlist-picker
+    *ngIf="pickerFor()"
+    (picked)="onPicked($event)"
+    (closed)="pickerFor.set(null)"
+  ></app-playlist-picker>
+</div>

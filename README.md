@@ -1,59 +1,31 @@
-# MusicHub
+# Music Hub 🎧
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.27.
+Personal Spotify-style music app. Angular 19 + Capacitor (Android / iOS). All music lives on the device (IndexedDB) — no subscription, no server needed.
 
-## Development server
+## Features
+- Local music library: add audio files from the device, they're stored inside the app and work offline.
+- Playlists, artists and albums views, search, recently added.
+- Spotify-like player: mini player + full screen player with seek, next/prev and queue.
+- Add songs from a direct audio URL (streamed).
 
-To start a local development server, run:
-
+## Dev
 ```bash
-ng serve
+npm install
+npm start          # web preview at localhost:4200
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+## Build the Android app
 ```bash
-ng generate component component-name
+npm run build
+npx cap sync android
+npx cap open android   # opens Android Studio → Run on device
 ```
+Or build an APK directly: in Android Studio → Build → Build APK, or `cd android && gradlew assembleDebug`.
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## iOS
+Requires a Mac with Xcode: `npx cap add ios && npx cap open ios`.
 
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Roadmap / TODOs
+- **Supabase sync (free tier)**: upload songs to Supabase Storage + a `songs`/`playlists` table so family members share one library. Integration points are marked with `TODO` in `src/shared/services/library.service.ts`.
+- **Import from YouTube**: needs a small companion server (e.g. yt-dlp behind a tiny API) since audio extraction can't run inside the app. Note: downloading copyrighted music from YouTube is against YouTube's terms — use for your own/royalty-free content.
+- Real cover art (ID3 tag parsing), background audio plugin, media session controls.

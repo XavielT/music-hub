@@ -1,0 +1,137 @@
+.home {
+  padding: calc(16px + env(safe-area-inset-top)) 16px 24px;
+}
+
+.home-header {
+  margin-bottom: 20px;
+}
+
+.home-brand {
+  font-family: var(--font-brand);
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.home-brand-hub {
+  background: var(--Hub);
+  color: #000;
+  border-radius: 6px;
+  padding: 0 6px;
+  margin-left: 3px;
+}
+
+.home-greeting {
+  color: var(--main-ultra-light);
+  font-size: 0.9rem;
+  margin-top: 6px;
+}
+
+.home-empty {
+  background: #161616;
+  border: 1px solid #2d2d2d;
+  border-radius: 14px;
+  padding: 32px 20px;
+  text-align: center;
+  margin-top: 24px;
+}
+
+.home-empty-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.home-empty-text {
+  color: var(--main-ultra-light);
+  font-size: 0.85rem;
+  margin: 8px 0 18px;
+}
+
+.home-empty-cta {
+  display: inline-block;
+  background: var(--Hub);
+  color: #000;
+  font-family: var(--font-btns);
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 12px 22px;
+  transition: all 0.15s ease;
+}
+
+.home-section {
+  margin-top: 26px;
+}
+
+.home-section-title {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+}
+
+.home-recent {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.home-recent-card {
+  flex: 0 0 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.home-recent-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-recent-artist {
+  font-size: 0.7rem;
+  color: var(--main-ultra-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-playlists {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.home-playlist-card {
+  background: #161616;
+  border: 1px solid #2d2d2d;
+  border-radius: 14px;
+  padding: 12px;
+  text-decoration: none;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.3s ease;
+
+  &:active {
+    border-color: var(--Hub);
+  }
+}
+
+.home-playlist-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-top: 6px;
+}
+
+.home-playlist-count {
+  font-size: 0.7rem;
+  color: var(--main-ultra-light);
+}

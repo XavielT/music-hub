@@ -1,1 +1,41 @@
-/* You can add global styles to this file, and also import other style files */
+// Music Hub — global styles & design tokens
+:root {
+  // Colors
+  --Hub: #ff9000;
+  --Hub-translucid: rgba(255, 144, 0, 0.35);
+  --main: #0d0d0d;
+  --secondary: #1b1b1b;
+  --primary: #ff5f00;
+  --main-ultra-light: #929090;
+
+  // Fonts
+  --font-brand: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-body: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-btns: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--main);
+  color: #fff;
+  font-family: var(--font-body);
+  overscroll-behavior: none;
+  user-select: none;
+}
+
+input,
+textarea {
+  user-select: text;
+}

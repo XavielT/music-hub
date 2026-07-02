@@ -1,0 +1,12 @@
+<div class="song-item" [class.active]="active" (click)="play.emit()">
+  <div class="song-item-cover">
+    <app-cover [name]="song.artist" [color]="song.coverColor"></app-cover>
+  </div>
+  <div class="song-item-info">
+    <span class="song-item-title">{{ song.title }}</span>
+    <span class="song-item-artist">{{ song.artist }}</span>
+  </div>
+  <span class="song-item-duration">{{ formatDuration(song.duration) }}</span>
+  <button class="song-item-btn" (click)="$event.stopPropagation(); addToPlaylist.emit()" title="Add to playlist">＋</button>
+  <button class="song-item-btn" *ngIf="removable" (click)="$event.stopPropagation(); remove.emit()" title="Remove">✕</button>
+</div>

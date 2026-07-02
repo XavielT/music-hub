@@ -1,0 +1,43 @@
+<div class="add-music">
+  <h1 class="add-music-title">Add music</h1>
+  <p class="add-music-saved" *ngIf="savedMessage()">{{ savedMessage() }}</p>
+
+  <!-- From this device -->
+  <section class="add-music-section">
+    <h2 class="add-music-section-title">From this device</h2>
+    <label class="add-music-drop">
+      <input type="file" accept="audio/*" multiple (change)="onFiles($event)" hidden />
+      <span class="add-music-drop-icon">🎵</span>
+      <span>Tap to pick audio files</span>
+      <span class="add-music-drop-hint">Tip: name files "Artist - Title.mp3" to auto-fill the info</span>
+    </label>
+
+    <!-- Pending files -->
+    <div class="add-music-pending" *ngFor="let item of pending(); let i = index">
+      <div class="add-music-pending-fields">
+        <input type="text" placeholder="Title" [(ngModel)]="item.title" />
+        <input type="text" placeholder="Artist" [(ngModel)]="item.artist" />
+        <input type="text" placeholder="Album (optional)" [(ngModel)]="item.album" />
+      </div>
+      <button class="add-music-pending-remove" (click)="removePending(i)">✕</button>
+    </div>
+
+    <button class="add-music-save" *ngIf="pending().length > 0" [disabled]="saving()" (click)="saveAll()">
+      {{ saving() ? 'Saving...' : 'Save ' + pending().length + ' song(s)' }}
+    </button>
+  </section>
+
+  <!-- From a URL -->
+  <section class="add-music-section">
+    <h2 class="add-music-section-title">From a URL</h2>
+    <div class="add-music-remote">
+      <input type="url" placeholder="Direct audio link (.mp3, .m4a...)" [(ngModel)]="remoteUrl" />
+      <input type="text" placeholder="Title" [(ngModel)]="remoteTitle" />
+      <input type="text" placeholder="Artist" [(ngModel)]="remoteArtist" />
+      <button class="add-music-save" (click)="addRemote()">Add song</button>
+    </div>
+    <p class="add-music-note">
+      Paste a direct link to an audio file and it will stream in the app (needs internet).
+    </p>
+  </section>
+</div>

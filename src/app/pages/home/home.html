@@ -1,0 +1,38 @@
+<div class="home">
+  <!-- Brand header -->
+  <header class="home-header">
+    <h1 class="home-brand">Music<span class="home-brand-hub">Hub</span></h1>
+    <p class="home-greeting">{{ greeting() }} 🎧</p>
+  </header>
+
+  <!-- Empty state -->
+  <div class="home-empty" *ngIf="library.songs().length === 0">
+    <p class="home-empty-title">Your library is empty</p>
+    <p class="home-empty-text">Add songs from your device to start listening.</p>
+    <a class="home-empty-cta" routerLink="/add">＋ Add music</a>
+  </div>
+
+  <!-- Recently added -->
+  <section class="home-section" *ngIf="recent().length > 0">
+    <h2 class="home-section-title">Recently added</h2>
+    <div class="home-recent">
+      <div class="home-recent-card" *ngFor="let song of recent()" (click)="playSong(song)">
+        <app-cover [name]="song.artist" [color]="song.coverColor"></app-cover>
+        <span class="home-recent-title">{{ song.title }}</span>
+        <span class="home-recent-artist">{{ song.artist }}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Playlists -->
+  <section class="home-section" *ngIf="library.playlists().length > 0">
+    <h2 class="home-section-title">Your playlists</h2>
+    <div class="home-playlists">
+      <a class="home-playlist-card" *ngFor="let p of library.playlists()" [routerLink]="['/playlist', p.id]">
+        <app-cover [name]="p.name" [color]="p.coverColor"></app-cover>
+        <span class="home-playlist-name">{{ p.name }}</span>
+        <span class="home-playlist-count">{{ p.songIds.length }} songs</span>
+      </a>
+    </div>
+  </section>
+</div>

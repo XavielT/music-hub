@@ -1,0 +1,16 @@
+.cover {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.cover-letter {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.6em;
+  color: rgba(255, 255, 255, 0.85);
+}

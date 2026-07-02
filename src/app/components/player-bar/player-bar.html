@@ -1,0 +1,53 @@
+<!-- Mini player -->
+<div class="player-bar" *ngIf="player.current() as song" (click)="expanded.set(true)">
+  <div class="player-bar-cover">
+    <app-cover [name]="song.artist" [color]="song.coverColor"></app-cover>
+  </div>
+  <div class="player-bar-info">
+    <span class="player-bar-title">{{ song.title }}</span>
+    <span class="player-bar-artist">{{ song.artist }}</span>
+  </div>
+  <button class="player-bar-btn" (click)="$event.stopPropagation(); player.toggle()">
+    {{ player.isPlaying() ? '❚❚' : '▶' }}
+  </button>
+  <button class="player-bar-btn" (click)="$event.stopPropagation(); player.next()">⏭</button>
+  <div class="player-bar-progress">
+    <div class="player-bar-progress-fill" [style.width.%]="player.progress() * 100"></div>
+  </div>
+</div>
+
+<!-- Full screen player -->
+<div class="player-full" *ngIf="expanded() && player.current() as song">
+  <button class="player-full-close" (click)="expanded.set(false)">⌄</button>
+
+  <div class="player-full-cover">
+    <app-cover [name]="song.artist" [color]="song.coverColor"></app-cover>
+  </div>
+
+  <div class="player-full-info">
+    <h2 class="player-full-title">{{ song.title }}</h2>
+    <p class="player-full-artist">{{ song.artist }} · {{ song.album }}</p>
+  </div>
+
+  <div class="player-full-seek">
+    <input
+      type="range"
+      min="0"
+      [max]="player.duration()"
+      [value]="player.currentTime()"
+      (input)="onSeek($event)"
+    />
+    <div class="player-full-times">
+      <span>{{ format(player.currentTime()) }}</span>
+      <span>{{ format(player.duration()) }}</span>
+    </div>
+  </div>
+
+  <div class="player-full-controls">
+    <button class="player-full-btn" (click)="player.previous()">⏮</button>
+    <button class="player-full-btn player-full-btn--play" (click)="player.toggle()">
+      {{ player.isPlaying() ? '❚❚' : '▶' }}
+    </button>
+    <button class="player-full-btn" (click)="player.next()">⏭</button>
+  </div>
+</div>

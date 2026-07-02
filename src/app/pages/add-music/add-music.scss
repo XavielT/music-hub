@@ -1,0 +1,139 @@
+.add-music {
+  padding: calc(16px + env(safe-area-inset-top)) 16px 24px;
+}
+
+.add-music-title {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+}
+
+.add-music-saved {
+  color: var(--Hub);
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.add-music-section {
+  margin-top: 20px;
+}
+
+.add-music-section-title {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+}
+
+.add-music-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: #161616;
+  border: 1px dashed #2d2d2d;
+  border-radius: 14px;
+  padding: 28px 16px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+
+  &:active {
+    border-color: var(--Hub);
+  }
+}
+
+.add-music-drop-icon {
+  font-size: 1.8rem;
+}
+
+.add-music-drop-hint {
+  font-size: 0.72rem;
+  color: var(--main-ultra-light);
+}
+
+.add-music-pending {
+  display: flex;
+  gap: 8px;
+  background: #161616;
+  border: 1px solid #2d2d2d;
+  border-radius: 14px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+.add-music-pending-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  input {
+    background: var(--secondary);
+    border: 1px solid #2d2d2d;
+    border-radius: 8px;
+    color: #fff;
+    font-family: var(--font-body);
+    padding: 9px 12px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--Hub);
+    }
+  }
+}
+
+.add-music-pending-remove {
+  background: none;
+  border: none;
+  color: var(--main-ultra-light);
+  cursor: pointer;
+  align-self: flex-start;
+  padding: 4px;
+}
+
+.add-music-save {
+  width: 100%;
+  background: var(--Hub);
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-btns);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 13px;
+  margin-top: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.add-music-remote {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  input {
+    background: var(--secondary);
+    border: 1px solid #2d2d2d;
+    border-radius: 8px;
+    color: #fff;
+    font-family: var(--font-body);
+    padding: 11px 12px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--Hub);
+    }
+  }
+}
+
+.add-music-note {
+  color: var(--main-ultra-light);
+  font-size: 0.75rem;
+  margin-top: 10px;
+  line-height: 1.4;
+}

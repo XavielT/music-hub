@@ -1,0 +1,31 @@
+<div class="search">
+  <!-- Search input -->
+  <h1 class="search-title">Search</h1>
+  <input
+    class="search-input"
+    type="search"
+    placeholder="Songs, artists or albums..."
+    (input)="onInput($event)"
+  />
+
+  <!-- Results -->
+  <div class="search-results">
+    <app-song-item
+      *ngFor="let song of results()"
+      [song]="song"
+      [removable]="false"
+      [active]="player.current()?.id === song.id"
+      (play)="player.play(song, results())"
+      (addToPlaylist)="pickerFor.set(song)"
+    ></app-song-item>
+
+    <p class="search-empty" *ngIf="results().length === 0">No results in your library.</p>
+  </div>
+
+  <!-- Playlist picker overlay -->
+  <app-playlist-picker
+    *ngIf="pickerFor()"
+    (picked)="onPicked($event)"
+    (closed)="pickerFor.set(null)"
+  ></app-playlist-picker>
+</div>
