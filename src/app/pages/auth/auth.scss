@@ -1,0 +1,143 @@
+.auth {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+  background: radial-gradient(circle at 50% 0%, rgba(255, 144, 0, 0.16), transparent 60%), var(--main);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 360px;
+}
+
+.auth-brand {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.auth-brand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: var(--Hub);
+  color: #000;
+  font-size: 1.7rem;
+  margin-bottom: 12px;
+}
+
+.auth-brand-name {
+  font-family: var(--font-brand);
+  font-size: 1.5rem;
+  letter-spacing: 0.5px;
+}
+
+.auth-brand-tagline {
+  color: var(--main-ultra-light);
+  font-size: 0.82rem;
+  margin-top: 4px;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.auth-tab {
+  flex: 1;
+  background: var(--secondary);
+  border: 1px solid #2d2d2d;
+  border-radius: 20px;
+  color: var(--main-ultra-light);
+  font-family: var(--font-btns);
+  font-size: 0.8rem;
+  padding: 9px 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &.active {
+    background: var(--Hub);
+    border-color: var(--Hub);
+    color: #000;
+    font-weight: 700;
+  }
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.auth-input {
+  background: var(--secondary);
+  border: 1px solid #2d2d2d;
+  border-radius: 10px;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: 13px 14px;
+  width: 100%;
+
+  &::placeholder {
+    color: var(--main-ultra-light);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--Hub);
+  }
+}
+
+.auth-error {
+  color: var(--primary);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.auth-notice {
+  color: var(--Hub);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.auth-submit {
+  background: var(--Hub);
+  border: none;
+  border-radius: 10px;
+  color: #000;
+  font-family: var(--font-btns);
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 14px 0;
+  margin-top: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.auth-switch {
+  color: var(--main-ultra-light);
+  font-size: 0.8rem;
+  text-align: center;
+  margin-top: 16px;
+
+  button {
+    background: none;
+    border: none;
+    color: var(--Hub);
+    font-family: var(--font-btns);
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0 2px;
+    cursor: pointer;
+  }
+}

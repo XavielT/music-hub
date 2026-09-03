@@ -1,7 +1,8 @@
 import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../../shared/services/auth.service';
 import { LibraryService, SongGroup } from '../../../shared/services/library.service';
 import { PlayerService } from '../../../shared/services/player.service';
 import { SongItem } from '../../../shared/components/song-item/song-item';
@@ -28,7 +29,19 @@ export class LibraryComponent {
 
   groups = computed(() => (this.tab() === 'artists' ? this.library.artists() : this.library.albums()));
 
-  constructor(public library: LibraryService, public player: PlayerService) {}
+  accountInitial = computed(() => (this.auth.displayName().trim()[0] || '?').toUpperCase());
+
+  constructor(
+    public library: LibraryService,
+    public player: PlayerService,
+    public auth: AuthService,
+    private router: Router
+  ) {}
+
+  async signOut(): Promise<void> {
+    await this.auth.signOut();
+    await this.router.navigateByUrl('/auth');
+  }
 
   setTab(tab: LibraryTab): void {
     this.tab.set(tab);

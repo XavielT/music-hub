@@ -1,6 +1,18 @@
 <div class="library">
   <h1 class="library-title">Your library</h1>
 
+  <!-- Account -->
+  <div class="library-account">
+    <div class="library-account-avatar">{{ accountInitial() }}</div>
+    <div class="library-account-info">
+      <span class="library-account-name">{{ auth.displayName() }}</span>
+      <span class="library-account-email" *ngIf="auth.displayName() !== auth.user()?.email">
+        {{ auth.user()?.email }}
+      </span>
+    </div>
+    <button class="library-account-signout" (click)="signOut()">Sign out</button>
+  </div>
+
   <!-- Tabs -->
   <div class="library-tabs">
     <button

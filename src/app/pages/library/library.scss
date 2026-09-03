@@ -156,3 +156,68 @@
   font-size: 0.75rem;
   color: var(--main-ultra-light);
 }
+
+.library-account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #161616;
+  border: 1px solid #2d2d2d;
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+
+.library-account-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--Hub);
+  color: #000;
+  font-weight: 700;
+}
+
+.library-account-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.library-account-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.library-account-email {
+  font-size: 0.72rem;
+  color: var(--main-ultra-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.library-account-signout {
+  background: none;
+  border: 1px solid #2d2d2d;
+  border-radius: 20px;
+  color: var(--main-ultra-light);
+  font-family: var(--font-btns);
+  font-size: 0.75rem;
+  padding: 7px 14px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:active {
+    border-color: var(--Hub);
+    color: var(--Hub);
+  }
+}

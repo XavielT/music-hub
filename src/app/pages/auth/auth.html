@@ -1,0 +1,61 @@
+<div class="auth">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <span class="auth-brand-icon">♫</span>
+      <h1 class="auth-brand-name">Music Hub</h1>
+      <p class="auth-brand-tagline">Your library, on every device.</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab" [class.active]="mode() === 'login'" (click)="setMode('login')">Sign in</button>
+      <button class="auth-tab" [class.active]="mode() === 'register'" (click)="setMode('register')">Register</button>
+    </div>
+
+    <form class="auth-form" (ngSubmit)="submit()">
+      <input
+        class="auth-input"
+        type="email"
+        name="email"
+        autocomplete="email"
+        placeholder="Email"
+        [(ngModel)]="email"
+      />
+
+      <input
+        class="auth-input"
+        *ngIf="mode() === 'register'"
+        type="text"
+        name="displayName"
+        autocomplete="name"
+        placeholder="Display name"
+        [(ngModel)]="displayName"
+      />
+
+      <input
+        class="auth-input"
+        type="password"
+        name="password"
+        [attr.autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"
+        placeholder="Password"
+        [(ngModel)]="password"
+      />
+
+      <p class="auth-error" *ngIf="error()">{{ error() }}</p>
+      <p class="auth-notice" *ngIf="notice()">{{ notice() }}</p>
+
+      <button class="auth-submit" type="submit" [disabled]="busy()">
+        <ng-container *ngIf="!busy()">{{ mode() === 'login' ? 'Sign in' : 'Create account' }}</ng-container>
+        <ng-container *ngIf="busy()">Please wait...</ng-container>
+      </button>
+    </form>
+
+    <p class="auth-switch" *ngIf="mode() === 'login'">
+      No account yet?
+      <button (click)="setMode('register')">Register</button>
+    </p>
+    <p class="auth-switch" *ngIf="mode() === 'register'">
+      Already have an account?
+      <button (click)="setMode('login')">Sign in</button>
+    </p>
+  </div>
+</div>

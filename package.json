@@ -20,6 +20,7 @@
     "@capacitor/android": "^8.4.1",
     "@capacitor/core": "^8.4.1",
     "@jofr/capacitor-media-session": "^4.0.0",
+    "@supabase/supabase-js": "^2.114.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "youtubei.js": "^17.2.0",
