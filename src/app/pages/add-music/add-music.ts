@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Capacitor } from '@capacitor/core';
 import { LibraryService } from '../../../shared/services/library.service';
 import { YoutubeService, YoutubeResult } from '../../../shared/services/youtube.service';
 
@@ -10,6 +11,16 @@ interface PendingSong {
   artist: string;
   album: string;
 }
+
+// YouTube search talks to YouTube's internal API directly. On the phone
+// CapacitorHttp makes those requests natively (no CORS); a browser blocks
+// them, so the section is offered read-only there instead of hanging.
+const YT_BROWSER_HINT =
+  'YouTube search only works in the installed Android app. Here in the browser, add songs from your device or a direct audio URL below.';
+
+// Safety net: the YouTube client can hang instead of failing, and the UI must
+// never sit on a spinner forever.
+const YT_TIMEOUT_MS = 15000;
 
 @Component({
   selector: 'app-add-music',
@@ -29,27 +40,57 @@ export class AddMusicComponent {
   ytSearching = signal(false);
   ytDownloading = signal<string | null>(null);
   ytError = signal('');
+  // False in the browser preview, true in the installed app.
+  readonly ytAvailable = Capacitor.isNativePlatform();
 
   remoteUrl = '';
   remoteTitle = '';
   remoteArtist = '';
+  remoteError = signal('');
 
   constructor(private library: LibraryService, private youtube: YoutubeService) {}
 
   async ytSearch(): Promise<void> {
     const query = this.ytQuery.trim();
     if (!query || this.ytSearching()) return;
+    if (!this.ytAvailable) {
+      this.ytError.set(YT_BROWSER_HINT);
+      return;
+    }
     this.ytError.set('');
     this.ytSearching.set(true);
     try {
       const videoId = this.youtube.parseVideoId(query);
-      if (videoId) this.ytResults.set([await this.youtube.getResult(videoId)]);
-      else this.ytResults.set(await this.youtube.search(query));
+      if (videoId) this.ytResults.set([await this.withTimeout(this.youtube.getResult(videoId))]);
+      else this.ytResults.set(await this.withTimeout(this.youtube.search(query)));
       if (this.ytResults().length === 0) this.ytError.set('No results found.');
-    } catch {
-      this.ytError.set('YouTube search failed. Note: this only works in the installed app, not in the browser preview.');
+    } catch (err) {
+      this.ytError.set(
+        (err as Error)?.message === 'yt-timeout'
+          ? 'YouTube did not answer in time. Try again, or add the song from your device below.'
+          : 'YouTube search failed. It only works in the installed app, not in the browser preview.'
+      );
+    } finally {
+      // Always clears the spinner, including on timeout.
+      this.ytSearching.set(false);
     }
-    this.ytSearching.set(false);
+  }
+
+  // Rejects with 'yt-timeout' when YouTube neither answers nor errors.
+  private withTimeout<T>(promise: Promise<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('yt-timeout')), YT_TIMEOUT_MS);
+      promise.then(
+        value => {
+          clearTimeout(timer);
+          resolve(value);
+        },
+        err => {
+          clearTimeout(timer);
+          reject(err);
+        }
+      );
+    });
   }
 
   async ytDownload(result: YoutubeResult): Promise<void> {
@@ -125,7 +166,30 @@ export class AddMusicComponent {
 
   async addRemote(): Promise<void> {
     const url = this.remoteUrl.trim();
+    this.remoteError.set('');
     if (!url) return;
+
+    // A YouTube page link is not an audio file: it would be stored as a song
+    // that can never play. Say so instead of failing later at playback.
+    if (this.youtube.parseVideoId(url)) {
+      this.remoteError.set(
+        'That is a YouTube page link, not an audio file. YouTube downloads are blocked, so add the song as a file from your device instead.'
+      );
+      return;
+    }
+
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      this.remoteError.set('That does not look like a valid link.');
+      return;
+    }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      this.remoteError.set('The link must start with http:// or https://');
+      return;
+    }
+
     await this.library.addRemoteSong(url, {
       title: this.remoteTitle.trim(),
       artist: this.remoteArtist.trim(),

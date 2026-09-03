@@ -239,3 +239,13 @@
   margin-top: 10px;
   line-height: 1.4;
 }
+
+// Shown above the YouTube search when the feature is unavailable (browser).
+.add-music-note-warn {
+  color: var(--main-ultra-light);
+  background: var(--secondary);
+  border-left: 3px solid var(--Hub);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin: 0 0 12px;
+}

@@ -5,14 +5,24 @@
   <!-- From YouTube -->
   <section class="add-music-section">
     <h2 class="add-music-section-title">From YouTube</h2>
+    <p class="add-music-note add-music-note-warn" *ngIf="!ytAvailable">
+      Only available in the installed Android app — the browser blocks YouTube's API.
+      Use "From this device" or a direct audio URL below.
+    </p>
+
     <div class="add-music-yt-search">
       <input
         type="text"
         placeholder="Search a song or paste a YouTube link"
         [(ngModel)]="ytQuery"
         (keyup.enter)="ytSearch()"
+        [disabled]="!ytAvailable"
       />
-      <button class="add-music-yt-btn" (click)="ytSearch()" [disabled]="ytSearching()">
+      <button
+        class="add-music-yt-btn"
+        (click)="ytSearch()"
+        [disabled]="ytSearching() || !ytAvailable"
+      >
         {{ ytSearching() ? '...' : '⌕' }}
       </button>
     </div>
@@ -38,10 +48,16 @@
   <section class="add-music-section">
     <h2 class="add-music-section-title">From this device</h2>
     <label class="add-music-drop">
-      <input type="file" accept="audio/*" multiple (change)="onFiles($event)" hidden />
+      <input
+        type="file"
+        accept="audio/*,video/mp4,.mp3,.m4a,.mp4,.aac,.wav,.ogg,.opus,.flac"
+        multiple
+        (change)="onFiles($event)"
+        hidden
+      />
       <span class="add-music-drop-icon">🎵</span>
       <span>Tap to pick audio files</span>
-      <span class="add-music-drop-hint">Tip: name files "Artist - Title.mp3" to auto-fill the info</span>
+      <span class="add-music-drop-hint">mp3, m4a, mp4, wav, ogg, flac — name them "Artist - Title.mp3" to auto-fill the info</span>
     </label>
 
     <!-- Pending files -->
@@ -68,6 +84,7 @@
       <input type="text" placeholder="Artist" [(ngModel)]="remoteArtist" />
       <button class="add-music-save" (click)="addRemote()">Add song</button>
     </div>
+    <p class="add-music-error" *ngIf="remoteError()">{{ remoteError() }}</p>
     <p class="add-music-note">
       Paste a direct link to an audio file and it will stream in the app (needs internet).
     </p>
