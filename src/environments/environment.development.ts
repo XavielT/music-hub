@@ -1,10 +1,9 @@
 // Supabase connection settings (dev / `npm start`).
-// Same project as production unless you create a separate Supabase project for dev.
+// Same x-core project as production — there is no separate dev project.
 export const environment = {
   production: false,
-  // TODO: paste from Supabase dashboard → Project Settings → API → Project URL
-  supabaseUrl: 'https://YOUR-PROJECT-REF.supabase.co',
-  // TODO: paste from Supabase dashboard → Project Settings → API → anon public key
-  // Never paste the service_role key here.
-  supabaseAnonKey: 'YOUR-ANON-PUBLIC-KEY',
+  supabaseUrl: 'https://nakgrkcqyuycadeuenuw.supabase.co',
+  // anon public key. Never paste the service_role key here.
+  supabaseAnonKey:
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ha2dya2NxeXV5Y2FkZXVlbnV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NjE1NjUsImV4cCI6MjEwNDAzNzU2NX0.83aqu6TlnXDs4eg-waT0FQlycvFc6hQinwgg42SSCwE',
 };
