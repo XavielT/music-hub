@@ -51,6 +51,11 @@ export class DbService {
     await this.request((await this.tx(store, 'readwrite')).put(value, key));
   }
 
+  // Used to tell which songs still have their audio blob on this device.
+  async getAllKeys(store: string): Promise<IDBValidKey[]> {
+    return this.request((await this.tx(store, 'readonly')).getAllKeys());
+  }
+
   async delete(store: string, key: IDBValidKey): Promise<void> {
     await this.request((await this.tx(store, 'readwrite')).delete(key));
   }

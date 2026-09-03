@@ -70,6 +70,11 @@
       <button class="add-music-pending-remove" (click)="removePending(i)">✕</button>
     </div>
 
+    <label class="add-music-cloud" *ngIf="pending().length > 0">
+      <input type="checkbox" [checked]="uploadToCloud()" (change)="uploadToCloud.set($any($event.target).checked)" />
+      <span>Upload to the cloud so they play on your other devices</span>
+    </label>
+
     <button class="add-music-save" *ngIf="pending().length > 0" [disabled]="saving()" (click)="saveAll()">
       {{ saving() ? 'Saving...' : 'Save ' + pending().length + ' song(s)' }}
     </button>

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LibraryService } from '../../../shared/services/library.service';
 import { PlayerService } from '../../../shared/services/player.service';
+import { SyncService } from '../../../shared/services/sync.service';
 import { SongItem } from '../../../shared/components/song-item/song-item';
 import { Cover } from '../../../shared/ui/cover/cover';
 
@@ -26,10 +27,18 @@ export class PlaylistDetailsComponent {
     route: ActivatedRoute,
     private router: Router,
     public library: LibraryService,
-    public player: PlayerService
+    public player: PlayerService,
+    public sync: SyncService
   ) {
     this.id = route.snapshot.paramMap.get('id') ?? '';
   }
+
+  // Pull every cloud song in this playlist down for offline listening.
+  downloadAll(): void {
+    void this.sync.downloadPlaylist(this.songs());
+  }
+
+  offlineCount = computed(() => this.songs().filter(s => s.downloaded).length);
 
   playAll(): void {
     const list = this.songs();

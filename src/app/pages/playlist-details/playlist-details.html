@@ -11,6 +11,14 @@
       <p class="playlist-details__count">{{ p.songIds.length }} songs</p>
       <div class="playlist-details__actions">
         <button class="playlist-details__play" (click)="playAll()" [disabled]="songs().length === 0">▶ Play</button>
+        <button
+          class="playlist-details__download"
+          (click)="downloadAll()"
+          [disabled]="sync.uploading() || offlineCount() === songs().length"
+          title="Download every song for offline listening"
+        >
+          {{ offlineCount() === songs().length && songs().length > 0 ? '✓ Offline' : '⬇ Download' }}
+        </button>
         <button class="playlist-details__delete" (click)="deletePlaylist()">Delete</button>
       </div>
     </div>
@@ -24,6 +32,9 @@
       [active]="player.current()?.id === song.id"
       (play)="player.play(song, songs())"
       (remove)="library.removeFromPlaylist(p.id, song.id)"
+      (upload)="sync.uploadOne(song)"
+      (download)="library.downloadSong(song)"
+      (removeDownload)="library.removeDownload(song)"
     ></app-song-item>
     <p class="playlist-details__empty" *ngIf="songs().length === 0">
       This playlist is empty. Add songs from Search or Library with the ＋ button.

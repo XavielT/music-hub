@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, computed, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Cover } from '../../ui/cover/cover';
 import { SongModel } from '../../models/song.model';
@@ -11,12 +11,44 @@ import { SongModel } from '../../models/song.model';
   styleUrl: './song-item.scss',
 })
 export class SongItem {
-  @Input({ required: true }) song!: SongModel;
+  song = input.required<SongModel>();
   @Input() active = false;
   @Input() removable = true;
   @Output() play = new EventEmitter<void>();
   @Output() addToPlaylist = new EventEmitter<void>();
   @Output() remove = new EventEmitter<void>();
+  @Output() upload = new EventEmitter<void>();
+  @Output() download = new EventEmitter<void>();
+  @Output() removeDownload = new EventEmitter<void>();
+
+  // One glyph summarising where the audio lives.
+  //   ↑  only on this device, can be uploaded
+  //   ⬇  in the cloud, not downloaded here
+  //   ●  in the cloud and available offline
+  badge = computed(() => {
+    const song = this.song();
+    if (song.syncState === 'uploading') return { icon: '⋯', title: 'Uploading…', kind: 'busy' };
+    if (song.syncState === 'downloading') return { icon: '⋯', title: 'Downloading…', kind: 'busy' };
+    if (song.syncState === 'local-only')
+      return { icon: '↑', title: 'On this device only — tap to upload', kind: 'local' };
+    if (song.downloaded) return { icon: '●', title: 'In the cloud, available offline', kind: 'offline' };
+    // A song added from a URL has no stored audio, so it can only stream.
+    if (!song.storagePath) return { icon: '☁', title: 'Streams from a link — needs a connection', kind: 'cloud' };
+    return { icon: '⬇', title: 'In the cloud — tap to download for offline', kind: 'cloud' };
+  });
+
+  // Cloud song with no local copy: unplayable without a connection.
+  needsConnection = computed(() => {
+    const song = this.song();
+    return !song.downloaded && song.syncState === 'synced';
+  });
+
+  onBadgeClick(): void {
+    const song = this.song();
+    if (song.syncState === 'local-only') this.upload.emit();
+    else if (song.syncState === 'synced' && !song.downloaded && song.storagePath) this.download.emit();
+    else if (song.syncState === 'synced' && song.downloaded) this.removeDownload.emit();
+  }
 
   formatDuration(seconds: number): string {
     if (!seconds) return '--:--';

@@ -13,6 +13,35 @@
     <button class="library-account-signout" (click)="signOut()">Sign out</button>
   </div>
 
+  <!-- Cloud status -->
+  <div class="library-cloud">
+    <div class="library-cloud-row">
+      <span class="library-cloud-label">Cloud storage</span>
+      <span class="library-cloud-usage" [class.warn]="nearQuota()">
+        {{ usedLabel() }} / {{ quotaLabel }}
+      </span>
+      <button class="library-cloud-refresh" (click)="sync.sync()" [disabled]="sync.syncing()" title="Sync with the cloud">
+        {{ sync.syncing() ? '⋯' : '⟳' }}
+      </button>
+    </div>
+    <div class="library-cloud-bar">
+      <div class="library-cloud-bar-fill" [class.warn]="nearQuota()" [style.width.%]="usedPercent()"></div>
+    </div>
+    <p class="library-cloud-warn" *ngIf="nearQuota()">
+      You are close to the 1 GB free limit. Delete a few cloud songs before adding more.
+    </p>
+
+    <div class="library-cloud-upload" *ngIf="pendingUploads() > 0">
+      <span>{{ pendingUploads() }} song(s) only on this device</span>
+      <button (click)="sync.uploadAll()" [disabled]="sync.uploading()">
+        {{ sync.uploading() ? 'Uploading...' : 'Upload all' }}
+      </button>
+    </div>
+    <p class="library-cloud-progress" *ngIf="sync.uploadProgress() as p">
+      {{ p.done + 1 }} / {{ p.total }} — {{ p.title }}
+    </p>
+  </div>
+
   <!-- Tabs -->
   <div class="library-tabs">
     <button
@@ -34,6 +63,9 @@
       (play)="player.play(song, library.songs())"
       (addToPlaylist)="pickerFor.set(song)"
       (remove)="library.removeSong(song.id)"
+      (upload)="sync.uploadOne(song)"
+      (download)="library.downloadSong(song)"
+      (removeDownload)="library.removeDownload(song)"
     ></app-song-item>
     <p class="library-empty" *ngIf="library.songs().length === 0">No songs yet. Add some from the ＋ tab.</p>
   </div>
@@ -63,6 +95,9 @@
         [active]="player.current()?.id === song.id"
         (play)="player.play(song, group.songs)"
         (addToPlaylist)="pickerFor.set(song)"
+        (upload)="sync.uploadOne(song)"
+        (download)="library.downloadSong(song)"
+        (removeDownload)="library.removeDownload(song)"
       ></app-song-item>
     </ng-container>
   </div>

@@ -1,6 +1,8 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { MediaSession } from '@jofr/capacitor-media-session';
 import { LibraryService } from './library.service';
+import { CloudLibraryService } from './cloud-library.service';
+import { ToastService } from './toast.service';
 import { SongModel } from '../models/song.model';
 
 @Injectable({ providedIn: 'root' })
@@ -25,7 +27,15 @@ export class PlayerService {
 
   progress = computed(() => (this._duration() > 0 ? this._currentTime() / this._duration() : 0));
 
-  constructor(private library: LibraryService) {
+  // Set when a song cannot be played right now (cloud audio, no connection).
+  private _unavailable = signal<string | null>(null);
+  unavailable = this._unavailable.asReadonly();
+
+  constructor(
+    private library: LibraryService,
+    private cloud: CloudLibraryService,
+    private toast: ToastService
+  ) {
     // Keep audio alive in the background: the WebView needs an explicit
     // hint that this is media playback the user wants to continue.
     this.audio.setAttribute('playsinline', '');
@@ -90,17 +100,49 @@ export class PlayerService {
       URL.revokeObjectURL(this.objectUrl);
       this.objectUrl = null;
     }
-    let src = song.url ?? '';
-    if (song.source === 'local') {
-      const blob = await this.library.getSongFile(song.id);
-      if (!blob) return;
-      this.objectUrl = URL.createObjectURL(blob);
-      src = this.objectUrl;
+    this._unavailable.set(null);
+
+    const src = await this.resolveSource(song);
+    if (!src) {
+      this._isPlaying.set(false);
+      this._unavailable.set(song.id);
+      this.toast.error(
+        navigator.onLine
+          ? `"${song.title}" could not be loaded.`
+          : `"${song.title}" is not downloaded — connect to play it, or download it for offline use.`
+      );
+      return;
     }
+
     this._current.set(song);
     this.audio.src = src;
     this.updateMetadata(song);
     await this.audio.play().catch(() => this._isPlaying.set(false));
+  }
+
+  // Offline-first: the local blob wins, then cloud storage, then a plain URL.
+  private async resolveSource(song: SongModel): Promise<string | null> {
+    if (song.downloaded) {
+      const blob = await this.library.getSongFile(song.id);
+      if (blob) {
+        this.objectUrl = URL.createObjectURL(blob);
+        return this.objectUrl;
+      }
+    }
+
+    if (song.storagePath) {
+      if (!navigator.onLine) return null;
+      try {
+        return await this.cloud.getStreamUrl(song);
+      } catch {
+        return null;
+      }
+    }
+
+    if (song.url) return navigator.onLine ? song.url : null;
+
+    // Legacy local song whose blob went missing.
+    return null;
   }
 
   // --- MediaSession: lock-screen / notification controls + background playback ---

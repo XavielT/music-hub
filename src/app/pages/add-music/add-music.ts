@@ -48,6 +48,10 @@ export class AddMusicComponent {
   remoteArtist = '';
   remoteError = signal('');
 
+  // Cloud upload is the point of having an account, so it defaults to on
+  // whenever there is a connection.
+  uploadToCloud = signal(navigator.onLine);
+
   constructor(private library: LibraryService, private youtube: YoutubeService) {}
 
   async ytSearch(): Promise<void> {
@@ -152,16 +156,21 @@ export class AddMusicComponent {
     if (this.saving()) return;
     this.saving.set(true);
     const items = this.pending();
+    const toCloud = this.uploadToCloud() && navigator.onLine;
     for (const item of items) {
-      await this.library.addLocalSong(item.file, {
-        title: item.title,
-        artist: item.artist,
-        album: item.album,
-      });
+      await this.library.addLocalSong(
+        item.file,
+        { title: item.title, artist: item.artist, album: item.album },
+        toCloud
+      );
     }
     this.pending.set([]);
     this.saving.set(false);
-    this.savedMessage.set(`${items.length} song${items.length === 1 ? '' : 's'} added to your library ✔`);
+    this.savedMessage.set(
+      toCloud
+        ? `${items.length} song${items.length === 1 ? '' : 's'} added and uploaded to the cloud ✔`
+        : `${items.length} song${items.length === 1 ? '' : 's'} added to this device ✔`
+    );
   }
 
   async addRemote(): Promise<void> {

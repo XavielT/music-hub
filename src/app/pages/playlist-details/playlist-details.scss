@@ -73,3 +73,18 @@
   font-size: 0.85rem;
   margin-top: 30px;
 }
+
+.playlist-details__download {
+  background: none;
+  border: 1px solid var(--Hub);
+  color: var(--Hub);
+  border-radius: 16px;
+  padding: 7px 14px;
+  font-size: 0.75rem;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+}

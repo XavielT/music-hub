@@ -65,3 +65,41 @@
     color: var(--Hub);
   }
 }
+
+// Sync state badge: doubles as the upload / download / free-space button.
+.song-item-badge {
+  background: none;
+  border: 1px solid var(--main-ultra-light);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  color: var(--main-ultra-light);
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.is-local {
+    color: var(--Hub);
+    border-color: var(--Hub);
+  }
+
+  &.is-offline {
+    color: var(--Hub);
+    border-color: var(--Hub);
+    background: var(--Hub-translucid);
+  }
+
+  &.is-busy {
+    opacity: 0.6;
+  }
+}
+
+.song-item-offline-hint {
+  color: var(--main-ultra-light);
+  font-style: normal;
+  opacity: 0.8;
+}

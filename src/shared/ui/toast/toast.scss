@@ -1,0 +1,29 @@
+.toast-stack {
+  position: fixed;
+  // Sits above the player bar and bottom nav.
+  bottom: 148px;
+  left: 12px;
+  right: 12px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  background: var(--secondary);
+  color: #fff;
+  border-left: 3px solid var(--Hub);
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+
+  &.error {
+    border-left-color: var(--primary);
+  }
+}
