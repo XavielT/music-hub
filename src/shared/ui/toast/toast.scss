@@ -1,7 +1,7 @@
 .toast-stack {
   position: fixed;
-  // Sits above the player bar and bottom nav.
-  bottom: 148px;
+  // Sits above the player bar and bottom nav, clear of the home indicator.
+  bottom: calc(148px + env(safe-area-inset-bottom));
   left: 12px;
   right: 12px;
   z-index: 60;

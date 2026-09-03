@@ -1,0 +1,13 @@
+<div class="install-hint" *ngIf="visible()">
+  <span class="install-hint-title">Install Music Hub</span>
+
+  <!-- iOS: no install API, so spell out the Share-sheet route. -->
+  <p class="install-hint-steps" *ngIf="showIosSteps()">
+    Tap <strong>Share</strong> in Safari, then <strong>Add to Home Screen</strong>. It opens
+    full screen and keeps your downloaded songs available offline.
+  </p>
+
+  <button class="install-hint-btn" *ngIf="showInstallButton()" (click)="pwa.promptInstall()">
+    Install
+  </button>
+</div>

@@ -1,0 +1,39 @@
+.install-hint {
+  background: var(--secondary);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.install-hint-title {
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.install-hint-steps {
+  margin: 0;
+  color: var(--main-ultra-light);
+  font-size: 0.75rem;
+  line-height: 1.45;
+
+  strong {
+    color: var(--Hub);
+    font-weight: 600;
+  }
+}
+
+.install-hint-btn {
+  align-self: flex-start;
+  background: var(--Hub);
+  color: #000;
+  border: none;
+  border-radius: 16px;
+  padding: 7px 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}

@@ -7,5 +7,10 @@
     <app-player-bar></app-player-bar>
     <app-bottom-nav></app-bottom-nav>
   </ng-container>
+  <!-- A newer build is cached and takes effect on reload. -->
+  <div class="app-update" *ngIf="pwa.updateReady()">
+    <span>A new version is ready.</span>
+    <button (click)="pwa.applyUpdate()">Reload</button>
+  </div>
   <app-toast></app-toast>
 </div>

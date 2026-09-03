@@ -8,3 +8,37 @@
   flex: 1;
   overflow-y: auto;
 }
+
+// "Update available" banner, shown when the service worker has a newer build.
+.app-update {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(148px + env(safe-area-inset-bottom));
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--secondary);
+  border-left: 3px solid var(--Hub);
+  border-radius: 8px;
+  padding: 11px 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+
+  span {
+    flex: 1;
+    color: #fff;
+    font-size: 0.8rem;
+  }
+
+  button {
+    background: var(--Hub);
+    color: #000;
+    border: none;
+    border-radius: 14px;
+    padding: 6px 14px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}

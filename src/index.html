@@ -12,6 +12,16 @@
        app is English-only, so opt out of translation entirely. -->
   <meta name="google" content="notranslate">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  <!-- PWA: installable on desktop and, via Add to Home Screen, on iPhone. -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Music Hub">
+  <!-- black-translucent lets the dark app art run under the status bar; the
+       pages already pad with env(safe-area-inset-top). -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
 </head>
 <body>
   <app-root></app-root>

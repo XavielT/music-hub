@@ -151,49 +151,68 @@ export class PlayerService {
   // Uses @jofr/capacitor-media-session: a real Android MediaSession +
   // media notification natively, and the Web MediaSession API on the browser.
 
-  private setupMediaSession(): void {
+  // These calls return promises, and on the web (notably iOS Safari) an
+  // unsupported action rejects instead of throwing. Swallow each one on its
+  // own so a single missing action cannot take down the rest — or surface as
+  // an unhandled rejection.
+  private safely(run: () => unknown): void {
     try {
-      MediaSession.setActionHandler({ action: 'play' }, () => this.toggle());
-      MediaSession.setActionHandler({ action: 'pause' }, () => this.toggle());
-      MediaSession.setActionHandler({ action: 'previoustrack' }, () => this.previous());
-      MediaSession.setActionHandler({ action: 'nexttrack' }, () => this.next());
+      const result = run();
+      if (result instanceof Promise) result.catch(() => undefined);
+    } catch {
+      // Platform does not support this call at all.
+    }
+  }
+
+  private setupMediaSession(): void {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) {
+      // No MediaSession anywhere (older Safari): playback still works, just
+      // without lock-screen controls.
+      return;
+    }
+
+    this.safely(() => MediaSession.setActionHandler({ action: 'play' }, () => this.toggle()));
+    this.safely(() => MediaSession.setActionHandler({ action: 'pause' }, () => this.toggle()));
+    this.safely(() => MediaSession.setActionHandler({ action: 'previoustrack' }, () => this.previous()));
+    this.safely(() => MediaSession.setActionHandler({ action: 'nexttrack' }, () => this.next()));
+    this.safely(() =>
       MediaSession.setActionHandler({ action: 'seekto' }, details => {
         if (details.seekTime != null) this.seek(details.seekTime);
-      });
-      this.mediaSessionReady = true;
-    } catch {
-      // Ignore unsupported actions on older platforms.
-    }
+      })
+    );
+    this.mediaSessionReady = true;
   }
 
   private updateMetadata(song: SongModel): void {
     if (!this.mediaSessionReady) return;
-    MediaSession.setMetadata({
-      title: song.title,
-      artist: song.artist,
-      album: song.album,
-      artwork: song.coverUrl
-        ? [{ src: song.coverUrl, sizes: '512x512', type: 'image/jpeg' }]
-        : [],
-    });
+    this.safely(() =>
+      MediaSession.setMetadata({
+        title: song.title,
+        artist: song.artist,
+        album: song.album,
+        artwork: song.coverUrl
+          ? [{ src: song.coverUrl, sizes: '512x512', type: 'image/jpeg' }]
+          : [],
+      })
+    );
   }
 
   private setPlaybackState(state: 'playing' | 'paused' | 'none'): void {
-    if (this.mediaSessionReady) MediaSession.setPlaybackState({ playbackState: state });
+    if (!this.mediaSessionReady) return;
+    this.safely(() => MediaSession.setPlaybackState({ playbackState: state }));
   }
 
   private updatePositionState(): void {
     if (!this.mediaSessionReady) return;
     const duration = this.audio.duration;
     if (!isFinite(duration) || duration <= 0) return;
-    try {
+    // setPositionState rejects if the values are inconsistent — safe to skip.
+    this.safely(() =>
       MediaSession.setPositionState({
         duration,
         position: Math.min(this.audio.currentTime, duration),
         playbackRate: this.audio.playbackRate || 1,
-      });
-    } catch {
-      // setPositionState throws if values are inconsistent — safe to skip.
-    }
+      })
+    );
   }
 }

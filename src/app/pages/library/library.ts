@@ -10,6 +10,7 @@ import { CloudLibraryService, STORAGE_QUOTA_BYTES } from '../../../shared/servic
 import { SongItem } from '../../../shared/components/song-item/song-item';
 import { PlaylistPicker } from '../../../shared/components/playlist-picker/playlist-picker';
 import { Cover } from '../../../shared/ui/cover/cover';
+import { InstallHint } from '../../../shared/components/install-hint/install-hint';
 import { SongModel } from '../../../shared/models/song.model';
 
 type LibraryTab = 'songs' | 'artists' | 'albums' | 'playlists';
@@ -17,7 +18,7 @@ type LibraryTab = 'songs' | 'artists' | 'albums' | 'playlists';
 @Component({
   selector: 'app-library',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, SongItem, PlaylistPicker, Cover],
+  imports: [CommonModule, RouterLink, FormsModule, SongItem, PlaylistPicker, Cover, InstallHint],
   templateUrl: './library.html',
   styleUrl: './library.scss',
 })
