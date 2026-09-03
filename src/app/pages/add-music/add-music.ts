@@ -157,19 +157,32 @@ export class AddMusicComponent {
     this.saving.set(true);
     const items = this.pending();
     const toCloud = this.uploadToCloud() && navigator.onLine;
+    const added: string[] = [];
     for (const item of items) {
-      await this.library.addLocalSong(
+      const song = await this.library.addLocalSong(
         item.file,
         { title: item.title, artist: item.artist, album: item.album },
         toCloud
       );
+      added.push(song.id);
     }
     this.pending.set([]);
     this.saving.set(false);
+
+    // Report what actually happened, not what was intended: an upload can
+    // fail and leave the song on this device only.
+    const plural = items.length === 1 ? '' : 's';
+    if (!toCloud) {
+      this.savedMessage.set(`${items.length} song${plural} added to this device ✔`);
+      return;
+    }
+    const uploaded = this.library
+      .songs()
+      .filter(s => added.includes(s.id) && s.syncState === 'synced').length;
     this.savedMessage.set(
-      toCloud
-        ? `${items.length} song${items.length === 1 ? '' : 's'} added and uploaded to the cloud ✔`
-        : `${items.length} song${items.length === 1 ? '' : 's'} added to this device ✔`
+      uploaded === items.length
+        ? `${items.length} song${plural} added and uploaded to the cloud ✔`
+        : `${items.length} song${plural} added to this device — ${items.length - uploaded} could not be uploaded, tap ↑ in your library to retry.`
     );
   }
 
