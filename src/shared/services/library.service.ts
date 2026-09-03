@@ -1,6 +1,12 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { DbService } from './db.service';
-import { CloudLibraryService, PlaylistRow, PlaylistSongRow, SongRow } from './cloud-library.service';
+import {
+  CloudLibraryService,
+  PlaylistRow,
+  PlaylistSongRow,
+  SongRow,
+  isNetworkError,
+} from './cloud-library.service';
 import { ToastService } from './toast.service';
 import { SongModel, normalizeSong } from '../models/song.model';
 import { PlaylistModel, normalizePlaylist } from '../models/playlist.model';
@@ -169,7 +175,11 @@ export class LibraryService {
     } catch (err) {
       // The local copy is untouched: it simply stays local-only.
       await this.patchSong(song.id, { syncState: 'local-only' });
-      this.toast.error(`Upload of "${song.title}" failed: ${(err as Error).message}`);
+      this.toast.error(
+        isNetworkError(err)
+          ? `No connection — "${song.title}" stays on this device. Tap ↑ to retry later.`
+          : `Upload of "${song.title}" failed: ${(err as Error).message}`
+      );
       console.warn('uploadSong failed', err);
       return false;
     }
@@ -187,7 +197,11 @@ export class LibraryService {
       return true;
     } catch (err) {
       await this.patchSong(song.id, { syncState: 'synced' });
-      this.toast.error(`Could not download "${song.title}".`);
+      this.toast.error(
+        isNetworkError(err)
+          ? `No connection — "${song.title}" could not be downloaded.`
+          : `Could not download "${song.title}".`
+      );
       console.warn('downloadSong failed', err);
       return false;
     }

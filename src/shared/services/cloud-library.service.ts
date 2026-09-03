@@ -39,6 +39,22 @@ const SONG_COLUMNS =
   'id, owner_id, title, artist, album, duration, storage_path, remote_url, cover_url, cover_color, size_bytes, created_at';
 const PLAYLIST_COLUMNS = 'id, owner_id, name, cover_color, created_at';
 
+// navigator.onLine is unreliable in the Android WebView: it keeps reporting
+// true in airplane mode. So a dropped connection has to be recognised from the
+// failure itself rather than trusted from the flag.
+export function isNetworkError(err: unknown): boolean {
+  const message = (err instanceof Error ? err.message : String(err)).toLowerCase();
+  return (
+    message.includes('failed to fetch') ||
+    message.includes('networkerror') ||
+    message.includes('network request failed') ||
+    message.includes('load failed') ||
+    message.includes('err_internet') ||
+    message.includes('err_network') ||
+    message.includes('err_name_not_resolved')
+  );
+}
+
 export const AUDIO_BUCKET = 'songs';
 // Supabase free tier gives 1 GB of Storage.
 export const STORAGE_QUOTA_BYTES = 1024 * 1024 * 1024;

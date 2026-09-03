@@ -106,10 +106,12 @@ export class PlayerService {
     if (!src) {
       this._isPlaying.set(false);
       this._unavailable.set(song.id);
+      // A cloud song with no local copy is the common case here, and
+      // navigator.onLine cannot be trusted to tell us why it failed.
       this.toast.error(
-        navigator.onLine
-          ? `"${song.title}" could not be loaded.`
-          : `"${song.title}" is not downloaded — connect to play it, or download it for offline use.`
+        song.storagePath || song.url
+          ? `"${song.title}" needs a connection — download it with ⬇ to play it offline.`
+          : `"${song.title}" could not be loaded.`
       );
       return;
     }

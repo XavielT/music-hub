@@ -1,6 +1,6 @@
 import { Injectable, computed, effect, signal } from '@angular/core';
 import { AuthService } from './auth.service';
-import { CloudLibraryService } from './cloud-library.service';
+import { CloudLibraryService, isNetworkError } from './cloud-library.service';
 import { LibraryService } from './library.service';
 import { ToastService } from './toast.service';
 import { SongModel } from '../models/song.model';
@@ -89,7 +89,11 @@ export class SyncService {
       this._lastSyncAt.set(Date.now());
     } catch (err) {
       // Local data is left exactly as it was.
-      this.toast.error(`Sync failed: ${(err as Error).message}`);
+      this.toast.error(
+        isNetworkError(err)
+          ? 'No connection — showing the library stored on this device.'
+          : `Sync failed: ${(err as Error).message}`
+      );
       console.warn('sync failed', err);
     } finally {
       this._syncing.set(false);
