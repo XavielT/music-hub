@@ -16,10 +16,44 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Release signing. The values live OUTSIDE this repo — in
+    // ~/.gradle/gradle.properties — so the keystore password is never
+    // committed and never appears in a build log. Without them, only debug
+    // builds work and assembleRelease fails with a clear message rather
+    // than silently producing an unsigned APK.
+    signingConfigs {
+        release {
+            def storePath = project.findProperty('MUSICHUB_STORE_FILE')
+            if (storePath) {
+                storeFile file(storePath)
+                storePassword project.findProperty('MUSICHUB_STORE_PASSWORD')
+                keyAlias project.findProperty('MUSICHUB_KEY_ALIAS')
+                keyPassword project.findProperty('MUSICHUB_KEY_PASSWORD')
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (project.hasProperty('MUSICHUB_STORE_FILE')) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+}
+
+// Fail loudly instead of shipping an unsigned or debug-signed release.
+tasks.whenTaskAdded { task ->
+    if (task.name == 'assembleRelease' || task.name == 'bundleRelease') {
+        task.doFirst {
+            if (!project.hasProperty('MUSICHUB_STORE_FILE')) {
+                throw new GradleException(
+                    "No release signing config found.\n" +
+                    "Add MUSICHUB_STORE_FILE, MUSICHUB_STORE_PASSWORD, MUSICHUB_KEY_ALIAS and\n" +
+                    "MUSICHUB_KEY_PASSWORD to ~/.gradle/gradle.properties (see README).")
+            }
         }
     }
 }

@@ -78,9 +78,47 @@ release* → tag e.g. `v0.1.0` → attach the APK renamed to `music-hub.apk` →
 The portfolio's download button points at
 `releases/latest/download/music-hub.apk`, so future releases update it automatically.
 
-> Debug APKs are signed with the local debug keystore. If you rebuild on a different
-> machine the signature changes and Android refuses to upgrade an existing install —
-> generate a proper release keystore before sharing builds widely.
+## Signed release builds
+
+Debug APKs use the machine-local debug keystore, so a build from a different
+machine cannot upgrade an existing install — Android rejects the signature change.
+A release keystore fixes that permanently: keep the same key and every future
+build upgrades cleanly.
+
+**One-time setup.** Generate the key (choose your own password; keep it safe — losing
+it means never being able to update the app again):
+
+```bash
+mkdir -p ~/keystores
+keytool -genkeypair -v \
+  -keystore ~/keystores/music-hub-release.jks \
+  -alias music-hub -keyalg RSA -keysize 4096 -validity 10000
+```
+
+Then add these to **`~/.gradle/gradle.properties`** — outside this repo, so the
+password is never committed and never shows up in a build log:
+
+```properties
+MUSICHUB_STORE_FILE=/home/<you>/keystores/music-hub-release.jks
+MUSICHUB_STORE_PASSWORD=<the password you chose>
+MUSICHUB_KEY_ALIAS=music-hub
+MUSICHUB_KEY_PASSWORD=<the same password, unless you set a separate key password>
+```
+
+**Build a signed release:**
+```bash
+npm run build && npx cap sync android
+cd android && ./gradlew assembleRelease
+# APK at android/app/build/outputs/apk/release/app-release.apk
+```
+
+`assembleRelease` fails with an explicit message if those properties are missing,
+rather than quietly producing an unsigned APK. `*.jks`, `*.keystore` and
+`keystore.properties` are gitignored in both the repo root and `android/`.
+
+**Back the keystore up somewhere you will not lose it** (password manager, encrypted
+drive). It is not recoverable, and without it you cannot ship an update that existing
+installs will accept.
 
 ## iOS
 A native iOS build requires a Mac with Xcode (`npx cap add ios && npx cap open ios`).
