@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
+import { InstallHint } from '../../../shared/components/install-hint/install-hint';
 
 type AuthMode = 'login' | 'register';
 
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, InstallHint],
   templateUrl: './auth.html',
   styleUrl: './auth.scss',
 })

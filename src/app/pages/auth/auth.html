@@ -57,5 +57,9 @@
       Already have an account?
       <button (click)="setMode('login')">Sign in</button>
     </p>
+
+    <!-- Installing before signing in is the natural order on iPhone, so the
+         hint belongs here too, not only behind the login. -->
+    <app-install-hint></app-install-hint>
   </div>
 </div>
