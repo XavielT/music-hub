@@ -1,5 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { MediaSession } from '@jofr/capacitor-media-session';
+import { Capacitor } from '@capacitor/core';
 import { LibraryService } from './library.service';
 import { CloudLibraryService } from './cloud-library.service';
 import { ToastService } from './toast.service';
@@ -165,11 +166,13 @@ export class PlayerService {
   }
 
   private setupMediaSession(): void {
-    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) {
-      // No MediaSession anywhere (older Safari): playback still works, just
-      // without lock-screen controls.
-      return;
-    }
+    // On Android the plugin talks to a real native MediaSession and
+    // navigator.mediaSession does NOT exist in the WebView, so this must not
+    // be gated on the web API — doing so silently kills the lock-screen
+    // controls on the platform they were built for. On the web the plugin
+    // wraps navigator.mediaSession, so there the check is the right one.
+    const supported = Capacitor.isNativePlatform() || (typeof navigator !== 'undefined' && 'mediaSession' in navigator);
+    if (!supported) return;
 
     this.safely(() => MediaSession.setActionHandler({ action: 'play' }, () => this.toggle()));
     this.safely(() => MediaSession.setActionHandler({ action: 'pause' }, () => this.toggle()));
