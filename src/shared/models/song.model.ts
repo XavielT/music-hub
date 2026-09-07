@@ -27,6 +27,9 @@ export interface SongModel {
   downloaded: boolean; // audio blob present in IndexedDB `files`
   coverPath?: string; // path in the `covers` bucket: {ownerId}/{songId}.{ext}
   hasCover: boolean; // cover blob present in IndexedDB `covers`
+  // Artwork has already been searched for online and not found. Device-only:
+  // without it every backfill would ask about the same unmatchable songs again.
+  artworkChecked?: boolean;
 }
 
 // Songs stored before the cloud fields existed load without them. Fill in
@@ -44,6 +47,7 @@ export function normalizeSong(
     syncState: raw.syncState ?? 'local-only',
     downloaded: raw.downloaded ?? hasBlob,
     coverPath: raw.coverPath,
+    artworkChecked: raw.artworkChecked,
     // Derived from what is really in the store rather than trusted from the
     // record, the same way `downloaded` is: a cleared database would otherwise
     // leave every song pointing at art that is gone.

@@ -9,6 +9,7 @@ import {
   STORAGE_QUOTA_BYTES,
   isNetworkError,
 } from './cloud-library.service';
+import { ArtworkService } from './artwork.service';
 import { ToastService } from './toast.service';
 import { SongModel, normalizeSong } from '../models/song.model';
 import { PlaylistModel, normalizePlaylist } from '../models/playlist.model';
@@ -42,7 +43,8 @@ export class LibraryService {
     private db: DbService,
     private cloud: CloudLibraryService,
     private auth: AuthService,
-    private toast: ToastService
+    private toast: ToastService,
+    private artwork: ArtworkService
   ) {}
 
   whenReady(): Promise<void> {
@@ -381,6 +383,61 @@ export class LibraryService {
     if (!resolved && song.coverPath && !this.online()) this.coversResolving.delete(song.id);
   }
 
+  // Songs with no artwork from any source yet, and not already looked up.
+  missingArtwork = computed(() =>
+    this._songs().filter(s => !s.hasCover && !s.coverUrl && !s.coverPath && !s.artworkChecked)
+  );
+
+  private _artworkProgress = signal<{ done: number; total: number } | null>(null);
+  artworkProgress = this._artworkProgress.asReadonly();
+
+  /**
+   * Looks up cover art online for songs whose files carried none, and keeps
+   * what it finds like any other artwork — on the device, and in the covers
+   * bucket when the song is in the shared library.
+   *
+   * Throttled by ArtworkService, so this is slow by design: a whole library is
+   * minutes, not seconds. Every song is marked as looked-up either way, so a
+   * second run only covers what is genuinely new.
+   */
+  async findMissingArtwork(ids?: string[]): Promise<number> {
+    if (this._artworkProgress()) return 0;
+    const wanted = ids ? new Set(ids) : null;
+    const candidates = this.missingArtwork().filter(s => !wanted || wanted.has(s.id));
+    if (!candidates.length) return 0;
+
+    let found = 0;
+    this._artworkProgress.set({ done: 0, total: candidates.length });
+    try {
+      for (const [index, song] of candidates.entries()) {
+        this._artworkProgress.set({ done: index, total: candidates.length });
+        const cover = await this.artwork.find(song);
+        // Marked either way: a song nobody has artwork for should not be asked
+        // about on every future run.
+        await this.patchSong(song.id, { artworkChecked: true });
+        if (!cover) continue;
+
+        await this.db.put('covers', cover, song.id);
+        await this.patchSong(song.id, { hasCover: true });
+        found++;
+
+        // Shared-library songs carry their new artwork to everyone else.
+        if (song.syncState === 'synced' && this.auth.isAdmin() && this.online()) {
+          try {
+            const path = await this.cloud.attachCover(song.id, cover);
+            await this.patchSong(song.id, { coverPath: path });
+          } catch (err) {
+            // The cover still works on this device; it just has not travelled.
+            console.warn('attachCover failed', err);
+          }
+        }
+      }
+    } finally {
+      this._artworkProgress.set(null);
+    }
+    return found;
+  }
+
   // Pulls a song's cloud artwork onto this device. Returns undefined when
   // there is nothing to fetch.
   private async cacheCover(song: SongModel): Promise<Blob | undefined> {
@@ -527,9 +584,10 @@ export class LibraryService {
       syncState: 'synced',
       downloaded: downloadedHint ?? existing?.downloaded ?? false,
       coverPath: row.cover_path ?? undefined,
-      // Device-only fact, like `downloaded`: the row says where the artwork
+      // Device-only facts, like `downloaded`: the row says where the artwork
       // lives in the cloud, not whether this device already has it.
       hasCover: existing?.hasCover ?? false,
+      artworkChecked: existing?.artworkChecked,
     };
     await this.db.put('songs', song);
     this._songs.update(list => {

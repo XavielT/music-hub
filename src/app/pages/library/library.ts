@@ -12,6 +12,7 @@ import { PlaylistPicker } from '../../../shared/components/playlist-picker/playl
 import { Cover } from '../../../shared/ui/cover/cover';
 import { InstallHint } from '../../../shared/components/install-hint/install-hint';
 import { UpdatePanel } from '../../../shared/components/update-panel/update-panel';
+import { ArtworkBackfill } from '../../../shared/components/artwork-backfill/artwork-backfill';
 import { SongModel } from '../../../shared/models/song.model';
 
 type LibraryTab = 'songs' | 'artists' | 'albums' | 'playlists';
@@ -28,6 +29,7 @@ type LibraryTab = 'songs' | 'artists' | 'albums' | 'playlists';
     Cover,
     InstallHint,
     UpdatePanel,
+    ArtworkBackfill,
   ],
   templateUrl: './library.html',
   styleUrl: './library.scss',

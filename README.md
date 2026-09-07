@@ -349,6 +349,38 @@ all at once during sync — a library of 200 songs would otherwise mean 200
 requests before anything renders. Downloading a song for offline takes its
 artwork along with it.
 
+### When the file has no artwork
+
+Most of this library came off YouTube, where the audio carries no picture at
+all. For those, Music Hub asks the **iTunes Search API** — free, no key, and it
+sends `access-control-allow-origin: *`, so it works on the web as well as in the
+app. Artwork is stored exactly like an embedded cover, and a song already in the
+shared library gets its new cover uploaded so everyone else sees it too.
+
+Newly added songs are looked up automatically in the background. For songs that
+were already there, the library page offers **Find artwork** — opt-in, because
+it is one request per song to an outside service.
+
+**The matching is deliberately strict, and refusing is the safe answer.** iTunes
+returns something for every query, so taking the first hit is how a library ends
+up decorated with the wrong albums — and a wrong cover looks deliberate in a way
+a letter tile does not. So:
+
+- the query drops uploader noise (`(Video Oficial)`, `[Official Video]`) and the
+  artist prefix that rips repeat in the title
+- results are scored, preferring an exact title and artist — its first hit for
+  "Blinding Lights" is a remix, not the song
+- with no artist to confirm against, only a long, distinctive, exactly-matching
+  title is accepted: somebody else's `Track01` is not this song's cover
+
+Apple asks for roughly 20 calls a minute, so requests are spaced three seconds
+apart. A whole library is minutes, not seconds — that is deliberate. Every song
+is marked as looked-up whether or not anything was found, so a second run only
+covers what is new.
+
+`connect-src` in `vercel.json` had to grow to allow `itunes.apple.com` and
+`*.mzstatic.com` (the artwork host).
+
 ## Roadmap / TODOs
 - **Import from YouTube**: search works inside the Android app (native HTTP bypasses
   CORS), but YouTube blocks the audio download itself via bot protection, so this

@@ -237,6 +237,11 @@ export class AddMusicComponent implements OnDestroy {
     this.pending.set([]);
     this.saving.set(false);
 
+    // Look up artwork for whatever came in without any. Deliberately not
+    // awaited: it is throttled to one request every few seconds, and the songs
+    // are already in the library — the covers just appear as they arrive.
+    void this.library.findMissingArtwork(added);
+
     // Report what actually happened, not what was intended: an upload can
     // fail and leave the song on this device only.
     const plural = items.length === 1 ? '' : 's';

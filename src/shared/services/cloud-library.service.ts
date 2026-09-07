@@ -258,6 +258,15 @@ export class CloudLibraryService {
     return path;
   }
 
+  // Adds artwork to a song whose row already exists — the case when a cover is
+  // found online after the song was uploaded. Returns where it landed.
+  async attachCover(songId: string, cover: Blob): Promise<string> {
+    const path = await this.uploadCover(cover, songId);
+    const { error } = await this.client.from('songs').update({ cover_path: path }).eq('id', songId);
+    if (error) throw new Error(error.message);
+    return path;
+  }
+
   // Pulls artwork down so it is on the device like the audio is, rather than
   // needing a fresh signed URL (and a connection) every time it is shown.
   async downloadCover(coverPath: string): Promise<Blob> {

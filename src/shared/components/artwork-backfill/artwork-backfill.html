@@ -1,0 +1,6 @@
+<div class="artwork-backfill" *ngIf="visible()">
+  <span class="artwork-backfill-text">{{ label() }}</span>
+  <button class="artwork-backfill-btn" (click)="run()" [disabled]="running()">
+    {{ running() ? 'Searching…' : 'Find artwork' }}
+  </button>
+</div>

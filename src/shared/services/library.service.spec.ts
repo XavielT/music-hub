@@ -48,7 +48,9 @@ describe('LibraryService cover art', () => {
       // Nothing here reaches the cloud: these songs stay local.
       { usedBytes: () => 0, addUsage: () => undefined } as never,
       { isAdmin: () => false, user: () => ({ id: USER }) } as never,
-      { error: () => undefined, show: () => undefined } as never
+      { error: () => undefined, show: () => undefined } as never,
+      // Nothing in here goes looking for artwork online.
+      { find: async () => null } as never
     );
     await library.activate(USER);
   });
