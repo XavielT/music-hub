@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
 
 const EXPIRED_LINK =
-  'That reset link is no longer valid — it may have expired or already been used. Ask for a new one from the sign-in page, and open it in the same browser you requested it from.';
+  'That reset link is no longer valid — it may have expired or already been used. Ask for a new one from the sign-in page.';
 
 // Landing page for the recovery link in the reset email.
 //

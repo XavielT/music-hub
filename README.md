@@ -83,6 +83,29 @@ Angular hashes `chunk-*`, `main-*`, `polyfills-*` and `styles-*`, so those are s
 `no-cache` — if those were cached, the service worker could never see a new version
 and the app would be frozen on an old build.
 
+## Password reset
+
+"Forgot password?" on `/auth` emails a link that lands on `/auth/reset`. The auth
+client uses `flowType: 'implicit'` so the link carries the session in its URL
+fragment and works in **any** browser. That matters on phones: under the stronger
+PKCE flow the reset is only redeemable in the browser that requested it, so asking
+from the installed PWA and opening the link in the mail app's browser fails.
+
+The trade-off is that an implicit link is not bound to a browser, so a leaked one is
+usable until it expires or is consumed. **To get PKCE-grade security back**, set up
+custom SMTP (Supabase locks email templates behind it), then change the *Reset
+password* template link to:
+
+```
+{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery
+```
+
+`/auth/reset` already prefers that shape and exchanges it with `verifyOtp`, so no
+code change is needed — after which `flowType` can go back to `'pkce'`.
+
+Note the free tier allows only **2 auth emails per hour**; a 429 during testing is
+that limit, not a bug.
+
 ## Invite-only sign-ups
 
 Registration is open in the UI but the database rejects unknown emails: a
