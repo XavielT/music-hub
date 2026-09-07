@@ -47,6 +47,10 @@ export class PlaylistDetailsComponent {
     if (list.length) this.player.play(list[0], list);
   }
 
+  shuffleAll(): void {
+    void this.player.shufflePlay(this.songs());
+  }
+
   async deletePlaylist(): Promise<void> {
     await this.library.deletePlaylist(this.id);
     this.router.navigate(['/library']);

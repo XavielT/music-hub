@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PlayerService } from '../../../shared/services/player.service';
 import { Cover } from '../../../shared/ui/cover/cover';
@@ -12,8 +12,27 @@ import { Cover } from '../../../shared/ui/cover/cover';
 })
 export class PlayerBar {
   expanded = signal(false);
+  showQueue = signal(false);
+
+  repeatLabel = computed(() => {
+    switch (this.player.repeat()) {
+      case 'all':
+        return 'Repeat queue';
+      case 'one':
+        return 'Repeat this song';
+      default:
+        return 'Repeat off';
+    }
+  });
 
   constructor(public player: PlayerService) {}
+
+  // The queue closes with the player: leaving it open means it is still open
+  // the next time the player is expanded, which hides the artwork for no reason.
+  collapse(): void {
+    this.showQueue.set(false);
+    this.expanded.set(false);
+  }
 
   onSeek(event: Event): void {
     const input = event.target as HTMLInputElement;

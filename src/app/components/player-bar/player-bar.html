@@ -18,7 +18,7 @@
 
 <!-- Full screen player -->
 <div class="player-full" *ngIf="expanded() && player.current() as song">
-  <button class="player-full-close" (click)="expanded.set(false)">⌄</button>
+  <button class="player-full-close" (click)="collapse()">⌄</button>
 
   <div class="player-full-cover">
     <app-cover [name]="song.artist" [color]="song.coverColor" [imageUrl]="song.coverUrl || null"></app-cover>
@@ -44,10 +44,57 @@
   </div>
 
   <div class="player-full-controls">
-    <button class="player-full-btn" (click)="player.previous()">⏮</button>
+    <button
+      class="player-full-btn player-full-btn--mode"
+      [class.on]="player.shuffle()"
+      (click)="player.toggleShuffle()"
+      [attr.aria-pressed]="player.shuffle()"
+      [title]="player.shuffle() ? 'Shuffle on' : 'Shuffle off'"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
+      </svg>
+    </button>
+
+    <button class="player-full-btn" (click)="player.previous()" title="Previous">⏮</button>
     <button class="player-full-btn player-full-btn--play" (click)="player.toggle()">
       {{ player.isPlaying() ? '❚❚' : '▶' }}
     </button>
-    <button class="player-full-btn" (click)="player.next()">⏭</button>
+    <button class="player-full-btn" (click)="player.next()" title="Next">⏭</button>
+
+    <button
+      class="player-full-btn player-full-btn--mode"
+      [class.on]="player.repeat() !== 'off'"
+      (click)="player.cycleRepeat()"
+      [title]="repeatLabel()"
+    >
+      <!-- repeat-one gets the little 1 inside the loop -->
+      <svg viewBox="0 0 24 24" aria-hidden="true" *ngIf="player.repeat() !== 'one'">
+        <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" />
+      </svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true" *ngIf="player.repeat() === 'one'">
+        <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zM13 15V9h-1l-2 1v1h1.5v4H13z" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Queue -->
+  <button class="player-full-queue-toggle" (click)="showQueue.set(!showQueue())">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z" />
+    </svg>
+    <span>{{ showQueue() ? 'Hide queue' : 'Queue' }}</span>
+    <span class="player-full-queue-count" *ngIf="player.upNext().length">{{ player.upNext().length }}</span>
+  </button>
+
+  <div class="player-queue" *ngIf="showQueue()">
+    <p class="player-queue-heading">Next up</p>
+    <button class="player-queue-item" *ngFor="let entry of player.upNext()" (click)="player.jumpTo(entry.position)">
+      <span class="player-queue-item-title">{{ entry.song.title }}</span>
+      <span class="player-queue-item-artist">{{ entry.song.artist }}</span>
+    </button>
+    <p class="player-queue-empty" *ngIf="player.upNext().length === 0">
+      {{ player.repeat() === 'off' ? 'Last song in the queue.' : 'Last song — the queue starts over next.' }}
+    </p>
   </div>
 </div>

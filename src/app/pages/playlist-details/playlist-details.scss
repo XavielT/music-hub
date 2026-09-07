@@ -37,7 +37,33 @@
 
 .playlist-details__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
+}
+
+.playlist-details__shuffle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid #3a3a3a;
+  border-radius: 20px;
+  color: #fff;
+  font-family: var(--font-btns);
+  font-weight: 600;
+  padding: 9px 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+  }
 }
 
 .playlist-details__play {

@@ -73,6 +73,7 @@
   flex-direction: column;
   align-items: center;
   padding: calc(16px + env(safe-area-inset-top)) 24px calc(32px + env(safe-area-inset-bottom));
+  overflow-y: auto;
 }
 
 .player-full-close {
@@ -135,7 +136,10 @@
 .player-full-controls {
   display: flex;
   align-items: center;
-  gap: 28px;
+  justify-content: center;
+  // Five controls now, so the gap has to give on narrow phones.
+  gap: clamp(12px, 5vw, 26px);
+  width: 100%;
   margin-top: 18px;
 }
 
@@ -159,4 +163,120 @@
     color: #000;
     font-size: 1.5rem;
   }
+}
+
+// Shuffle / repeat sit either side of the transport buttons, dimmed until on.
+.player-full-btn--mode {
+  color: var(--main-ultra-light);
+  padding: 6px;
+  display: flex;
+  position: relative;
+
+  svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+  }
+
+  &.on {
+    color: var(--Hub);
+
+    // The dot Spotify uses to make "on" readable at a glance in the dark.
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--Hub);
+    }
+  }
+}
+
+.player-full-queue-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  background: none;
+  border: none;
+  color: var(--main-ultra-light);
+  font-family: var(--font-btns);
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 6px 10px;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+  }
+
+  &:active {
+    color: var(--Hub);
+  }
+}
+
+.player-full-queue-count {
+  background: #2d2d2d;
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 0.7rem;
+}
+
+.player-queue {
+  width: 100%;
+  max-width: 480px;
+  margin-top: 4px;
+  // Keeps the artwork visible: the list scrolls rather than pushing it away.
+  max-height: 34vh;
+  overflow-y: auto;
+  border-top: 1px solid #2d2d2d;
+  padding-top: 10px;
+}
+
+.player-queue-heading {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--main-ultra-light);
+  margin-bottom: 6px;
+}
+
+.player-queue-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  text-align: left;
+  padding: 8px 10px;
+  cursor: pointer;
+
+  &:active {
+    background: #2d2d2d;
+  }
+}
+
+.player-queue-item-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.player-queue-item-artist {
+  font-size: 0.7rem;
+  color: var(--main-ultra-light);
+}
+
+.player-queue-empty {
+  font-size: 0.75rem;
+  color: var(--main-ultra-light);
+  padding: 6px 10px;
 }
