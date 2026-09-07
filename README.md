@@ -38,7 +38,12 @@ alone.
 2. Framework preset: **Other** (`vercel.json` provides everything).
 3. **Deploy**. Note the URL, e.g. `music-hub-xaviel.vercel.app`.
 4. In Supabase → **Authentication → URL Configuration**, set **Site URL** to that URL
-   and add `http://localhost:4200` under Additional Redirect URLs for local dev.
+   and add these under **Additional Redirect URLs**:
+   - `http://localhost:4200` and `http://localhost:4200/auth/reset` (local dev)
+   - `https://<your-vercel-url>/auth/reset` (the password-reset landing page)
+
+   Without the `/auth/reset` entries, the link in the reset email falls back to the
+   Site URL and the new-password form is never reached.
 
 After that, **every push to `main` deploys automatically**. Or from the CLI:
 
@@ -46,11 +51,44 @@ After that, **every push to `main` deploys automatically**. Or from the CLI:
 npx vercel --prod
 ```
 
+### Security headers
+`vercel.json` also sends `X-Content-Type-Options`, `Referrer-Policy`,
+`X-Frame-Options`, `Permissions-Policy` and a CSP. Two things the CSP depends on:
+
+- **`style-src` needs `'unsafe-inline'`** — Angular injects component styles as
+  `<style>` elements at runtime. Scripts do *not* need it.
+- **`inlineCritical` is off** in `angular.json` (production `optimization.styles`).
+  With it on, the build emits `<link rel="stylesheet" media="print"
+  onload="this.media='all'">` in `index.html`; that inline handler needs
+  `script-src 'unsafe-inline'`, and without it the stylesheet stays `media="print"`
+  and **the app renders unstyled**. Do not re-enable it without also revisiting the
+  CSP. The styles bundle is under 1 kB, so loading it normally costs nothing.
+
+`connect-src` is pinned to the x-core Supabase project, so a new backend host has to
+be added there too.
+
 ### Why the cache headers matter
 Angular hashes `chunk-*`, `main-*`, `polyfills-*` and `styles-*`, so those are served
 `immutable` for a year. `index.html`, `ngsw.json` and `ngsw-worker.js` are explicitly
 `no-cache` — if those were cached, the service worker could never see a new version
 and the app would be frozen on an old build.
+
+## Invite-only sign-ups
+
+Registration is open in the UI but the database rejects unknown emails: a
+`before insert on auth.users` trigger checks `public.allowed_emails`. To let a family
+member in, add their address (lowercase) via the Supabase SQL editor:
+
+```sql
+insert into public.allowed_emails (email, note)
+values ('someone@example.com', 'sister')
+on conflict (email) do nothing;
+```
+
+`allowed_emails` has RLS on with **no policies** and no grants to `anon`/
+`authenticated` on purpose — only the `security definer` trigger reads it, so the
+list cannot be enumerated through the API. A blocked sign-up shows
+"Sign-ups are invite-only. Ask Xaviel to add your email, then register."
 
 ## Install as an app
 
