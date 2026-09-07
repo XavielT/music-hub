@@ -277,6 +277,34 @@ export class LibraryService {
   }
 
   // Frees the local blob but keeps the cloud song listed.
+  // Songs whose audio is on this device *and* in the cloud, so dropping the
+  // local copy frees space without losing anything.
+  clearableDownloads = computed(() =>
+    this._songs().filter(s => s.downloaded && s.syncState === 'synced' && !!s.storagePath)
+  );
+
+  // Local-only songs are downloads too, but deleting theirs would be deleting
+  // the song. Counted separately so the UI can say why they are staying.
+  unclearableDownloads = computed(() =>
+    this._songs().filter(s => s.downloaded && s.syncState !== 'synced')
+  );
+
+  /**
+   * Frees space by dropping the local audio of every song that can be fetched
+   * again. Metadata, playlists and cover art all stay, so the library looks
+   * unchanged — the songs simply stream until they are downloaded again.
+   */
+  async clearDownloads(): Promise<{ cleared: number; freedBytes: number }> {
+    const targets = this.clearableDownloads();
+    let freedBytes = 0;
+    for (const song of targets) {
+      await this.db.delete('files', song.id);
+      await this.patchSong(song.id, { downloaded: false });
+      freedBytes += song.sizeBytes;
+    }
+    return { cleared: targets.length, freedBytes };
+  }
+
   async removeDownload(song: SongModel): Promise<void> {
     if (song.syncState !== 'synced') {
       this.toast.error('This song is only on this device — uploading it first would delete it for good.');

@@ -1,8 +1,13 @@
 // Music Hub — global styles & design tokens
 :root {
   // Colors
+  // The accent, and everything derived from it. ThemeService overwrites these
+  // on the root element when a colour has been chosen; these are the defaults
+  // it falls back to and what the first paint uses.
   --Hub: #ff9000;
   --Hub-translucid: rgba(255, 144, 0, 0.35);
+  // Text and icons drawn on top of the accent — white for a dark accent.
+  --on-Hub: #000000;
   --main: #0d0d0d;
   --secondary: #1b1b1b;
   --primary: #ff5f00;

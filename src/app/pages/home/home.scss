@@ -15,7 +15,7 @@
 
 .home-brand-hub {
   background: var(--Hub);
-  color: #000;
+  color: var(--on-Hub);
   border-radius: 6px;
   padding: 0 6px;
   margin-left: 3px;
@@ -51,7 +51,7 @@
 .home-empty-cta {
   display: inline-block;
   background: var(--Hub);
-  color: #000;
+  color: var(--on-Hub);
   font-family: var(--font-btns);
   font-weight: 700;
   text-decoration: none;

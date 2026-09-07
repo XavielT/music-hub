@@ -189,7 +189,26 @@ account and its admin badge, a password change (an emailed link — there is no
 new-password form to get wrong here), sign out, cloud storage and sync, the
 cover-art lookup, and updates.
 
-Two things are worth knowing:
+**Appearance** recolours the app from a single accent. Everything visual keys
+off `--Hub`, so a theme is that value plus three derived ones: a translucent
+version, a deeper shade, and `--on-Hub` — the colour of text drawn *on* the
+accent, which has to flip to white for a dark pick or every button reads black
+on black. That last one is chosen by comparing contrast ratios rather than a
+luminance threshold: at a threshold of 0.42 four of the eight presets would have
+taken white text at 3.1:1 where black gives them 6.6:1.
+
+`ThemeService` paints those on `document.documentElement` and is constructed by
+an app initializer — nothing else would construct it until the settings page was
+opened, so the app would start in the default colour every launch and only
+correct itself once you went looking.
+
+**Clear downloads** drops the local audio of every song that can be fetched
+again, which is only songs that are `synced` and have a `storage_path`. Metadata,
+playlists and cover art all stay, so the library looks unchanged and the songs
+simply stream until they are downloaded again. Local-only songs are counted
+separately and never touched: their local audio *is* the song.
+
+Two more things are worth knowing:
 
 - **The recovery link's origin differs by platform.** Inside the Capacitor
   WebView `location.origin` is `https://localhost`, which is not somewhere an

@@ -53,7 +53,7 @@
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--Hub);
-  color: #000;
+  color: var(--on-Hub);
   font-weight: 700;
   font-size: 1.1rem;
   display: flex;
@@ -152,7 +152,7 @@
 .settings-row-action-btn {
   flex-shrink: 0;
   background: var(--Hub);
-  color: #000;
+  color: var(--on-Hub);
   border: none;
   border-radius: 14px;
   padding: 7px 14px;
@@ -235,4 +235,76 @@
   &--ok {
     color: #6bcf7f;
   }
+}
+
+// --- accent picker ---
+
+.settings-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.settings-swatch {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  // The ring sits outside the colour so the swatch reads as its colour alone.
+  box-shadow: 0 0 0 1px #2d2d2d;
+  transition: transform 0.12s ease;
+
+  &.active {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px var(--main);
+    transform: scale(1.06);
+  }
+
+  &--custom {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    // A colour input cannot be styled, so it covers the swatch invisibly and
+    // the swatch itself is what gets seen.
+    input[type='color'] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    // Marks it out from the fixed presets.
+    &::after {
+      content: '✎';
+      font-size: 0.85rem;
+      color: var(--on-Hub);
+      pointer-events: none;
+    }
+  }
+}
+
+.settings-text-btn {
+  margin-top: 12px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--Hub);
+  font-family: var(--font-btns);
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.settings-row-action-btn--danger {
+  background: #ff6b6b;
+  color: #fff;
 }

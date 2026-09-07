@@ -7,6 +7,7 @@ import { LibraryService } from '../../../shared/services/library.service';
 import { SyncService } from '../../../shared/services/sync.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { UpdateService } from '../../../shared/services/update.service';
+import { ThemeService } from '../../../shared/services/theme.service';
 import {
   CloudLibraryService,
   STORAGE_QUOTA_BYTES,
@@ -37,7 +38,15 @@ export class SettingsComponent implements OnInit {
 
   downloadedCount = computed(() => this.library.songs().filter(s => s.downloaded).length);
 
+  clearableBytes = computed(() =>
+    this.library.clearableDownloads().reduce((total, s) => total + s.sizeBytes, 0)
+  );
+
   sendingReset = signal(false);
+  // Clearing is reversible but not free — it costs a re-download — so the
+  // button asks once rather than firing on the first tap.
+  confirmingClear = signal(false);
+  clearing = signal(false);
 
   constructor(
     public auth: AuthService,
@@ -45,6 +54,7 @@ export class SettingsComponent implements OnInit {
     public sync: SyncService,
     public cloud: CloudLibraryService,
     public update: UpdateService,
+    public theme: ThemeService,
     private toast: ToastService,
     private router: Router
   ) {}
@@ -82,6 +92,28 @@ export class SettingsComponent implements OnInit {
     this.sendingReset.set(false);
     if (result.ok) this.toast.show(result.message ?? `Reset link sent to ${email}.`);
     else this.toast.error(result.message ?? 'Could not send the reset email.');
+  }
+
+  onCustomAccent(event: Event): void {
+    this.theme.set((event.target as HTMLInputElement).value);
+  }
+
+  async clearDownloads(): Promise<void> {
+    if (!this.confirmingClear()) {
+      this.confirmingClear.set(true);
+      // Untouched after a few seconds, it goes back to being a safe button.
+      setTimeout(() => this.confirmingClear.set(false), 5000);
+      return;
+    }
+    this.confirmingClear.set(false);
+    this.clearing.set(true);
+    const { cleared, freedBytes } = await this.library.clearDownloads();
+    this.clearing.set(false);
+    this.toast.show(
+      cleared === 0
+        ? 'Nothing to clear.'
+        : `Cleared ${cleared} download${cleared === 1 ? '' : 's'} — ${this.formatBytes(freedBytes)} freed. They stream until you download them again.`
+    );
   }
 
   async allowInstalls(): Promise<void> {

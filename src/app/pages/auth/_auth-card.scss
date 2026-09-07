@@ -25,7 +25,7 @@
   height: 56px;
   border-radius: 18px;
   background: var(--Hub);
-  color: #000;
+  color: var(--on-Hub);
   font-size: 1.7rem;
   margin-bottom: 12px;
 }
@@ -63,7 +63,7 @@
   &.active {
     background: var(--Hub);
     border-color: var(--Hub);
-    color: #000;
+    color: var(--on-Hub);
     font-weight: 700;
   }
 }
@@ -110,7 +110,7 @@
   background: var(--Hub);
   border: none;
   border-radius: 10px;
-  color: #000;
+  color: var(--on-Hub);
   font-family: var(--font-btns);
   font-size: 0.95rem;
   font-weight: 700;

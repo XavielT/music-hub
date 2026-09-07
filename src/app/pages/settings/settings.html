@@ -33,6 +33,32 @@
     </button>
   </section>
 
+  <!-- Appearance -->
+  <section class="settings-section">
+    <h2 class="settings-section-title">Appearance</h2>
+    <p class="settings-note">The accent colour, used everywhere in the app.</p>
+    <div class="settings-swatches">
+      <button
+        class="settings-swatch"
+        *ngFor="let preset of theme.presets"
+        [style.background]="preset.value"
+        [class.active]="theme.accent() === preset.value"
+        (click)="theme.set(preset.value)"
+        [title]="preset.name"
+        [attr.aria-label]="preset.name"
+      ></button>
+
+      <!-- Anything the presets do not cover. The swatch shows the current
+           colour, and the input on top of it opens the system picker. -->
+      <label class="settings-swatch settings-swatch--custom" [style.background]="theme.accent()" title="Custom colour">
+        <input type="color" [value]="theme.accent()" (input)="onCustomAccent($event)" />
+      </label>
+    </div>
+    <button class="settings-text-btn" *ngIf="!theme.isDefault()" (click)="theme.reset()">
+      Back to amber
+    </button>
+  </section>
+
   <!-- Cloud library -->
   <section class="settings-section">
     <h2 class="settings-section-title">Shared library</h2>
@@ -73,6 +99,28 @@
 
     <p class="settings-note">
       {{ downloadedCount() }} of {{ library.songs().length }} song(s) are downloaded for offline play.
+    </p>
+
+    <div class="settings-row" *ngIf="library.clearableDownloads().length > 0">
+      <span>
+        <strong>Clear downloads</strong>
+        <em>
+          Frees {{ formatBytes(clearableBytes()) }}. The songs stay in your library and stream
+          until you download them again.
+        </em>
+      </span>
+      <button
+        class="settings-row-action-btn"
+        [class.settings-row-action-btn--danger]="confirmingClear()"
+        (click)="clearDownloads()"
+        [disabled]="clearing()"
+      >
+        {{ clearing() ? 'Clearing…' : confirmingClear() ? 'Confirm' : 'Clear' }}
+      </button>
+    </div>
+    <p class="settings-note" *ngIf="library.unclearableDownloads().length > 0">
+      {{ library.unclearableDownloads().length }} song(s) are only on this device, so their audio
+      is kept — clearing those would delete them.
     </p>
   </section>
 

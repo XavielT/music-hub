@@ -30,7 +30,7 @@
   &.active {
     background: var(--Hub);
     border-color: var(--Hub);
-    color: #000;
+    color: var(--on-Hub);
     font-weight: 700;
   }
 }
@@ -115,7 +115,7 @@
 
   button {
     background: var(--Hub);
-    color: #000;
+    color: var(--on-Hub);
     border: none;
     border-radius: 10px;
     font-family: var(--font-btns);
@@ -169,7 +169,7 @@
   align-items: center;
   gap: 6px;
   background: var(--Hub);
-  color: #000;
+  color: var(--on-Hub);
   border: none;
   border-radius: 18px;
   padding: 8px 16px;
