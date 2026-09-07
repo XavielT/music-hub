@@ -181,17 +181,26 @@ npx cap sync android
 cd android && ./gradlew assembleDebug
 # APK at android/app/build/outputs/apk/debug/app-debug.apk
 ```
-Capacitor 8 requires **JDK 21+**, and `ANDROID_HOME` must point at the Android SDK.
-The system default here is JDK 17, which fails with `invalid source release: 21`
-while compiling `capacitor-android`. Either install one
-(`sudo apt install openjdk-21-jdk`) or point Gradle at the JDK that Android Studio
-already bundles:
+Capacitor 8 needs **exactly JDK 21** here, and `ANDROID_HOME` must point at the
+Android SDK:
 
 ```bash
-export JAVA_HOME=$(find /var/lib/flatpak/app/com.google.AndroidStudio \
-  -maxdepth 6 -type d -name jbr | head -1)
+sudo apt install openjdk-21-jdk-headless
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export PATH="$JAVA_HOME/bin:$PATH"
 ```
+
+Both neighbours fail, in opposite directions:
+
+- **JDK 17** (the system default) → `invalid source release: 21` compiling
+  `capacitor-android`, which targets 21.
+- **Android Studio's bundled JBR** is JDK **25** → `Unsupported class file major
+  version 69`. Gradle 8.14 cannot *run* on 25. This one is a trap: it appears to
+  work while a Gradle daemon started by Android Studio is still warm, then fails
+  on the next cold build. Don't use it.
+
+If a build fails right after changing JDKs, run `./gradlew --stop` first — a stale
+daemon on the old JVM will otherwise be reused.
 
 To publish it for others: GitHub → the `music-hub` repo → **Releases** → *Draft a new
 release* → tag e.g. `v0.1.0` → attach the APK renamed to `music-hub.apk` → publish.
