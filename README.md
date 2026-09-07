@@ -141,8 +141,17 @@ npx cap sync android
 cd android && ./gradlew assembleDebug
 # APK at android/app/build/outputs/apk/debug/app-debug.apk
 ```
-Capacitor 8 requires **JDK 21** (`sudo apt install openjdk-21-jdk`), and
-`ANDROID_HOME` must point at the Android SDK.
+Capacitor 8 requires **JDK 21+**, and `ANDROID_HOME` must point at the Android SDK.
+The system default here is JDK 17, which fails with `invalid source release: 21`
+while compiling `capacitor-android`. Either install one
+(`sudo apt install openjdk-21-jdk`) or point Gradle at the JDK that Android Studio
+already bundles:
+
+```bash
+export JAVA_HOME=$(find /var/lib/flatpak/app/com.google.AndroidStudio \
+  -maxdepth 6 -type d -name jbr | head -1)
+export PATH="$JAVA_HOME/bin:$PATH"
+```
 
 To publish it for others: GitHub → the `music-hub` repo → **Releases** → *Draft a new
 release* → tag e.g. `v0.1.0` → attach the APK renamed to `music-hub.apk` → publish.
@@ -155,6 +164,14 @@ Debug APKs use the machine-local debug keystore, so a build from a different
 machine cannot upgrade an existing install — Android rejects the signature change.
 A release keystore fixes that permanently: keep the same key and every future
 build upgrades cleanly.
+
+> ⚠️ **Switching a phone from a debug build to a release build wipes the app's
+> data.** The signatures differ, so Android refuses the upgrade and the old app has
+> to be uninstalled first — which takes IndexedDB with it: downloaded audio, and any
+> song still marked *local-only* that was never uploaded. Before that one-time
+> switch, open the library and upload everything pending (the ↑ action), so the
+> cloud holds it all and the new install just syncs it back down. After the switch
+> it never happens again, as long as the same keystore is used.
 
 **One-time setup.** Generate the key (choose your own password; keep it safe — losing
 it means never being able to update the app again):
