@@ -1,16 +1,20 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Capacitor } from '@capacitor/core';
 import { AuthService } from '../../../shared/services/auth.service';
 import { LibraryService } from '../../../shared/services/library.service';
 import { YoutubeService, YoutubeResult } from '../../../shared/services/youtube.service';
+import { readTags } from '../../../shared/services/tags';
 
 interface PendingSong {
   file: File;
   title: string;
   artist: string;
   album: string;
+  // Cover art lifted out of the file's own tags, kept aside until it is saved.
+  picture?: Blob;
+  taggedTitle: boolean; // the file said so, rather than the filename guessing
 }
 
 // YouTube search talks to YouTube's internal API directly. On the phone
@@ -30,9 +34,10 @@ const YT_TIMEOUT_MS = 15000;
   templateUrl: './add-music.html',
   styleUrl: './add-music.scss',
 })
-export class AddMusicComponent {
+export class AddMusicComponent implements OnDestroy {
   pending = signal<PendingSong[]>([]);
   saving = signal(false);
+  reading = signal(false);
   savedMessage = signal('');
 
   // YouTube search / download
@@ -135,25 +140,82 @@ export class AddMusicComponent {
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
-  onFiles(event: Event): void {
+  async onFiles(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files ?? []);
-    const parsed = files.map(file => {
-      // Try to parse "Artist - Title.mp3" from the file name
-      const base = file.name.replace(/\.[^.]+$/, '');
-      const parts = base.split(' - ');
-      return {
-        file,
-        title: parts.length > 1 ? parts.slice(1).join(' - ').trim() : base,
-        artist: parts.length > 1 ? parts[0].trim() : '',
-        album: '',
-      };
-    });
-    this.pending.update(list => [...list, ...parsed]);
     input.value = '';
+
+    // Show the filename guess straight away — reading tags off a dozen files
+    // takes a moment, and an empty list in the meantime looks like nothing
+    // happened.
+    const guesses = files.map(file => ({ file, ...this.guessFromName(file) }));
+    this.pending.update(list => [...list, ...guesses]);
+
+    this.reading.set(true);
+    for (const guess of guesses) {
+      const tags = await readTags(guess.file);
+      if (!tags.title && !tags.artist && !tags.album && !tags.picture) continue;
+      // What the file says about itself beats a filename split on " - ".
+      this.pending.update(list =>
+        list.map(item =>
+          item.file === guess.file
+            ? {
+                ...item,
+                title: tags.title || item.title,
+                artist: tags.artist || item.artist,
+                album: tags.album || item.album,
+                picture: tags.picture,
+                taggedTitle: !!tags.title,
+              }
+            : item
+        )
+      );
+    }
+    this.reading.set(false);
+  }
+
+  // "Artist - Title.mp3" is the best a filename can offer, and it is what the
+  // untagged files fall back to.
+  private guessFromName(file: File): Omit<PendingSong, 'file'> {
+    const base = file.name.replace(/\.[^.]+$/, '');
+    const parts = base.split(' - ');
+    return {
+      title: parts.length > 1 ? parts.slice(1).join(' - ').trim() : base,
+      artist: parts.length > 1 ? parts[0].trim() : '',
+      album: '',
+      taggedTitle: false,
+    };
+  }
+
+  // Object URLs for the artwork previews, one per file, released when the
+  // file leaves the list or the page goes away.
+  private previews = new Map<File, string>();
+
+  previewFor(item: PendingSong): string | null {
+    if (!item.picture) return null;
+    let url = this.previews.get(item.file);
+    if (!url) {
+      url = URL.createObjectURL(item.picture);
+      this.previews.set(item.file, url);
+    }
+    return url;
+  }
+
+  private releasePreview(file: File): void {
+    const url = this.previews.get(file);
+    if (!url) return;
+    URL.revokeObjectURL(url);
+    this.previews.delete(file);
+  }
+
+  ngOnDestroy(): void {
+    for (const url of this.previews.values()) URL.revokeObjectURL(url);
+    this.previews.clear();
   }
 
   removePending(index: number): void {
+    const item = this.pending()[index];
+    if (item) this.releasePreview(item.file);
     this.pending.update(list => list.filter((_, i) => i !== index));
   }
 
@@ -166,11 +228,12 @@ export class AddMusicComponent {
     for (const item of items) {
       const song = await this.library.addLocalSong(
         item.file,
-        { title: item.title, artist: item.artist, album: item.album },
+        { title: item.title, artist: item.artist, album: item.album, picture: item.picture },
         toCloud
       );
       added.push(song.id);
     }
+    for (const item of items) this.releasePreview(item.file);
     this.pending.set([]);
     this.saving.set(false);
 

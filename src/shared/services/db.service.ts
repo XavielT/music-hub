@@ -8,12 +8,12 @@ const DB_PREFIX = 'music-hub-db::';
 // into the first account that signs in and then removed.
 const LEGACY_DB_NAME = 'music-hub-db';
 const LEGACY_CLAIM_KEY = 'music-hub-legacy-db-claim';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
-const STORES = ['songs', 'files', 'playlists'] as const;
+const STORES = ['songs', 'files', 'playlists', 'covers'] as const;
 
-// Lightweight IndexedDB wrapper: song metadata, audio blobs and playlists
-// live on the device so the app works fully offline.
+// Lightweight IndexedDB wrapper: song metadata, audio blobs, playlists and
+// cover art live on the device so the app works fully offline.
 @Injectable({ providedIn: 'root' })
 export class DbService {
   // The database of the signed-in user. Null until `use()` has been called.
@@ -70,8 +70,21 @@ export class DbService {
         if (!db.objectStoreNames.contains('songs')) db.createObjectStore('songs', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('files')) db.createObjectStore('files');
         if (!db.objectStoreNames.contains('playlists')) db.createObjectStore('playlists', { keyPath: 'id' });
+        // Cover art, keyed by song id like `files`. Version 2 adds this; an
+        // existing database gets the store and keeps everything else.
+        if (!db.objectStoreNames.contains('covers')) db.createObjectStore('covers');
       };
-      req.onsuccess = () => resolve(req.result);
+      // Another tab holding the previous version open stalls the upgrade
+      // until it lets go. The onversionchange handler below is what makes it
+      // let go; this is here so the wait is visible if it ever happens anyway.
+      req.onblocked = () => console.warn(`IndexedDB upgrade of ${name} is waiting on another tab`);
+      req.onsuccess = () => {
+        const db = req.result;
+        // A newer tab asking for a version this one does not have gets to
+        // proceed: hanging on to the old connection would block it forever.
+        db.onversionchange = () => db.close();
+        resolve(db);
+      };
       req.onerror = () => reject(req.error);
     });
   }
@@ -98,6 +111,8 @@ export class DbService {
         taken = true;
       } else {
         for (const store of STORES) {
+          // The legacy database is version 1 and has no `covers` store.
+          if (!legacy.objectStoreNames.contains(store)) continue;
           const source = legacy.transaction(store, 'readonly').objectStore(store);
           const [keys, values] = await Promise.all([
             this.request(source.getAllKeys()),
@@ -105,8 +120,9 @@ export class DbService {
           ]);
           if (!values.length) continue;
 
-          // `songs` and `playlists` key off `id`; `files` uses out-of-line keys.
-          const inline = store !== 'files';
+          // `songs` and `playlists` key off `id`; `files` and `covers` use
+          // out-of-line keys.
+          const inline = store !== 'files' && store !== 'covers';
           const tx = target.transaction(store, 'readwrite');
           const dest = tx.objectStore(store);
           values.forEach((value, i) => (inline ? dest.put(value) : dest.put(value, keys[i])));

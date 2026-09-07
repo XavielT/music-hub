@@ -16,6 +16,7 @@ export interface SongRow {
   storage_path: string | null;
   remote_url: string | null;
   cover_url: string | null;
+  cover_path: string | null;
   cover_color: string;
   size_bytes: number;
   created_at: string;
@@ -36,7 +37,7 @@ export interface PlaylistSongRow {
 }
 
 const SONG_COLUMNS =
-  'id, owner_id, title, artist, album, duration, storage_path, remote_url, cover_url, cover_color, size_bytes, created_at';
+  'id, owner_id, title, artist, album, duration, storage_path, remote_url, cover_url, cover_path, cover_color, size_bytes, created_at';
 const PLAYLIST_COLUMNS = 'id, owner_id, name, cover_color, created_at';
 
 // navigator.onLine is unreliable in the Android WebView: it keeps reporting
@@ -56,6 +57,9 @@ export function isNetworkError(err: unknown): boolean {
 }
 
 export const AUDIO_BUCKET = 'songs';
+// Cover art extracted from a song's tags. Same policies as `songs`: any
+// signed-in member reads it, only admins write, and only into their own folder.
+export const COVER_BUCKET = 'covers';
 // Supabase free tier gives 1 GB of Storage.
 export const STORAGE_QUOTA_BYTES = 1024 * 1024 * 1024;
 
@@ -86,6 +90,18 @@ export function audioContentType(file: Blob): string {
   // mp3 is the overwhelming majority, so it is also the fallback for a file
   // the browser gave no type for at all.
   return AUDIO_MIME_ALIASES[type] ?? 'audio/mpeg';
+}
+
+// The covers bucket accepts only these three. The tag reader already
+// normalises to them, so anything else here is a blob from somewhere older.
+export function coverContentType(cover: Blob): string {
+  const type = (cover.type || '').split(';')[0].trim().toLowerCase();
+  return type === 'image/png' || type === 'image/webp' ? type : 'image/jpeg';
+}
+
+function coverExtension(cover: Blob): string {
+  const type = coverContentType(cover);
+  return type === 'image/png' ? 'png' : type === 'image/webp' ? 'webp' : 'jpg';
 }
 
 const SIGNED_URL_TTL_SECONDS = 3600;
@@ -137,10 +153,11 @@ export class CloudLibraryService {
 
   // Inserts the metadata row, then pushes the audio. If the upload fails the
   // row is removed again so the library never shows a song that cannot play.
-  async uploadSong(file: Blob, song: SongModel): Promise<SongRow> {
+  async uploadSong(file: Blob, song: SongModel, cover?: Blob): Promise<SongRow> {
     const ownerId = this.userId();
     const ext = this.extensionFor(file, song);
     const storagePath = `${ownerId}/${song.id}.${ext}`;
+    let coverPath: string | null = null;
 
     const { error: insertError } = await this.client
       .from('songs')
@@ -168,9 +185,19 @@ export class CloudLibraryService {
         });
       if (uploadError) throw new Error(uploadError.message);
 
+      // Artwork is a nice-to-have next to the audio: a song that uploaded
+      // fine must not be rolled back because its picture would not go.
+      if (cover) {
+        try {
+          coverPath = await this.uploadCover(cover, song.id);
+        } catch (err) {
+          console.warn('cover upload failed', err);
+        }
+      }
+
       const { data: updated, error: updateError } = await this.client
         .from('songs')
-        .update({ storage_path: storagePath, size_bytes: file.size })
+        .update({ storage_path: storagePath, size_bytes: file.size, cover_path: coverPath ?? null })
         .eq('id', song.id)
         .select(SONG_COLUMNS)
         .single();
@@ -184,6 +211,12 @@ export class CloudLibraryService {
         .from(AUDIO_BUCKET)
         .remove([storagePath])
         .catch(() => undefined);
+      if (coverPath) {
+        await this.client.storage
+          .from(COVER_BUCKET)
+          .remove([coverPath])
+          .catch(() => undefined);
+      }
       await this.client.from('songs').delete().eq('id', song.id);
       throw err;
     }
@@ -210,7 +243,34 @@ export class CloudLibraryService {
     return data as SongRow;
   }
 
+  // --- Cover art ---
+
+  // Pushes a song's artwork and returns where it landed. Failing to store a
+  // picture must never fail the song, so callers treat this as best-effort.
+  async uploadCover(cover: Blob, songId: string): Promise<string> {
+    const ownerId = this.userId();
+    const path = `${ownerId}/${songId}.${coverExtension(cover)}`;
+    const { error } = await this.client.storage.from(COVER_BUCKET).upload(path, cover, {
+      contentType: coverContentType(cover),
+      upsert: true,
+    });
+    if (error) throw new Error(error.message);
+    return path;
+  }
+
+  // Pulls artwork down so it is on the device like the audio is, rather than
+  // needing a fresh signed URL (and a connection) every time it is shown.
+  async downloadCover(coverPath: string): Promise<Blob> {
+    const { data, error } = await this.client.storage.from(COVER_BUCKET).download(coverPath);
+    if (error || !data) throw new Error(error?.message ?? 'Cover download failed');
+    return data;
+  }
+
   async deleteSong(song: SongModel): Promise<void> {
+    if (song.coverPath) {
+      const { error } = await this.client.storage.from(COVER_BUCKET).remove([song.coverPath]);
+      if (error) console.warn('cover remove failed', error.message);
+    }
     if (song.storagePath) {
       const { error } = await this.client.storage.from(AUDIO_BUCKET).remove([song.storagePath]);
       // A missing object should not block deleting the row.

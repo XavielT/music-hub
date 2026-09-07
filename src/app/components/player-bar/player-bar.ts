@@ -1,5 +1,6 @@
 import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LibraryService } from '../../../shared/services/library.service';
 import { PlayerService } from '../../../shared/services/player.service';
 import { Cover } from '../../../shared/ui/cover/cover';
 
@@ -25,7 +26,7 @@ export class PlayerBar {
     }
   });
 
-  constructor(public player: PlayerService) {}
+  constructor(public player: PlayerService, public library: LibraryService) {}
 
   // The queue closes with the player: leaving it open means it is still open
   // the next time the player is expanded, which hides the artwork for no reason.

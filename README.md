@@ -12,6 +12,8 @@ Supabase, and still fully playable offline.
 - Per-song sync state at a glance — `↑` only on this device, `⬇` in the cloud,
   `●` downloaded for offline, `☁` streams from a link.
 - Local music library: add audio files from the device (mp3, m4a, mp4, wav, ogg, flac).
+- **Tags and cover art are read from the files themselves** — title, artist, album
+  and embedded artwork, for MP3 (ID3v2), M4A/MP4 and FLAC.
 - Playlists, artists and albums views, search, recently added.
 - Spotify-like player: mini player + full screen player with seek, next/prev,
   **shuffle**, **repeat (queue / one)** and a tappable **up-next queue**.
@@ -314,9 +316,28 @@ installs will accept.
 A native iOS build requires a Mac with Xcode (`npx cap add ios && npx cap open ios`).
 The PWA above is the supported route without one.
 
+## Cover art and tags
+
+Adding a file from the device reads what it already knows about itself — title,
+artist, album and the embedded picture — instead of guessing from the filename.
+`src/shared/services/tags.ts` parses ID3v2 (MP3), MP4 atoms (M4A, what
+`compress-for-cloud.sh` produces) and FLAC by hand; no metadata library, because
+those three containers are a fraction of the size of any dependency that would
+ship in the bundle. Anything it cannot read falls back to splitting the filename
+on `" - "`, exactly as before.
+
+Artwork is kept out of the song record — a record is read on every library load,
+and a few hundred kB of image in each one would make that crawl. It lives in an
+IndexedDB `covers` store keyed by song id (database version 2), and, for cloud
+songs, in the `covers` bucket with the same policies as `songs`: members read,
+admins write to their own folder. `songs.cover_path` says where.
+
+Covers are pulled down lazily, when a song is actually on screen, rather than
+all at once during sync — a library of 200 songs would otherwise mean 200
+requests before anything renders. Downloading a song for offline takes its
+artwork along with it.
+
 ## Roadmap / TODOs
-- Shared/family library (the schema already separates `owner_id` so it is additive).
-- Cover art from ID3 tags on upload.
 - **Import from YouTube**: search works inside the Android app (native HTTP bypasses
   CORS), but YouTube blocks the audio download itself via bot protection, so this
   needs a companion server (e.g. yt-dlp behind a small API). Note that downloading

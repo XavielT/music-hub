@@ -61,31 +61,39 @@ export class LibraryService {
 
   // Signing out has to land on an empty UI, not the previous user's library.
   deactivate(): void {
+    // The object URLs point at the previous account's artwork; letting them
+    // leak would keep those blobs alive for the whole session.
+    for (const url of Object.values(this._coverUrls())) URL.revokeObjectURL(url);
+    this._coverUrls.set({});
+    this.coversResolving.clear();
     this._songs.set([]);
     this._playlists.set([]);
     this.ready = Promise.resolve();
   }
 
   private async load(): Promise<void> {
-    const [rawSongs, rawPlaylists, fileKeys] = await Promise.all([
+    const [rawSongs, rawPlaylists, fileKeys, coverKeys] = await Promise.all([
       this.db.getAll<SongModel>('songs'),
       this.db.getAll<PlaylistModel>('playlists'),
       this.db.getAllKeys('files'),
+      this.db.getAllKeys('covers'),
     ]);
 
     // Migration: songs saved before the cloud fields existed get defaults,
     // and `downloaded` is derived from whether the blob is really here.
     const blobIds = new Set(fileKeys.map(String));
+    const coverIds = new Set(coverKeys.map(String));
     const stale: SongModel[] = [];
     const songs = rawSongs.map(raw => {
-      const song = normalizeSong(raw, blobIds.has(raw.id));
+      const song = normalizeSong(raw, blobIds.has(raw.id), coverIds.has(raw.id));
       // Only rewrite rows that were actually missing cloud fields, or whose
       // `downloaded` flag no longer matches what is on disk.
       if (
         raw.syncState === undefined ||
         raw.ownerId === undefined ||
         raw.sizeBytes === undefined ||
-        raw.downloaded !== song.downloaded
+        raw.downloaded !== song.downloaded ||
+        raw.hasCover !== song.hasCover
       ) {
         stale.push(song);
       }
@@ -117,11 +125,24 @@ export class LibraryService {
 
   async addLocalSong(
     file: File,
-    meta: { title: string; artist: string; album: string; coverUrl?: string; duration?: number },
+    meta: {
+      title: string;
+      artist: string;
+      album: string;
+      coverUrl?: string;
+      duration?: number;
+      picture?: Blob;
+    },
     uploadToCloud = false
   ): Promise<SongModel> {
+    const id = crypto.randomUUID();
+    // Artwork pulled out of the file's own tags. Stored beside the audio
+    // rather than on the song record: a record is read on every library load
+    // and holding a few hundred kB of image in it would make that crawl.
+    if (meta.picture) await this.db.put('covers', meta.picture, id);
+
     const song: SongModel = {
-      id: crypto.randomUUID(),
+      id,
       title: meta.title || file.name,
       artist: meta.artist || 'Unknown artist',
       album: meta.album || 'Unknown album',
@@ -134,6 +155,7 @@ export class LibraryService {
       sizeBytes: file.size,
       syncState: 'local-only',
       downloaded: true,
+      hasCover: !!meta.picture,
     };
     await this.db.put('files', file, song.id);
     await this.db.put('songs', song);
@@ -158,6 +180,7 @@ export class LibraryService {
       sizeBytes: 0,
       syncState: 'local-only',
       downloaded: false,
+      hasCover: false,
     };
     await this.db.put('songs', song);
     this._songs.update(list => [song, ...list]);
@@ -208,7 +231,8 @@ export class LibraryService {
 
     await this.patchSong(song.id, { syncState: 'uploading' });
     try {
-      const row = await this.cloud.uploadSong(file, song);
+      const cover = song.hasCover ? await this.db.get<Blob>('covers', song.id) : undefined;
+      const row = await this.cloud.uploadSong(file, song, cover);
       await this.applyRow(row, true);
       this.cloud.addUsage(row.size_bytes);
       return true;
@@ -234,6 +258,9 @@ export class LibraryService {
       const blob = await this.cloud.downloadAudio(song);
       await this.db.put('files', blob, song.id);
       await this.patchSong(song.id, { syncState: 'synced', downloaded: true });
+      // Downloading is what "have this offline" means, and artwork is part of
+      // that. It is best-effort: a missing picture is not a failed download.
+      await this.cacheCover(song).catch(() => undefined);
       return true;
     } catch (err) {
       await this.patchSong(song.id, { syncState: 'synced' });
@@ -293,11 +320,87 @@ export class LibraryService {
   async forgetSongLocally(id: string): Promise<void> {
     await this.db.delete('songs', id);
     await this.db.delete('files', id);
+    await this.db.delete('covers', id);
+    this.releaseCover(id);
     this._songs.update(list => list.filter(s => s.id !== id));
   }
 
   getSongFile(id: string): Promise<Blob | undefined> {
     return this.db.get<Blob>('files', id);
+  }
+
+  // --- Cover art ---
+
+  // Object URLs for the artwork held on this device, built on first sight and
+  // kept until the song goes away.
+  private _coverUrls = signal<Record<string, string>>({});
+  private coversResolving = new Set<string>();
+
+  /**
+   * What to show for a song: a remote thumbnail if it has one, otherwise the
+   * artwork read out of its tags.
+   *
+   * Reading a blob out of IndexedDB is asynchronous and this is called from
+   * templates, so the first call starts the read and returns null; the signal
+   * it writes into brings the picture in as soon as it lands.
+   */
+  coverSrc(song: SongModel): string | null {
+    if (song.coverUrl) return song.coverUrl;
+    if (!song.hasCover && !song.coverPath) return null;
+    const cached = this._coverUrls()[song.id];
+    if (cached) return cached;
+    void this.resolveCover(song);
+    return null;
+  }
+
+  private async resolveCover(song: SongModel): Promise<void> {
+    // coverSrc() runs on every change-detection pass, so without this marker a
+    // song whose artwork resolves to nothing would start a fresh lookup on
+    // each one.
+    if (this.coversResolving.has(song.id)) return;
+    this.coversResolving.add(song.id);
+
+    let resolved = false;
+    try {
+      // On this device already, or fetched once and kept from then on. Pulling
+      // covers during sync would mean one request per song in the library up
+      // front; doing it here means only what is actually on screen is fetched.
+      const blob = (await this.db.get<Blob>('covers', song.id)) ?? (await this.cacheCover(song));
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        this._coverUrls.update(map => ({ ...map, [song.id]: url }));
+        resolved = true;
+      }
+    } catch {
+      // No artwork to show: the letter tile is a fine outcome.
+    }
+
+    // Only being offline is worth another attempt — that changes on its own.
+    // A song with nothing to fetch, or one whose fetch really failed, keeps
+    // the marker so it is not retried on a loop.
+    if (!resolved && song.coverPath && !this.online()) this.coversResolving.delete(song.id);
+  }
+
+  // Pulls a song's cloud artwork onto this device. Returns undefined when
+  // there is nothing to fetch.
+  private async cacheCover(song: SongModel): Promise<Blob | undefined> {
+    if (!song.coverPath || !this.online()) return undefined;
+    const blob = await this.cloud.downloadCover(song.coverPath);
+    await this.db.put('covers', blob, song.id);
+    await this.patchSong(song.id, { hasCover: true });
+    return blob;
+  }
+
+  private releaseCover(id: string): void {
+    const url = this._coverUrls()[id];
+    if (!url) return;
+    URL.revokeObjectURL(url);
+    this._coverUrls.update(map => {
+      const next = { ...map };
+      delete next[id];
+      return next;
+    });
+    this.coversResolving.delete(id);
   }
 
   // --- Playlists ---
@@ -423,6 +526,10 @@ export class LibraryService {
       sizeBytes: row.size_bytes,
       syncState: 'synced',
       downloaded: downloadedHint ?? existing?.downloaded ?? false,
+      coverPath: row.cover_path ?? undefined,
+      // Device-only fact, like `downloaded`: the row says where the artwork
+      // lives in the cloud, not whether this device already has it.
+      hasCover: existing?.hasCover ?? false,
     };
     await this.db.put('songs', song);
     this._songs.update(list => {

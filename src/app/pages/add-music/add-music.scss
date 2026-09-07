@@ -275,3 +275,18 @@
   line-height: 1.45;
   margin-top: 8px;
 }
+
+// Cover art found in a file's tags, shown next to its fields before saving.
+.add-music-pending-art {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.add-music-reading {
+  color: var(--main-ultra-light);
+  font-size: 0.75rem;
+  margin-bottom: 8px;
+}

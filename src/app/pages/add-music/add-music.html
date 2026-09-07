@@ -61,7 +61,11 @@
     </label>
 
     <!-- Pending files -->
+    <p class="add-music-reading" *ngIf="reading()">Reading tags from the files…</p>
+
     <div class="add-music-pending" *ngFor="let item of pending(); let i = index">
+      <!-- Artwork the file carried with it, so you can see it was picked up. -->
+      <img class="add-music-pending-art" *ngIf="previewFor(item) as art" [src]="art" alt="" />
       <div class="add-music-pending-fields">
         <input type="text" placeholder="Title" [(ngModel)]="item.title" />
         <input type="text" placeholder="Artist" [(ngModel)]="item.artist" />

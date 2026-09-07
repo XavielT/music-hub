@@ -15,7 +15,7 @@ export interface SongModel {
   duration: number; // seconds
   source: SongSource;
   url?: string; // stream url when source is 'remote'
-  coverUrl?: string; // real cover art (e.g. YouTube thumbnail)
+  coverUrl?: string; // remote cover art (e.g. a YouTube thumbnail)
   coverColor: string;
   addedAt: number;
 
@@ -25,11 +25,17 @@ export interface SongModel {
   sizeBytes: number;
   syncState: SyncState;
   downloaded: boolean; // audio blob present in IndexedDB `files`
+  coverPath?: string; // path in the `covers` bucket: {ownerId}/{songId}.{ext}
+  hasCover: boolean; // cover blob present in IndexedDB `covers`
 }
 
 // Songs stored before the cloud fields existed load without them. Fill in
 // safe defaults so the rest of the app can assume the full shape.
-export function normalizeSong(raw: Partial<SongModel> & { id: string }, hasBlob: boolean): SongModel {
+export function normalizeSong(
+  raw: Partial<SongModel> & { id: string },
+  hasBlob: boolean,
+  hasCover: boolean
+): SongModel {
   return {
     ...(raw as SongModel),
     ownerId: raw.ownerId ?? '',
@@ -37,5 +43,10 @@ export function normalizeSong(raw: Partial<SongModel> & { id: string }, hasBlob:
     sizeBytes: raw.sizeBytes ?? 0,
     syncState: raw.syncState ?? 'local-only',
     downloaded: raw.downloaded ?? hasBlob,
+    coverPath: raw.coverPath,
+    // Derived from what is really in the store rather than trusted from the
+    // record, the same way `downloaded` is: a cleared database would otherwise
+    // leave every song pointing at art that is gone.
+    hasCover,
   };
 }

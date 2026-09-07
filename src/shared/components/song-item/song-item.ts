@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output, computed, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Cover } from '../../ui/cover/cover';
+import { LibraryService } from '../../services/library.service';
 import { SongModel } from '../../models/song.model';
 
 @Component({
@@ -12,6 +13,9 @@ import { SongModel } from '../../models/song.model';
 })
 export class SongItem {
   song = input.required<SongModel>();
+
+  constructor(public library: LibraryService) {}
+
   // Members cannot push to the shared library, so their local-only songs
   // show as "stays on this device" rather than a tappable upload prompt.
   canUpload = input(true);
