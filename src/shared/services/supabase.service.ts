@@ -7,15 +7,20 @@ import { environment } from '../../environments/environment';
 export const AUTH_STORAGE_KEY = 'music-hub-auth';
 
 // Single SupabaseClient for the whole app. Auth is configured for the
-// Capacitor WebView: the session lives in localStorage (which survives app
-// restarts on Android/iOS) and there is no OAuth redirect to parse.
+// Capacitor WebView: the session lives in localStorage, which survives app
+// restarts on Android/iOS.
+//
+// `detectSessionInUrl` is on because the password-recovery link comes back to
+// /auth/reset with a PKCE `?code=`, which supabase-js has to exchange for a
+// session before the new password can be set. Inside the Capacitor shell the
+// app opens at a plain local URL with no code to find, so it is a no-op there.
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
   readonly client: SupabaseClient = createClient(environment.supabaseUrl, environment.supabaseAnonKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: false,
+      detectSessionInUrl: true,
       storage: localStorage,
       storageKey: AUTH_STORAGE_KEY,
       flowType: 'pkce',

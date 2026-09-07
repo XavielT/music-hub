@@ -2,6 +2,13 @@ import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from '../shared/guards/auth.guard';
 
 export const routes: Routes = [
+  // Landing page for the password-recovery link. No guard: the link itself
+  // signs the user in, so it has to be reachable in both states — and it is
+  // declared before 'auth' so the longer path matches first.
+  {
+    path: 'auth/reset',
+    loadComponent: () => import('./pages/auth-reset/auth-reset').then(m => m.AuthResetComponent),
+  },
   {
     path: 'auth',
     canActivate: [guestGuard],

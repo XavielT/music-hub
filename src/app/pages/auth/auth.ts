@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
 import { InstallHint } from '../../../shared/components/install-hint/install-hint';
 
-type AuthMode = 'login' | 'register';
+type AuthMode = 'login' | 'register' | 'forgot';
 
 @Component({
   selector: 'app-auth',
@@ -44,10 +44,7 @@ export class AuthComponent {
     }
 
     this.busy.set(true);
-    const result =
-      this.mode() === 'login'
-        ? await this.auth.signIn(this.email, this.password)
-        : await this.auth.signUp(this.email, this.password, this.displayName);
+    const result = await this.runMode();
     this.busy.set(false);
 
     if (!result.ok) {
@@ -55,11 +52,16 @@ export class AuthComponent {
       return;
     }
 
+    // Password reset never signs anybody in here: the link in the email does.
+    if (this.mode() === 'forgot') {
+      this.setModeKeepingNotice('login', result.message);
+      return;
+    }
+
     // Sign-up on a project with email confirmation returns no session:
     // show the notice and let the user sign in afterwards.
     if (!this.auth.signedIn()) {
-      this.notice.set(result.message);
-      this.setModeKeepingNotice('login');
+      this.setModeKeepingNotice('login', result.message);
       return;
     }
 
@@ -67,16 +69,33 @@ export class AuthComponent {
     await this.router.navigateByUrl(redirect && !redirect.startsWith('/auth') ? redirect : '/');
   }
 
-  private setModeKeepingNotice(mode: AuthMode): void {
-    const notice = this.notice();
+  private runMode() {
+    switch (this.mode()) {
+      case 'login':
+        return this.auth.signIn(this.email, this.password);
+      case 'register':
+        return this.auth.signUp(this.email, this.password, this.displayName);
+      case 'forgot':
+        return this.auth.sendPasswordReset(this.email);
+    }
+  }
+
+  private setModeKeepingNotice(mode: AuthMode, notice: string): void {
     this.setMode(mode);
     this.notice.set(notice);
     this.password = '';
   }
 
+  submitLabel(): string {
+    if (this.busy()) return 'Please wait...';
+    if (this.mode() === 'login') return 'Sign in';
+    return this.mode() === 'register' ? 'Create account' : 'Send reset link';
+  }
+
   private validate(): string {
     if (!this.email.trim()) return 'Enter your email.';
     if (!this.email.includes('@')) return 'That email address does not look valid.';
+    if (this.mode() === 'forgot') return '';
     if (!this.password) return 'Enter your password.';
     if (this.mode() === 'register') {
       if (this.password.length < 6) return 'Password is too weak — use at least 6 characters.';

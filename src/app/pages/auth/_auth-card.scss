@@ -141,3 +141,28 @@
     cursor: pointer;
   }
 }
+
+// Small text links under the form (forgot password, back to sign in).
+.auth-link {
+  background: none;
+  border: none;
+  color: var(--main-ultra-light);
+  font-family: var(--font-btns);
+  font-size: 0.78rem;
+  padding: 0;
+  margin-top: 12px;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: underline;
+  align-self: center;
+
+  &:hover {
+    color: var(--Hub);
+  }
+}
+
+.auth-hint {
+  color: var(--main-ultra-light);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}

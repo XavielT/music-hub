@@ -101,6 +101,38 @@ export class AuthService {
     }
   }
 
+  // Sends the recovery email. The link lands on /auth/reset, where the PKCE
+  // code is exchanged for a session and the new password can be set.
+  async sendPasswordReset(email: string): Promise<AuthResult> {
+    this._loading.set(true);
+    try {
+      const { error } = await this.supabase.client.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/auth/reset`,
+      });
+      if (error) return { ok: false, message: this.friendlyError(error) };
+      return { ok: true, message: 'Reset link sent — check your inbox (and the spam folder).' };
+    } catch (err) {
+      return { ok: false, message: this.friendlyError(err) };
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  // Called from /auth/reset once the recovery link has signed the user in.
+  async updatePassword(password: string): Promise<AuthResult> {
+    this._loading.set(true);
+    try {
+      const { data, error } = await this.supabase.client.auth.updateUser({ password });
+      if (error) return { ok: false, message: this.friendlyError(error) };
+      if (data.user) this._user.set(data.user);
+      return { ok: true, message: '' };
+    } catch (err) {
+      return { ok: false, message: this.friendlyError(err) };
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
   async signOut(): Promise<void> {
     try {
       await this.supabase.client.auth.signOut();
@@ -210,6 +242,13 @@ export class AuthService {
     const raw = err instanceof Error ? err.message : String(err);
     const message = raw.toLowerCase();
 
+    // The invite-only trigger on auth.users (S1) raises its own message, but
+    // GoTrue usually swallows it and answers 500 "Database error saving new
+    // user" instead — verified against the live project. That trigger is the
+    // only thing that can fail the insert (the profile trigger swallows
+    // conflicts), so both spellings mean the same thing to the user.
+    if (message.includes('invite-only') || message.includes('database error saving new user'))
+      return 'Sign-ups are invite-only. Ask Xaviel to add your email, then register.';
     if (message.includes('invalid login credentials')) return 'Wrong email or password.';
     if (message.includes('email not confirmed')) return 'Confirm your email first, then sign in.';
     if (message.includes('already registered') || message.includes('already been registered'))
@@ -219,6 +258,19 @@ export class AuthService {
       return 'Password is too weak — use at least 6 characters.';
     if (message.includes('unable to validate email') || message.includes('invalid email'))
       return 'That email address does not look valid.';
+    // A recovery link that was already used, has expired, or was opened in a
+    // different browser than the one that asked for it.
+    if (
+      message.includes('expired') ||
+      message.includes('invalid flow state') ||
+      message.includes('code verifier') ||
+      message.includes('code challenge') ||
+      message.includes('auth session missing') ||
+      message.includes('invalid or has expired')
+    )
+      return 'That reset link is no longer valid. Ask for a new one from the sign-in page (open it in the same browser you requested it from).';
+    if (message.includes('same as the old') || message.includes('should be different'))
+      return 'Choose a password different from your current one.';
     if (message.includes('rate limit') || message.includes('too many'))
       return 'Too many attempts. Wait a minute and try again.';
     if (message.includes('failed to fetch') || message.includes('network') || message.includes('timeout'))

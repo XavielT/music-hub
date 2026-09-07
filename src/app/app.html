@@ -2,8 +2,9 @@
   <main class="app-content">
     <router-outlet></router-outlet>
   </main>
-  <!-- Player and navigation only exist once you are signed in -->
-  <ng-container *ngIf="auth.signedIn()">
+  <!-- Player and navigation only exist once you are signed in, and never on
+       the auth pages -->
+  <ng-container *ngIf="showChrome()">
     <app-player-bar></app-player-bar>
     <app-bottom-nav></app-bottom-nav>
   </ng-container>
