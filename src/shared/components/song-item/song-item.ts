@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, computed, input } from '@angular/core';
+import { Component, EventEmitter, Input, Output, computed, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Cover } from '../../ui/cover/cover';
 import { LibraryService } from '../../services/library.service';
@@ -14,7 +14,12 @@ import { SongModel } from '../../models/song.model';
 export class SongItem {
   song = input.required<SongModel>();
 
-  constructor(public library: LibraryService) {}
+  // The queue actions live behind a toggle: three permanent buttons per row
+  // would crowd a phone list, and these are occasional actions.
+  menuOpen = signal(false);
+
+  // Off on the playlist page, which has no picker to send the song to.
+  canAddToPlaylist = input(true);
 
   // Members cannot push to the shared library, so their local-only songs
   // show as "stays on this device" rather than a tappable upload prompt.
@@ -23,10 +28,14 @@ export class SongItem {
   @Input() removable = true;
   @Output() play = new EventEmitter<void>();
   @Output() addToPlaylist = new EventEmitter<void>();
+  @Output() addToQueue = new EventEmitter<void>();
+  @Output() playNext = new EventEmitter<void>();
   @Output() remove = new EventEmitter<void>();
   @Output() upload = new EventEmitter<void>();
   @Output() download = new EventEmitter<void>();
   @Output() removeDownload = new EventEmitter<void>();
+
+  constructor(public library: LibraryService) {}
 
   // One glyph summarising where the audio lives.
   //   ↑  only on this device, can be uploaded

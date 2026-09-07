@@ -78,6 +78,21 @@
     </button>
   </div>
 
+  <!-- Volume: pointless on Android (hardware buttons) and inert on iOS
+       Safari, which ignores assignments to HTMLMediaElement.volume. -->
+  <div class="player-full-volume" *ngIf="player.volumeSupported">
+    <span class="player-full-volume-icon" aria-hidden="true">🔈</span>
+    <input
+      type="range"
+      min="0"
+      max="1"
+      step="0.01"
+      [value]="player.volume()"
+      (input)="onVolume($event)"
+      aria-label="Volume"
+    />
+  </div>
+
   <!-- Queue -->
   <button class="player-full-queue-toggle" (click)="showQueue.set(!showQueue())">
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -88,11 +103,35 @@
   </button>
 
   <div class="player-queue" *ngIf="showQueue()">
+    <p class="player-queue-heading">Playing now</p>
+    <div class="player-queue-row is-current">
+      <span class="player-queue-item-text">
+        <span class="player-queue-item-title">{{ song.title }}</span>
+        <span class="player-queue-item-artist">{{ song.artist }}</span>
+      </span>
+    </div>
+
     <p class="player-queue-heading">Next up</p>
-    <button class="player-queue-item" *ngFor="let entry of player.upNext()" (click)="player.jumpTo(entry.position)">
-      <span class="player-queue-item-title">{{ entry.song.title }}</span>
-      <span class="player-queue-item-artist">{{ entry.song.artist }}</span>
-    </button>
+    <div class="player-queue-row" *ngFor="let entry of player.upNext(); let i = index; let last = last">
+      <button class="player-queue-item-text" (click)="player.jumpTo(entry.index)" title="Play this next">
+        <span class="player-queue-item-title">{{ entry.song.title }}</span>
+        <span class="player-queue-item-artist">{{ entry.song.artist }}</span>
+      </button>
+      <button
+        class="player-queue-btn"
+        (click)="player.moveInQueue(entry.index, entry.index - 1)"
+        [disabled]="i === 0"
+        title="Move up"
+      >▲</button>
+      <button
+        class="player-queue-btn"
+        (click)="player.moveInQueue(entry.index, entry.index + 1)"
+        [disabled]="last"
+        title="Move down"
+      >▼</button>
+      <button class="player-queue-btn" (click)="player.removeFromQueue(entry.index)" title="Remove">✕</button>
+    </div>
+
     <p class="player-queue-empty" *ngIf="player.upNext().length === 0">
       {{ player.repeat() === 'off' ? 'Last song in the queue.' : 'Last song — the queue starts over next.' }}
     </p>

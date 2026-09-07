@@ -63,6 +63,9 @@ export class SyncService {
   private async openAccount(userId: string): Promise<void> {
     this.closeAccount();
     await this.library.activate(userId);
+    // Before the network call, so the mini player is back with the last song
+    // the moment the library is on screen rather than after a sync round trip.
+    await this.player.restoreSession();
     await this.sync();
   }
 

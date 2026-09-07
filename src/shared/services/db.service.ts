@@ -8,7 +8,7 @@ const DB_PREFIX = 'music-hub-db::';
 // into the first account that signs in and then removed.
 const LEGACY_DB_NAME = 'music-hub-db';
 const LEGACY_CLAIM_KEY = 'music-hub-legacy-db-claim';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 const STORES = ['songs', 'files', 'playlists', 'covers'] as const;
 
@@ -73,6 +73,11 @@ export class DbService {
         // Cover art, keyed by song id like `files`. Version 2 adds this; an
         // existing database gets the store and keeps everything else.
         if (!db.objectStoreNames.contains('covers')) db.createObjectStore('covers');
+        // Where playback had got to, so the app can resume. One keyed entry,
+        // not a collection — added in version 3. Deliberately outside STORES:
+        // it is per-device state, and the legacy database has nothing to
+        // migrate into it.
+        if (!db.objectStoreNames.contains('player')) db.createObjectStore('player');
       };
       // Another tab holding the previous version open stalls the upgrade
       // until it lets go. The onversionchange handler below is what makes it

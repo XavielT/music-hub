@@ -35,6 +35,10 @@ export class PlayerBar {
     this.expanded.set(false);
   }
 
+  onVolume(event: Event): void {
+    this.player.setVolume(+(event.target as HTMLInputElement).value);
+  }
+
   onSeek(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.player.seek(+input.value);

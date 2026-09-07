@@ -246,25 +246,6 @@
   margin-bottom: 6px;
 }
 
-.player-queue-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  width: 100%;
-  background: none;
-  border: none;
-  border-radius: 6px;
-  color: #fff;
-  text-align: left;
-  padding: 8px 10px;
-  cursor: pointer;
-
-  &:active {
-    background: #2d2d2d;
-  }
-}
-
 .player-queue-item-title {
   font-size: 0.85rem;
   font-weight: 600;
@@ -279,4 +260,73 @@
   font-size: 0.75rem;
   color: var(--main-ultra-light);
   padding: 6px 10px;
+}
+
+.player-full-volume {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 480px;
+  margin-top: 16px;
+
+  input[type='range'] {
+    flex: 1;
+    accent-color: var(--Hub);
+  }
+}
+
+.player-full-volume-icon {
+  font-size: 0.8rem;
+  color: var(--main-ultra-light);
+}
+
+// A queue row: the song, then the controls that act on it.
+.player-queue-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 6px;
+
+  &.is-current {
+    background: #202020;
+
+    .player-queue-item-title {
+      color: var(--Hub);
+    }
+  }
+}
+
+.player-queue-item-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: #fff;
+  text-align: left;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.player-queue-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--main-ultra-light);
+  font-size: 0.8rem;
+  padding: 8px 6px;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.25;
+    cursor: default;
+  }
+
+  &:active:not(:disabled) {
+    color: var(--Hub);
+  }
 }

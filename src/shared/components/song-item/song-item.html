@@ -18,6 +18,20 @@
   >
     {{ badge().icon }}
   </button>
-  <button class="song-item-btn" (click)="$event.stopPropagation(); addToPlaylist.emit()" title="Add to playlist">＋</button>
+  <button
+    class="song-item-btn"
+    (click)="$event.stopPropagation(); menuOpen.set(!menuOpen())"
+    [class.is-open]="menuOpen()"
+    title="More"
+  >⋮</button>
   <button class="song-item-btn" *ngIf="removable" (click)="$event.stopPropagation(); remove.emit()" title="Remove">✕</button>
+</div>
+
+<!-- Queue and playlist actions, one row down so the song row stays readable. -->
+<div class="song-item-menu" *ngIf="menuOpen()">
+  <button (click)="menuOpen.set(false); playNext.emit()">Play next</button>
+  <button (click)="menuOpen.set(false); addToQueue.emit()">Add to queue</button>
+  <button *ngIf="canAddToPlaylist()" (click)="menuOpen.set(false); addToPlaylist.emit()">
+    Add to playlist
+  </button>
 </div>

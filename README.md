@@ -16,7 +16,9 @@ Supabase, and still fully playable offline.
   and embedded artwork, for MP3 (ID3v2), M4A/MP4 and FLAC.
 - Playlists, artists and albums views, search, recently added.
 - Spotify-like player: mini player + full screen player with seek, next/prev,
-  **shuffle**, **repeat (queue / one)** and a tappable **up-next queue**.
+  **shuffle**, **repeat (queue / one)**, **volume** (desktop), and a **queue
+  screen** you can reorder, remove from and jump around.
+- **Resumes where you left off** — same song, same position, paused.
 - **Shuffle** buttons on the songs list, each artist/album and every playlist.
 - Lock-screen / notification controls via MediaSession.
 - Add songs from a direct audio URL (streamed).
@@ -180,6 +182,39 @@ on conflict (email) do nothing;
 `authenticated` on purpose — only the `security definer` trigger reads it, so the
 list cannot be enumerated through the API. A blocked sign-up shows
 "Sign-ups are invite-only. Ask Xaviel to add your email, then register."
+
+## The player
+
+The queue is held in the order it will actually play, so what the queue screen
+shows and what every index in `PlayerService` refers to are the same list. The
+order *before* shuffling is kept alongside it, which is what makes turning
+shuffle off restore the original sequence exactly — reconciled both ways, so
+songs queued while shuffled survive the toggle and songs removed while shuffled
+do not come back.
+
+`play(song, queue)` is unchanged, and every existing caller still works.
+
+**Unplayable songs are stepped over, not stopped on** (audit B4). A cloud song
+with no local copy and no connection used to end playback with a toast; now the
+queue moves to the next song that can play. Bounded by the queue length, so an
+entirely unplayable queue ends rather than spinning — and says so once, not once
+per song.
+
+**Resume** is stored in IndexedDB (`player` store, database version 3): the
+queue's song ids, the index, the position, and the shuffle/repeat state, written
+on every song change and at most every five seconds during playback. It is
+restored after `LibraryService.activate()` — ids that no longer exist are
+dropped rather than restoring a broken queue — and always **paused**. Browsers
+block autoplay without a gesture, and starting music by itself when an app opens
+is rude where they don't.
+
+Shuffle, repeat and volume live in `localStorage` rather than the database:
+they are a listening habit rather than session state, and they are wanted before
+any database is open.
+
+The volume slider is hidden inside Capacitor, where the hardware buttons rule,
+and on iOS Safari, which ignores assignments to `HTMLMediaElement.volume` — a
+slider there is a dead control.
 
 ## Settings
 

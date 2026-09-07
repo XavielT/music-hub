@@ -103,3 +103,31 @@
   font-style: normal;
   opacity: 0.8;
 }
+
+.song-item-btn.is-open {
+  color: var(--Hub);
+}
+
+// Actions for one song, revealed under its row.
+.song-item-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 10px 10px 62px;
+
+  button {
+    background: var(--secondary);
+    border: 1px solid #2d2d2d;
+    border-radius: 14px;
+    color: #fff;
+    font-family: var(--font-btns);
+    font-size: 0.72rem;
+    padding: 6px 12px;
+    cursor: pointer;
+
+    &:active {
+      border-color: var(--Hub);
+      color: var(--Hub);
+    }
+  }
+}
