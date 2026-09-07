@@ -1,7 +1,5 @@
 import { Injectable, effect, signal } from '@angular/core';
-import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { Capacitor } from '@capacitor/core';
-import { filter } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 
 // Chromium fires this before showing its own install prompt; capturing it
@@ -11,12 +9,10 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+// Installing the app and asking for durable storage. Updates live in
+// UpdateService, which covers the Android build too.
 @Injectable({ providedIn: 'root' })
 export class PwaService {
-  // A newer build is cached and will be used after a reload.
-  private _updateReady = signal(false);
-  updateReady = this._updateReady.asReadonly();
-
   // Chromium only: set once the browser says the app is installable.
   private _canPrompt = signal(false);
   canPrompt = this._canPrompt.asReadonly();
@@ -24,7 +20,7 @@ export class PwaService {
   private deferredPrompt: BeforeInstallPromptEvent | null = null;
   private persistenceAsked = false;
 
-  constructor(private updates: SwUpdate, private auth: AuthService) {
+  constructor(private auth: AuthService) {
     // Downloaded songs are the whole point of the offline mode, and on iOS a
     // PWA's IndexedDB can be evicted under storage pressure. Asking to be
     // persistent is one call and only makes sense with a library to protect,
@@ -33,10 +29,6 @@ export class PwaService {
     effect(() => {
       if (this.auth.user()) void this.requestPersistentStorage();
     });
-
-    this.updates.versionUpdates
-      .pipe(filter((e): e is VersionReadyEvent => e.type === 'VERSION_READY'))
-      .subscribe(() => this._updateReady.set(true));
 
     window.addEventListener('beforeinstallprompt', event => {
       // Suppress the mini-infobar so the in-app button is the entry point.
@@ -83,15 +75,5 @@ export class PwaService {
     await this.deferredPrompt.userChoice;
     this.deferredPrompt = null;
     this._canPrompt.set(false);
-  }
-
-  // Activates the waiting worker and reloads onto the new build.
-  async applyUpdate(): Promise<void> {
-    try {
-      await this.updates.activateUpdate();
-    } catch {
-      // Fall through to the reload: worst case the old version loads again.
-    }
-    document.location.reload();
   }
 }

@@ -1,0 +1,66 @@
+.update-banner {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  // Clears the player bar and the bottom nav.
+  bottom: calc(148px + env(safe-area-inset-bottom));
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  background: var(--secondary);
+  border-left: 3px solid var(--Hub);
+  border-radius: 8px;
+  padding: 11px 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+.update-banner-text {
+  flex: 1;
+  color: #fff;
+  font-size: 0.8rem;
+}
+
+.update-banner-apply {
+  background: var(--Hub);
+  color: #000;
+  border: none;
+  border-radius: 14px;
+  padding: 6px 14px;
+  font-family: var(--font-btns);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  // Keeps the banner from twitching as the percentage counts up.
+  min-width: 68px;
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: default;
+  }
+}
+
+.update-banner-dismiss {
+  background: none;
+  border: none;
+  color: var(--main-ultra-light);
+  font-size: 0.9rem;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.update-banner-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: #2d2d2d;
+}
+
+.update-banner-progress-fill {
+  height: 100%;
+  background: var(--Hub);
+  transition: width 0.2s linear;
+}

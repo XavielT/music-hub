@@ -1,0 +1,40 @@
+<div class="update-panel">
+  <div class="update-panel-row">
+    <span class="update-panel-label">Music Hub {{ update.currentVersion() }}</span>
+    <button
+      class="update-panel-check"
+      (click)="update.check()"
+      [disabled]="update.status() === 'checking' || update.status() === 'downloading'"
+    >
+      {{ update.status() === 'checking' ? 'Checking…' : 'Check for updates' }}
+    </button>
+  </div>
+
+  <ng-container *ngIf="update.available() as found">
+    <p class="update-panel-found" *ngIf="update.status() !== 'idle' && update.status() !== 'checking'">
+      <ng-container *ngIf="found.version">
+        Version {{ found.version }} is available<ng-container *ngIf="found.sizeBytes">
+          — {{ update.formatSize(found.sizeBytes) }}</ng-container
+        >.
+      </ng-container>
+      <ng-container *ngIf="!found.version">A newer build is ready to load.</ng-container>
+    </p>
+
+    <pre class="update-panel-notes" *ngIf="found.notes">{{ found.notes }}</pre>
+
+    <button
+      class="update-panel-apply"
+      (click)="update.apply()"
+      [disabled]="update.status() === 'downloading'"
+      *ngIf="update.status() === 'available' || update.status() === 'downloading' || update.status() === 'ready'"
+    >
+      {{ update.actionLabel() }}
+    </button>
+
+    <div class="update-panel-bar" *ngIf="update.status() === 'downloading' && update.progress() >= 0">
+      <div class="update-panel-bar-fill" [style.width.%]="update.progress()"></div>
+    </div>
+  </ng-container>
+
+  <p class="update-panel-error" *ngIf="update.error()">{{ update.error() }}</p>
+</div>

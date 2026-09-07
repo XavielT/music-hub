@@ -1,0 +1,14 @@
+<div class="update-banner" *ngIf="visible()">
+  <span class="update-banner-text">{{ message() }}</span>
+  <button
+    class="update-banner-apply"
+    (click)="update.apply()"
+    [disabled]="update.status() === 'downloading'"
+  >
+    {{ update.actionLabel() }}
+  </button>
+  <button class="update-banner-dismiss" *ngIf="canDismiss()" (click)="dismiss()" title="Not now">✕</button>
+  <div class="update-banner-progress" *ngIf="update.status() === 'downloading' && update.progress() >= 0">
+    <div class="update-banner-progress-fill" [style.width.%]="update.progress()"></div>
+  </div>
+</div>

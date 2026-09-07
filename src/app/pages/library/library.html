@@ -59,6 +59,15 @@
 
   <!-- Songs tab -->
   <div *ngIf="tab() === 'songs'">
+    <div class="library-playall" *ngIf="library.songs().length > 0">
+      <button class="library-playall-btn" (click)="player.play(library.songs()[0], library.songs())">▶ Play all</button>
+      <button class="library-playall-btn library-playall-btn--shuffle" (click)="player.shufflePlay(library.songs())">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
+        </svg>
+        Shuffle
+      </button>
+    </div>
     <app-song-item
       *ngFor="let song of library.songs()"
       [song]="song"
@@ -92,6 +101,15 @@
     <ng-container *ngIf="selectedGroup() as group">
       <button class="library-back" (click)="selectedGroup.set(null)">‹ Back</button>
       <h2 class="library-group-title">{{ group.name }}</h2>
+      <div class="library-playall">
+        <button class="library-playall-btn" (click)="player.play(group.songs[0], group.songs)">▶ Play all</button>
+        <button class="library-playall-btn library-playall-btn--shuffle" (click)="player.shufflePlay(group.songs)">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
+          </svg>
+          Shuffle
+        </button>
+      </div>
       <app-song-item
         *ngFor="let song of group.songs"
         [song]="song"
@@ -124,6 +142,9 @@
 
   <!-- How to install as an app (hidden once installed) -->
   <app-install-hint></app-install-hint>
+
+  <!-- Version + "check for updates" -->
+  <app-update-panel></app-update-panel>
 
   <!-- Playlist picker overlay -->
   <app-playlist-picker

@@ -13,9 +13,13 @@ Supabase, and still fully playable offline.
   `●` downloaded for offline, `☁` streams from a link.
 - Local music library: add audio files from the device (mp3, m4a, mp4, wav, ogg, flac).
 - Playlists, artists and albums views, search, recently added.
-- Spotify-like player: mini player + full screen player with seek, next/prev and queue.
+- Spotify-like player: mini player + full screen player with seek, next/prev,
+  **shuffle**, **repeat (queue / one)** and a tappable **up-next queue**.
+- **Shuffle** buttons on the songs list, each artist/album and every playlist.
 - Lock-screen / notification controls via MediaSession.
 - Add songs from a direct audio URL (streamed).
+- **In-app updates**: the web app reloads onto a new build, the Android app
+  installs the latest GitHub release itself. See *Updating the app* below.
 
 ## Dev
 ```bash
@@ -163,6 +167,50 @@ on conflict (email) do nothing;
 list cannot be enumerated through the API. A blocked sign-up shows
 "Sign-ups are invite-only. Ask Xaviel to add your email, then register."
 
+## Updating the app
+
+Both builds update themselves from inside the app — there is a **Music Hub
+&lt;version&gt;** line with a **Check for updates** button at the bottom of the
+library page, and a banner appears on its own when something newer shows up.
+
+- **Web / installed PWA**: the service worker downloads a new build in the
+  background, so the button only has to activate it and reload. One click.
+- **Android**: there is no store to do this, so the app asks the GitHub
+  releases API whether a tag newer than its own `versionName` exists,
+  downloads the `music-hub.apk` attached to it and opens the system package
+  installer. Android 8+ asks once for permission to *install unknown apps*
+  (the app sends you straight to that settings screen), then it is: **Update →
+  Install**. Android refuses any APK not signed with the same key as the
+  installed one, so the release keystore below is what makes this work at all.
+
+The check runs at launch and never blocks anything — no network, no update, no
+complaint. The releases API allows 60 unauthenticated calls per hour per IP,
+which one check per launch stays well inside.
+
+### Cutting a release
+
+The updater compares the running version against the latest release tag, so
+`package.json`, `src/version.ts` and the Android `versionName`/`versionCode`
+have to agree. One script keeps them in step:
+
+```bash
+./tools/set-version.sh 0.3.0        # bumps all three, versionCode +1
+git commit -am "chore: release 0.3.0" && git tag v0.3.0 && git push --tags
+npm run build && npx cap sync android
+(cd android && ./gradlew assembleRelease)
+```
+
+Then draft the GitHub release for `v0.3.0` and attach the APK **renamed to
+`music-hub.apk`** — that exact filename is what the updater looks for, and it
+is also what the portfolio's `releases/latest/download/music-hub.apk` button
+points at. The release body becomes the notes shown in the app, so write it
+for the people who will read it there.
+
+Android will not install an APK whose `versionCode` is not higher than the
+installed one, which is why the script bumps it rather than leaving it to
+memory. A release with no `music-hub.apk` attached makes the app say so,
+rather than silently doing nothing.
+
 ## Install as an app
 
 - **iPhone/iPad**: open the deployed URL in **Safari** → Share → **Add to Home Screen**.
@@ -202,10 +250,8 @@ Both neighbours fail, in opposite directions:
 If a build fails right after changing JDKs, run `./gradlew --stop` first — a stale
 daemon on the old JVM will otherwise be reused.
 
-To publish it for others: GitHub → the `music-hub` repo → **Releases** → *Draft a new
-release* → tag e.g. `v0.1.0` → attach the APK renamed to `music-hub.apk` → publish.
-The portfolio's download button points at
-`releases/latest/download/music-hub.apk`, so future releases update it automatically.
+To publish it for others, follow *Cutting a release* above: it covers the version
+bump the in-app updater depends on as well as the GitHub release itself.
 
 ## Signed release builds
 

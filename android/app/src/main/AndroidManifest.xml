@@ -32,4 +32,8 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- In-app updates: lets the app hand a downloaded release APK to the
+         system package installer. The user still confirms every install, and
+         Android 8+ additionally requires them to allow it once in Settings. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 </manifest>

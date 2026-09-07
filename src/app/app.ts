@@ -6,13 +6,14 @@ import { PlayerBar } from './components/player-bar/player-bar';
 import { BottomNav } from './components/bottom-nav/bottom-nav';
 import { AuthService } from '../shared/services/auth.service';
 import { SyncService } from '../shared/services/sync.service';
-import { PwaService } from '../shared/services/pwa.service';
+import { UpdateService } from '../shared/services/update.service';
+import { UpdateBanner } from '../shared/components/update-banner/update-banner';
 import { ToastHost } from '../shared/ui/toast/toast';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, PlayerBar, BottomNav, ToastHost],
+  imports: [CommonModule, RouterOutlet, PlayerBar, BottomNav, UpdateBanner, ToastHost],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -24,12 +25,13 @@ export class App {
   // drop the player bar and nav on top of its form.
   showChrome = computed(() => this.auth.signedIn() && !this.url().startsWith('/auth'));
 
-  // SyncService is injected so it starts watching the session right away:
-  // it pulls the cloud library as soon as a user is available.
+  // SyncService is injected so it starts watching the session right away: it
+  // pulls the cloud library as soon as a user is available. UpdateService for
+  // the same reason — its constructor runs the launch check.
   constructor(
     public auth: AuthService,
     private sync: SyncService,
-    public pwa: PwaService,
+    private update: UpdateService,
     router: Router
   ) {
     this.url.set(router.url);
