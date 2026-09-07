@@ -38,12 +38,22 @@ alone.
 2. Framework preset: **Other** (`vercel.json` provides everything).
 3. **Deploy**. Note the URL, e.g. `music-hub-xaviel.vercel.app`.
 4. In Supabase → **Authentication → URL Configuration**, set **Site URL** to that URL
-   and add these under **Additional Redirect URLs**:
-   - `http://localhost:4200` and `http://localhost:4200/auth/reset` (local dev)
-   - `https://<your-vercel-url>/auth/reset` (the password-reset landing page)
+   and add the deploy URL under **Redirect URLs**.
 
-   Without the `/auth/reset` entries, the link in the reset email falls back to the
-   Site URL and the new-password form is never reached.
+   A globstar entry such as `https://<your-vercel-url>/**` already covers every
+   path, including `/auth/reset` — in Supabase's allow list `**` matches any
+   sequence of characters, with `.` and `/` as the separators. Supabase still
+   recommends listing the exact path in production, so the live config has both:
+
+   ```
+   https://music-hub-xaviel.vercel.app/**
+   https://music-hub-xaviel.vercel.app/auth/reset
+   http://localhost:4200/**
+   http://localhost:4200/auth/reset
+   ```
+
+   If neither a globstar nor the exact path is listed, the link in the reset email
+   silently falls back to the Site URL and the new-password form is never reached.
 
 After that, **every push to `main` deploys automatically**. Or from the CLI:
 
