@@ -1,6 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, effect, signal } from '@angular/core';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
+import { Capacitor } from '@capacitor/core';
 import { filter } from 'rxjs/operators';
+import { AuthService } from './auth.service';
 
 // Chromium fires this before showing its own install prompt; capturing it
 // lets the app offer an Install button at a moment of its choosing.
@@ -20,8 +22,18 @@ export class PwaService {
   canPrompt = this._canPrompt.asReadonly();
 
   private deferredPrompt: BeforeInstallPromptEvent | null = null;
+  private persistenceAsked = false;
 
-  constructor(private updates: SwUpdate) {
+  constructor(private updates: SwUpdate, private auth: AuthService) {
+    // Downloaded songs are the whole point of the offline mode, and on iOS a
+    // PWA's IndexedDB can be evicted under storage pressure. Asking to be
+    // persistent is one call and only makes sense with a library to protect,
+    // so it waits for a signed-in user. Browsers only grant it to installed /
+    // engaged sites; a refusal changes nothing.
+    effect(() => {
+      if (this.auth.user()) void this.requestPersistentStorage();
+    });
+
     this.updates.versionUpdates
       .pipe(filter((e): e is VersionReadyEvent => e.type === 'VERSION_READY'))
       .subscribe(() => this._updateReady.set(true));
@@ -37,6 +49,18 @@ export class PwaService {
       this.deferredPrompt = null;
       this._canPrompt.set(false);
     });
+  }
+
+  private async requestPersistentStorage(): Promise<void> {
+    // The native shell stores its data in the app sandbox — nothing to ask.
+    if (this.persistenceAsked || Capacitor.isNativePlatform()) return;
+    this.persistenceAsked = true;
+    try {
+      if (await navigator.storage?.persisted?.()) return;
+      await navigator.storage?.persist?.();
+    } catch {
+      // Not supported (or blocked) on this browser.
+    }
   }
 
   // True once the app runs from the home screen / app window rather than a tab.

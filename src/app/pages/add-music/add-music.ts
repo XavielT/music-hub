@@ -207,8 +207,12 @@ export class AddMusicComponent {
       this.remoteError.set('That does not look like a valid link.');
       return;
     }
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      this.remoteError.set('The link must start with http:// or https://');
+    if (parsed.protocol !== 'https:') {
+      // A plain http:// stream is blocked as mixed content on the deployed
+      // HTTPS site and in the installed app, so it could never play.
+      this.remoteError.set(
+        'The link must be https:// — plain http links are blocked on the installed app.'
+      );
       return;
     }
 
