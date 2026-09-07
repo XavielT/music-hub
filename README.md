@@ -211,6 +211,13 @@ installed one, which is why the script bumps it rather than leaving it to
 memory. A release with no `music-hub.apk` attached makes the app say so,
 rather than silently doing nothing.
 
+**Never reuse a version number, even one whose release was deleted.** Deleting
+a GitHub release does not reach the phones that already installed it, and they
+still hold that `versionCode` — a rebuilt "same" version would carry the same
+number and Android would refuse it, with nothing in the UI explaining why. Skip
+the number and move on: `main` staying ahead of the newest tag is the harmless
+half of this, and `set-version.sh` keeps counting up from wherever it is.
+
 ## Install as an app
 
 - **iPhone/iPad**: open the deployed URL in **Safari** → Share → **Add to Home Screen**.
