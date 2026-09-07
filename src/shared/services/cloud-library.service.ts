@@ -59,6 +59,35 @@ export const AUDIO_BUCKET = 'songs';
 // Supabase free tier gives 1 GB of Storage.
 export const STORAGE_QUOTA_BYTES = 1024 * 1024 * 1024;
 
+// The `songs` bucket only accepts these types. Browsers hand out a few
+// non-standard aliases for the same formats, and an unknown one would be
+// rejected by the bucket, so map them onto what the bucket allows.
+const AUDIO_MIME_ALIASES: Record<string, string> = {
+  'audio/mp3': 'audio/mpeg',
+  'audio/mpeg3': 'audio/mpeg',
+  'audio/x-mpeg': 'audio/mpeg',
+  'audio/m4a': 'audio/x-m4a',
+  'audio/x-m4a': 'audio/x-m4a',
+  'audio/mp4': 'audio/mp4',
+  'audio/aac': 'audio/aac',
+  'audio/x-aac': 'audio/aac',
+  'audio/ogg': 'audio/ogg',
+  'audio/vorbis': 'audio/ogg',
+  'audio/wav': 'audio/wav',
+  'audio/wave': 'audio/wav',
+  'audio/x-wav': 'audio/wav',
+  'audio/flac': 'audio/flac',
+  'audio/x-flac': 'audio/flac',
+  'audio/webm': 'audio/webm',
+};
+
+export function audioContentType(file: Blob): string {
+  const type = (file.type || '').split(';')[0].trim().toLowerCase();
+  // mp3 is the overwhelming majority, so it is also the fallback for a file
+  // the browser gave no type for at all.
+  return AUDIO_MIME_ALIASES[type] ?? 'audio/mpeg';
+}
+
 const SIGNED_URL_TTL_SECONDS = 3600;
 // Re-sign 5 minutes before expiry so a long track never dies mid-playback.
 const SIGNED_URL_REFRESH_MARGIN_MS = 5 * 60 * 1000;
@@ -78,6 +107,13 @@ export class CloudLibraryService {
 
   private get client() {
     return this.supabase.client;
+  }
+
+  // Signing out (or switching account) must not leave the next user with an
+  // hour of valid signed audio URLs and somebody else's quota bar.
+  resetSession(): void {
+    this.signedUrls.clear();
+    this._usedBytes.set(0);
   }
 
   private userId(): string {
@@ -127,7 +163,7 @@ export class CloudLibraryService {
       const { error: uploadError } = await this.client.storage
         .from(AUDIO_BUCKET)
         .upload(storagePath, file, {
-          contentType: file.type || 'audio/mpeg',
+          contentType: audioContentType(file),
           upsert: true,
         });
       if (uploadError) throw new Error(uploadError.message);
@@ -141,7 +177,13 @@ export class CloudLibraryService {
       if (updateError) throw new Error(updateError.message);
       return updated as SongRow;
     } catch (err) {
-      // Roll the row back so a failed upload leaves nothing behind.
+      // Roll back both halves so a failed upload leaves nothing behind: the
+      // row, and the object it may already have put in the bucket (which
+      // would otherwise eat quota invisibly, forever).
+      await this.client.storage
+        .from(AUDIO_BUCKET)
+        .remove([storagePath])
+        .catch(() => undefined);
       await this.client.from('songs').delete().eq('id', song.id);
       throw err;
     }

@@ -5,6 +5,7 @@ import {
   PlaylistRow,
   PlaylistSongRow,
   SongRow,
+  STORAGE_QUOTA_BYTES,
   isNetworkError,
 } from './cloud-library.service';
 import { ToastService } from './toast.service';
@@ -32,19 +33,35 @@ export class LibraryService {
   // Songs that exist only on this device and could be pushed to the cloud.
   localOnlySongs = computed(() => this._songs().filter(s => s.syncState === 'local-only'));
 
-  private ready: Promise<void>;
+  // Resolves once the signed-in user's library has been read off IndexedDB.
+  // Nothing is loaded until `activate()` names the account to load.
+  private ready: Promise<void> = Promise.resolve();
 
   constructor(
     private db: DbService,
     private cloud: CloudLibraryService,
     private toast: ToastService
-  ) {
-    this.ready = this.load();
-  }
+  ) {}
 
-  // Resolves once the local library has been read off IndexedDB.
   whenReady(): Promise<void> {
     return this.ready;
+  }
+
+  // Points the local store at one account and reads its library in. Must run
+  // before anything touches the library — SyncService's auth effect does it.
+  activate(userId: string): Promise<void> {
+    this.ready = (async () => {
+      await this.db.use(userId);
+      await this.load();
+    })();
+    return this.ready;
+  }
+
+  // Signing out has to land on an empty UI, not the previous user's library.
+  deactivate(): void {
+    this._songs.set([]);
+    this._playlists.set([]);
+    this.ready = Promise.resolve();
   }
 
   private async load(): Promise<void> {
@@ -163,6 +180,15 @@ export class LibraryService {
     const file = await this.getSongFile(song.id);
     if (!file) {
       this.toast.error(`"${song.title}" has no audio on this device, so it cannot be uploaded.`);
+      return false;
+    }
+
+    // Running head-first into the 1 GB wall fails with a raw storage error,
+    // so the quota is checked before a single byte goes up.
+    if (this.cloud.usedBytes() + file.size > STORAGE_QUOTA_BYTES) {
+      this.toast.error(
+        `Cloud storage is full — 1 GB limit reached, so "${song.title}" stays on this device. Delete a cloud song to make room.`
+      );
       return false;
     }
 

@@ -96,6 +96,28 @@ export class PlayerService {
     this.updatePositionState();
   }
 
+  // Full teardown, used when the account changes: audio from the previous
+  // user must not keep playing (or stay queued) for the next one.
+  stop(): void {
+    this.audio.pause();
+    this.audio.removeAttribute('src');
+    // Detaches the decoded stream; without it the WebView keeps the old
+    // buffer (and the media notification) alive.
+    this.audio.load();
+    if (this.objectUrl) {
+      URL.revokeObjectURL(this.objectUrl);
+      this.objectUrl = null;
+    }
+    this.queue = [];
+    this.index = -1;
+    this._current.set(null);
+    this._isPlaying.set(false);
+    this._currentTime.set(0);
+    this._duration.set(0);
+    this._unavailable.set(null);
+    this.setPlaybackState('none');
+  }
+
   private async loadAndPlay(song: SongModel): Promise<void> {
     if (this.objectUrl) {
       URL.revokeObjectURL(this.objectUrl);

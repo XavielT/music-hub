@@ -2,6 +2,7 @@ import { Injectable, computed, effect, signal } from '@angular/core';
 import { AuthService } from './auth.service';
 import { CloudLibraryService, isNetworkError } from './cloud-library.service';
 import { LibraryService } from './library.service';
+import { PlayerService } from './player.service';
 import { ToastService } from './toast.service';
 import { SongModel } from '../models/song.model';
 
@@ -32,25 +33,45 @@ export class SyncService {
     private auth: AuthService,
     private cloud: CloudLibraryService,
     private library: LibraryService,
+    private player: PlayerService,
     private toast: ToastService
   ) {
-    // Sync whenever a user becomes available (app start with a restored
-    // session, or a fresh login). Signing out resets the marker.
+    // The account is the unit of state here: the local database, the library
+    // signals, the signed URLs and the player all belong to one user and all
+    // have to turn over together when that user changes.
     effect(() => {
       const user = this.auth.user();
       if (!user) {
         this.lastSyncedUserId = null;
+        this.closeAccount();
         return;
       }
       if (user.id === this.lastSyncedUserId) return;
       this.lastSyncedUserId = user.id;
-      void this.sync();
+      void this.openAccount(user.id);
     });
 
     // Coming back online is a good moment to reconcile.
     window.addEventListener('online', () => {
       if (this.auth.user()) void this.sync();
     });
+  }
+
+  // Load this account's own local library first, then reconcile with the
+  // cloud. The order matters: syncing into the previous user's database would
+  // hand them somebody else's songs (and delete their downloads).
+  private async openAccount(userId: string): Promise<void> {
+    this.closeAccount();
+    await this.library.activate(userId);
+    await this.sync();
+  }
+
+  // Everything that belongs to the account that is going away.
+  private closeAccount(): void {
+    this.player.stop();
+    this.cloud.resetSession();
+    this.library.deactivate();
+    this._lastSyncAt.set(null);
   }
 
   private online(): boolean {
