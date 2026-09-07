@@ -9,10 +9,18 @@ const EXPIRED_LINK =
 
 // Landing page for the recovery link in the reset email.
 //
-// supabase-js (with detectSessionInUrl on) exchanges the `?code=` in the URL
-// for a session while AuthService.init() runs, i.e. before the router gets
-// here. So a signed-in user at this point means the link was good, and
-// updateUser() can set the new password.
+// Two link shapes are accepted:
+//
+// 1. `?token_hash=...` — what the current reset email sends. verifyOtp trades
+//    it for a session using nothing but the URL, so the link works in any
+//    browser. That matters on phones: the reset is requested in the installed
+//    PWA but the link opens in the mail app's browser, which cannot see the
+//    PWA's storage.
+// 2. `?code=...` — the PKCE link older emails carry. supabase-js (with
+//    detectSessionInUrl on) has already exchanged it while AuthService.init()
+//    ran, so a session simply exists by the time the router gets here. It only
+//    works in the browser that asked for the reset, which is why shape 1 is
+//    preferred.
 @Component({
   selector: 'app-auth-reset',
   standalone: true,
@@ -31,12 +39,27 @@ export class AuthResetComponent implements OnInit {
 
   constructor(private auth: AuthService, private router: Router) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     const failure = this.linkError();
     if (failure) {
       this.error.set(failure);
       return;
     }
+
+    const tokenHash = new URLSearchParams(window.location.search).get('token_hash');
+    if (tokenHash) {
+      const result = await this.auth.verifyRecoveryToken(tokenHash);
+      // Drop the token from the address bar either way: it is single-use, so
+      // reloading the page with it still attached would only fail.
+      history.replaceState(null, '', '/auth/reset');
+      if (!result.ok) {
+        this.error.set(result.message);
+        return;
+      }
+      this.ready.set(true);
+      return;
+    }
+
     if (!this.auth.signedIn()) {
       this.error.set(EXPIRED_LINK);
       return;

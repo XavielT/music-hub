@@ -1,5 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { Session, User } from '@supabase/supabase-js';
+import { EmailOtpType, Session, User } from '@supabase/supabase-js';
 import { AUTH_STORAGE_KEY, SupabaseService } from './supabase.service';
 import { ProfileModel } from '../models/profile.model';
 
@@ -111,6 +111,28 @@ export class AuthService {
       });
       if (error) return { ok: false, message: this.friendlyError(error) };
       return { ok: true, message: 'Reset link sent — check your inbox (and the spam folder).' };
+    } catch (err) {
+      return { ok: false, message: this.friendlyError(err) };
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  // Exchanges the `token_hash` from a recovery email for a session. Unlike the
+  // PKCE code, this needs nothing stored in the browser, so the link works
+  // wherever it is opened — a phone mail app included.
+  async verifyRecoveryToken(tokenHash: string): Promise<AuthResult> {
+    this._loading.set(true);
+    try {
+      const { data, error } = await this.supabase.client.auth.verifyOtp({
+        token_hash: tokenHash,
+        // Hardcoded rather than read from the URL: this page only ever
+        // handles password recovery.
+        type: 'recovery' as EmailOtpType,
+      });
+      if (error) return { ok: false, message: this.friendlyError(error) };
+      this.applySession(data.session);
+      return { ok: true, message: '' };
     } catch (err) {
       return { ok: false, message: this.friendlyError(err) };
     } finally {
@@ -268,7 +290,7 @@ export class AuthService {
       message.includes('auth session missing') ||
       message.includes('invalid or has expired')
     )
-      return 'That reset link is no longer valid. Ask for a new one from the sign-in page (open it in the same browser you requested it from).';
+      return 'That reset link is no longer valid — it may have expired or already been used. Ask for a new one from the sign-in page.';
     if (message.includes('same as the old') || message.includes('should be different'))
       return 'Choose a password different from your current one.';
     if (message.includes('rate limit') || message.includes('too many'))
