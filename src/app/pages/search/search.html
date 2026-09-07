@@ -19,6 +19,7 @@
       (addToPlaylist)="pickerFor.set(song)"
       (addToQueue)="player.addToQueue(song)"
       (playNext)="player.playNext(song)"
+      (edit)="editing.set(song)"
     ></app-song-item>
 
     <p class="search-empty" *ngIf="results().length === 0">No results in your library.</p>
@@ -30,4 +31,11 @@
     (picked)="onPicked($event)"
     (closed)="pickerFor.set(null)"
   ></app-playlist-picker>
+
+  <!-- Edit info -->
+  <app-song-editor
+    *ngIf="editing() as song"
+    [song]="song"
+    (closed)="editing.set(null)"
+  ></app-song-editor>
 </div>

@@ -30,6 +30,10 @@ export interface SongModel {
   // Artwork has already been searched for online and not found. Device-only:
   // without it every backfill would ask about the same unmatchable songs again.
   artworkChecked?: boolean;
+  // Edited on this device while offline (or while the push failed). Sync
+  // pushes these and clears the flag; until then applyRow must not overwrite
+  // the local title/artist/album with the cloud's older copy.
+  dirty?: boolean;
 }
 
 // Songs stored before the cloud fields existed load without them. Fill in
@@ -48,6 +52,7 @@ export function normalizeSong(
     downloaded: raw.downloaded ?? hasBlob,
     coverPath: raw.coverPath,
     artworkChecked: raw.artworkChecked,
+    dirty: raw.dirty,
     // Derived from what is really in the store rather than trusted from the
     // record, the same way `downloaded` is: a cleared database would otherwise
     // leave every song pointing at art that is gone.

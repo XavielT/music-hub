@@ -3,17 +3,19 @@ import { CommonModule } from '@angular/common';
 import { LibraryService } from '../../../shared/services/library.service';
 import { PlayerService } from '../../../shared/services/player.service';
 import { SongItem } from '../../../shared/components/song-item/song-item';
+import { SongEditor } from '../../../shared/components/song-editor/song-editor';
 import { PlaylistPicker } from '../../../shared/components/playlist-picker/playlist-picker';
 import { SongModel } from '../../../shared/models/song.model';
 
 @Component({
   selector: 'app-search',
   standalone: true,
-  imports: [CommonModule, SongItem, PlaylistPicker],
+  imports: [CommonModule, SongItem, SongEditor, PlaylistPicker],
   templateUrl: './search.html',
   styleUrl: './search.scss',
 })
 export class SearchComponent {
+  editing = signal<SongModel | null>(null);
   query = signal('');
   pickerFor = signal<SongModel | null>(null);
 

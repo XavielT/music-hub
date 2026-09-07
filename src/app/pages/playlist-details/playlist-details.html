@@ -45,6 +45,7 @@
       (play)="player.play(song, songs())"
       (addToQueue)="player.addToQueue(song)"
       (playNext)="player.playNext(song)"
+      (edit)="editing.set(song)"
       (remove)="library.removeFromPlaylist(p.id, song.id)"
       [canUpload]="auth.isAdmin()"
       (upload)="sync.uploadOne(song)"
@@ -55,4 +56,11 @@
       This playlist is empty. Add songs from Search or Library with the ＋ button.
     </p>
   </div>
+
+  <!-- Edit info -->
+  <app-song-editor
+    *ngIf="editing() as song"
+    [song]="song"
+    (closed)="editing.set(null)"
+  ></app-song-editor>
 </div>

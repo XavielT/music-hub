@@ -243,6 +243,19 @@ export class CloudLibraryService {
     return data as SongRow;
   }
 
+  // Pushes an edit to a song's own fields. Cover art travels separately, via
+  // attachCover.
+  async updateSongInfo(
+    songId: string,
+    info: { title: string; artist: string; album: string }
+  ): Promise<void> {
+    const { error } = await this.client
+      .from('songs')
+      .update({ title: info.title, artist: info.artist, album: info.album })
+      .eq('id', songId);
+    if (error) throw new Error(error.message);
+  }
+
   // --- Cover art ---
 
   // Pushes a song's artwork and returns where it landed. Failing to store a

@@ -7,6 +7,7 @@ import { LibraryService, SongGroup } from '../../../shared/services/library.serv
 import { PlayerService } from '../../../shared/services/player.service';
 import { SyncService } from '../../../shared/services/sync.service';
 import { SongItem } from '../../../shared/components/song-item/song-item';
+import { SongEditor } from '../../../shared/components/song-editor/song-editor';
 import { PlaylistPicker } from '../../../shared/components/playlist-picker/playlist-picker';
 import { Cover } from '../../../shared/ui/cover/cover';
 import { SongModel } from '../../../shared/models/song.model';
@@ -16,11 +17,12 @@ type LibraryTab = 'songs' | 'artists' | 'albums' | 'playlists';
 @Component({
   selector: 'app-library',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, SongItem, PlaylistPicker, Cover],
+  imports: [CommonModule, RouterLink, FormsModule, SongItem, SongEditor, PlaylistPicker, Cover],
   templateUrl: './library.html',
   styleUrl: './library.scss',
 })
 export class LibraryComponent {
+  editing = signal<SongModel | null>(null);
   tab = signal<LibraryTab>('songs');
   selectedGroup = signal<SongGroup | null>(null);
   pickerFor = signal<SongModel | null>(null);

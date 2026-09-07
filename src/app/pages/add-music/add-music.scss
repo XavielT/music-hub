@@ -290,3 +290,15 @@
   font-size: 0.75rem;
   margin-bottom: 8px;
 }
+
+// Shown under a pending song that matches one already in the library.
+.add-music-duplicate {
+  margin: -4px 0 0 4px;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: #ffb020;
+
+  strong {
+    font-weight: 600;
+  }
+}

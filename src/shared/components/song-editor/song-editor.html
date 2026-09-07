@@ -1,0 +1,39 @@
+<div class="song-editor-backdrop" (click)="closed.emit()"></div>
+
+<div class="song-editor" *ngIf="song() as current">
+  <h2 class="song-editor-title">Edit info</h2>
+
+  <div class="song-editor-cover-row">
+    <img class="song-editor-cover" *ngIf="currentCover() as art" [src]="art" alt="" />
+    <div class="song-editor-cover-empty" *ngIf="!currentCover()">♪</div>
+    <label class="song-editor-cover-btn">
+      Replace cover
+      <input type="file" accept="image/*" (change)="onCover($event)" />
+    </label>
+  </div>
+
+  <label class="song-editor-field">
+    <span>Title</span>
+    <input type="text" [(ngModel)]="title" placeholder="Title" />
+  </label>
+  <label class="song-editor-field">
+    <span>Artist</span>
+    <input type="text" [(ngModel)]="artist" placeholder="Artist" />
+  </label>
+  <label class="song-editor-field">
+    <span>Album</span>
+    <input type="text" [(ngModel)]="album" placeholder="Album" />
+  </label>
+
+  <!-- Members can correct their own copy, but the shared row is Xaviel's. -->
+  <p class="song-editor-note" *ngIf="!library.canPushEdits(current) && current.syncState === 'synced'">
+    This change stays on this device until it can reach the shared library.
+  </p>
+
+  <div class="song-editor-actions">
+    <button class="song-editor-cancel" (click)="closed.emit()">Cancel</button>
+    <button class="song-editor-save" (click)="save()" [disabled]="saving()">
+      {{ saving() ? 'Saving…' : 'Save' }}
+    </button>
+  </div>
+</div>

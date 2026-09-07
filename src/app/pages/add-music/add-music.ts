@@ -14,7 +14,11 @@ interface PendingSong {
   album: string;
   // Cover art lifted out of the file's own tags, kept aside until it is saved.
   picture?: Blob;
+  duration?: number;
   taggedTitle: boolean; // the file said so, rather than the filename guessing
+  // Title of a song already in the library that this looks like a second copy
+  // of. A warning only — adding it anyway is allowed.
+  duplicateOf?: string;
 }
 
 // YouTube search talks to YouTube's internal API directly. On the phone
@@ -59,7 +63,7 @@ export class AddMusicComponent implements OnDestroy {
   uploadToCloud = signal(navigator.onLine);
 
   constructor(
-    private library: LibraryService,
+    public library: LibraryService,
     public auth: AuthService,
     private youtube: YoutubeService
   ) {}
@@ -150,11 +154,12 @@ export class AddMusicComponent implements OnDestroy {
     // happened.
     const guesses = files.map(file => ({ file, ...this.guessFromName(file) }));
     this.pending.update(list => [...list, ...guesses]);
+    for (const guess of guesses) this.flagDuplicate(guess.file);
 
     this.reading.set(true);
     for (const guess of guesses) {
       const tags = await readTags(guess.file);
-      if (!tags.title && !tags.artist && !tags.album && !tags.picture) continue;
+      if (!tags.title && !tags.artist && !tags.album && !tags.picture && !tags.duration) continue;
       // What the file says about itself beats a filename split on " - ".
       this.pending.update(list =>
         list.map(item =>
@@ -165,13 +170,27 @@ export class AddMusicComponent implements OnDestroy {
                 artist: tags.artist || item.artist,
                 album: tags.album || item.album,
                 picture: tags.picture,
+                duration: tags.duration,
                 taggedTitle: !!tags.title,
               }
             : item
         )
       );
+      this.flagDuplicate(guess.file);
     }
     this.reading.set(false);
+  }
+
+  // Flags a pending song that looks like one already in the library. Re-run
+  // after tags land, since they usually correct the title the filename guessed.
+  private flagDuplicate(file: File): void {
+    this.pending.update(list =>
+      list.map(item => {
+        if (item.file !== file) return item;
+        const match = this.library.findDuplicate(item.title, item.artist);
+        return { ...item, duplicateOf: match ? `${match.title} — ${match.artist}` : undefined };
+      })
+    );
   }
 
   // "Artist - Title.mp3" is the best a filename can offer, and it is what the
@@ -228,7 +247,15 @@ export class AddMusicComponent implements OnDestroy {
     for (const item of items) {
       const song = await this.library.addLocalSong(
         item.file,
-        { title: item.title, artist: item.artist, album: item.album, picture: item.picture },
+        {
+          title: item.title,
+          artist: item.artist,
+          album: item.album,
+          picture: item.picture,
+          // From the tags when they had it, which saves decoding the file
+          // again just to measure it.
+          duration: item.duration,
+        },
         toCloud
       );
       added.push(song.id);

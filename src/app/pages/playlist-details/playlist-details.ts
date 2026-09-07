@@ -1,4 +1,4 @@
-import { Component, computed } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
@@ -6,16 +6,19 @@ import { LibraryService } from '../../../shared/services/library.service';
 import { PlayerService } from '../../../shared/services/player.service';
 import { SyncService } from '../../../shared/services/sync.service';
 import { SongItem } from '../../../shared/components/song-item/song-item';
+import { SongEditor } from '../../../shared/components/song-editor/song-editor';
 import { Cover } from '../../../shared/ui/cover/cover';
+import { SongModel } from '../../../shared/models/song.model';
 
 @Component({
   selector: 'app-playlist-details',
   standalone: true,
-  imports: [CommonModule, SongItem, Cover],
+  imports: [CommonModule, SongItem, SongEditor, Cover],
   templateUrl: './playlist-details.html',
   styleUrl: './playlist-details.scss',
 })
 export class PlaylistDetailsComponent {
+  editing = signal<SongModel | null>(null);
   private id: string;
 
   playlist = computed(() => this.library.playlists().find(p => p.id === this.id) ?? null);

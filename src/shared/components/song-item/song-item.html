@@ -31,6 +31,7 @@
 <div class="song-item-menu" *ngIf="menuOpen()">
   <button (click)="menuOpen.set(false); playNext.emit()">Play next</button>
   <button (click)="menuOpen.set(false); addToQueue.emit()">Add to queue</button>
+  <button *ngIf="library.canEdit(song())" (click)="menuOpen.set(false); edit.emit()">Edit info</button>
   <button *ngIf="canAddToPlaylist()" (click)="menuOpen.set(false); addToPlaylist.emit()">
     Add to playlist
   </button>

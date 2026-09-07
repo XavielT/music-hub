@@ -33,6 +33,7 @@
       (addToPlaylist)="pickerFor.set(song)"
       (addToQueue)="player.addToQueue(song)"
       (playNext)="player.playNext(song)"
+      (edit)="editing.set(song)"
       (remove)="library.removeSong(song.id)"
       (upload)="sync.uploadOne(song)"
       (download)="library.downloadSong(song)"
@@ -78,6 +79,7 @@
         (addToPlaylist)="pickerFor.set(song)"
       (addToQueue)="player.addToQueue(song)"
       (playNext)="player.playNext(song)"
+      (edit)="editing.set(song)"
         (upload)="sync.uploadOne(song)"
         (download)="library.downloadSong(song)"
         (removeDownload)="library.removeDownload(song)"
@@ -106,4 +108,11 @@
     (picked)="onPicked($event)"
     (closed)="pickerFor.set(null)"
   ></app-playlist-picker>
+
+  <!-- Edit info -->
+  <app-song-editor
+    *ngIf="editing() as song"
+    [song]="song"
+    (closed)="editing.set(null)"
+  ></app-song-editor>
 </div>

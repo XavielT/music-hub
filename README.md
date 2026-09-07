@@ -406,12 +406,19 @@ The PWA above is the supported route without one.
 ## Cover art and tags
 
 Adding a file from the device reads what it already knows about itself — title,
-artist, album and the embedded picture — instead of guessing from the filename.
-`src/shared/services/tags.ts` parses ID3v2 (MP3), MP4 atoms (M4A, what
-`compress-for-cloud.sh` produces) and FLAC by hand; no metadata library, because
-those three containers are a fraction of the size of any dependency that would
-ship in the bundle. Anything it cannot read falls back to splitting the filename
-on `" - "`, exactly as before.
+artist, album, duration and the embedded picture — instead of guessing from the
+filename. Parsing is `music-metadata`, imported dynamically: it costs **0.1 kB
+of transfer on the initial bundle** and splits itself per format, so opening the
+add page pulls only the parser for the file at hand. That covers everything the
+file picker accepts, Ogg/Opus and WAV included. Anything it cannot read falls
+back to splitting the filename on `" - "`, exactly as before — a parse failure
+is logged and never blocks adding the song.
+
+Cover art is scaled to **512 px on its longest edge and re-encoded as JPEG**
+before it is stored. Embedded art is routinely 1500×1500 and over a megabyte,
+which is a real cost held on the device, uploaded to a shared 1 GB bucket and
+fetched again on every other device. A cover that would not get smaller is left
+as it is.
 
 Artwork is kept out of the song record — a record is read on every library load,
 and a few hundred kB of image in each one would make that crawl. It lives in an
@@ -455,6 +462,23 @@ covers what is new.
 
 `connect-src` in `vercel.json` had to grow to allow `itunes.apple.com` and
 `*.mzstatic.com` (the artwork host).
+
+### Fixing what a file got wrong
+
+**Edit info** (in a song's ⋮ menu) corrects title, artist and album, and can
+replace the cover with any image — scaled the same way tag artwork is. It saves
+locally first, because the library on this device is what the user is looking
+at, then pushes to the cloud. An edit made offline is marked `dirty` and pushed
+on the next sync; until then `applyRow` keeps the local values, so a sync cannot
+silently undo what was just typed.
+
+Only an admin can edit a song in the shared library — the row is theirs under
+RLS — so the action is offered for local songs to everyone and for shared songs
+to admins, rather than failing against a policy.
+
+Adding a file whose title and artist already exist in the library shows a
+**duplicate hint** before saving. Case, accents and punctuation are ignored; the
+audio is not hashed. It is a warning, not a gate — adding it anyway is allowed.
 
 ## Roadmap / TODOs
 - **Import from YouTube**: search works inside the Android app (native HTTP bypasses

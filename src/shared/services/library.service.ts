@@ -411,6 +411,117 @@ export class LibraryService {
     if (!resolved && song.coverPath && !this.online()) this.coversResolving.delete(song.id);
   }
 
+  /**
+   * A song already in the library with the same title and artist, ignoring
+   * case, accents and punctuation.
+   *
+   * Deliberately not hashing audio: this is a hint shown before saving, not a
+   * gatekeeper, and two different rips of the same song should still match.
+   */
+  findDuplicate(title: string, artist: string): SongModel | null {
+    const wantedTitle = normaliseName(title);
+    if (!wantedTitle) return null;
+    const wantedArtist = normaliseName(artist);
+    return (
+      this._songs().find(
+        song => normaliseName(song.title) === wantedTitle && normaliseName(song.artist) === wantedArtist
+      ) ?? null
+    );
+  }
+
+  // Songs edited here that the cloud has not caught up with.
+  dirtySongs = computed(() => this._songs().filter(s => s.dirty && s.syncState === 'synced'));
+
+  /**
+   * Applies an edit to a song's own details, and its artwork if one was
+   * picked.
+   *
+   * Local first, always: the library on this device is what the user is
+   * looking at. A song that lives in the cloud is pushed straight away when
+   * that is possible, and marked to be pushed on the next sync when it is not.
+   */
+  async updateSongInfo(
+    id: string,
+    info: { title: string; artist: string; album: string; cover?: Blob }
+  ): Promise<void> {
+    const song = this._songs().find(s => s.id === id);
+    if (!song) return;
+
+    const title = info.title.trim() || song.title;
+    const artist = info.artist.trim() || 'Unknown artist';
+    const album = info.album.trim() || 'Unknown album';
+
+    if (info.cover) {
+      await this.db.put('covers', info.cover, id);
+      // Drop the object URL so the new artwork is the one that resolves next.
+      this.releaseCover(id);
+    }
+
+    const local = !this.canPushEdits(song);
+    await this.patchSong(id, {
+      title,
+      artist,
+      album,
+      hasCover: info.cover ? true : song.hasCover,
+      // A fresh cover means the old cloud object is out of date; artworkChecked
+      // stops the online lookup from second-guessing a deliberate choice.
+      artworkChecked: info.cover ? true : song.artworkChecked,
+      dirty: local && song.syncState === 'synced',
+    });
+
+    if (local) return;
+
+    try {
+      await this.cloud.updateSongInfo(id, { title, artist, album });
+      if (info.cover) {
+        const coverPath = await this.cloud.attachCover(id, info.cover);
+        await this.patchSong(id, { coverPath });
+      }
+      await this.patchSong(id, { dirty: false });
+    } catch (err) {
+      // Kept locally and retried on the next sync rather than lost.
+      await this.patchSong(id, { dirty: true });
+      this.toast.error(`"${title}" was updated on this device — it will sync when you are online.`);
+      console.warn('updateSongInfo failed', err);
+    }
+  }
+
+  // Pushes every edit that has been waiting. Called from the sync pass.
+  async pushDirtySongs(): Promise<void> {
+    for (const song of this.dirtySongs()) {
+      if (!this.canPushEdits(song)) continue;
+      try {
+        await this.cloud.updateSongInfo(song.id, {
+          title: song.title,
+          artist: song.artist,
+          album: song.album,
+        });
+        if (song.hasCover && !song.coverPath) {
+          const cover = await this.db.get<Blob>('covers', song.id);
+          if (cover) {
+            const coverPath = await this.cloud.attachCover(song.id, cover);
+            await this.patchSong(song.id, { coverPath });
+          }
+        }
+        await this.patchSong(song.id, { dirty: false });
+      } catch (err) {
+        // Still dirty; the next sync tries again.
+        console.warn('pushDirtySongs failed', err);
+      }
+    }
+  }
+
+  // A song in the shared library is only writable by an admin — a member's
+  // edit stays on their own device rather than failing against RLS.
+  canPushEdits(song: SongModel): boolean {
+    return song.syncState === 'synced' && this.auth.isAdmin() && this.online();
+  }
+
+  // Whether the edit dialog should be offered at all.
+  canEdit(song: SongModel): boolean {
+    return song.syncState !== 'synced' || this.auth.isAdmin();
+  }
+
   // Songs with no artwork from any source yet, and not already looked up.
   missingArtwork = computed(() =>
     this._songs().filter(s => !s.hasCover && !s.coverUrl && !s.coverPath && !s.artworkChecked)
@@ -595,11 +706,14 @@ export class LibraryService {
   // (whether the blob is here) intact.
   async applyRow(row: SongRow, downloadedHint?: boolean): Promise<SongModel> {
     const existing = this._songs().find(s => s.id === row.id);
+    // An edit made here and not yet pushed is newer than the row: taking the
+    // cloud's copy would silently undo what the user just typed.
+    const pendingEdit = existing?.dirty ? existing : null;
     const song: SongModel = {
       id: row.id,
-      title: row.title,
-      artist: row.artist,
-      album: row.album,
+      title: pendingEdit?.title ?? row.title,
+      artist: pendingEdit?.artist ?? row.artist,
+      album: pendingEdit?.album ?? row.album,
       duration: row.duration,
       source: row.remote_url ? 'remote' : 'local',
       url: row.remote_url ?? undefined,
@@ -616,6 +730,7 @@ export class LibraryService {
       // lives in the cloud, not whether this device already has it.
       hasCover: existing?.hasCover ?? false,
       artworkChecked: existing?.artworkChecked,
+      dirty: existing?.dirty,
     };
     await this.db.put('songs', song);
     this._songs.update(list => {
@@ -721,4 +836,14 @@ export class LibraryService {
       audio.src = url;
     });
   }
+}
+
+// Case, accents and punctuation all ignored, so "Café Tacvba" and
+// "cafe tacvba!" are the same artist.
+function normaliseName(text: string): string {
+  return (text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '');
 }

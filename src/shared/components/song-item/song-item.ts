@@ -30,6 +30,7 @@ export class SongItem {
   @Output() addToPlaylist = new EventEmitter<void>();
   @Output() addToQueue = new EventEmitter<void>();
   @Output() playNext = new EventEmitter<void>();
+  @Output() edit = new EventEmitter<void>();
   @Output() remove = new EventEmitter<void>();
   @Output() upload = new EventEmitter<void>();
   @Output() download = new EventEmitter<void>();

@@ -108,6 +108,7 @@ export class SyncService {
       }
       await this.library.dropSyncedPlaylistsMissingFrom(new Set(playlistRows.map(r => r.id)));
 
+      await this.library.pushDirtySongs();
       await this.pushPendingPlaylists();
 
       this._lastSyncAt.set(Date.now());
@@ -172,6 +173,7 @@ export class SyncService {
     if (uploaded > 0) {
       this.toast.show(`${uploaded} song${uploaded === 1 ? '' : 's'} uploaded to the cloud.`);
       // Playlists waiting on those songs can now be completed.
+      await this.library.pushDirtySongs();
       await this.pushPendingPlaylists();
     }
     if (failed > 0) this.toast.error(`${failed} upload${failed === 1 ? '' : 's'} failed.`);
@@ -187,6 +189,7 @@ export class SyncService {
     this._uploadProgress.set(null);
     if (ok) {
       this.toast.show(`"${song.title}" is in the cloud.`);
+      await this.library.pushDirtySongs();
       await this.pushPendingPlaylists();
     }
   }

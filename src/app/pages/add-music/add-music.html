@@ -63,16 +63,21 @@
     <!-- Pending files -->
     <p class="add-music-reading" *ngIf="reading()">Reading tags from the files…</p>
 
-    <div class="add-music-pending" *ngFor="let item of pending(); let i = index">
-      <!-- Artwork the file carried with it, so you can see it was picked up. -->
-      <img class="add-music-pending-art" *ngIf="previewFor(item) as art" [src]="art" alt="" />
-      <div class="add-music-pending-fields">
-        <input type="text" placeholder="Title" [(ngModel)]="item.title" />
-        <input type="text" placeholder="Artist" [(ngModel)]="item.artist" />
-        <input type="text" placeholder="Album (optional)" [(ngModel)]="item.album" />
+    <ng-container *ngFor="let item of pending(); let i = index">
+      <div class="add-music-pending">
+        <!-- Artwork the file carried with it, so you can see it was picked up. -->
+        <img class="add-music-pending-art" *ngIf="previewFor(item) as art" [src]="art" alt="" />
+        <div class="add-music-pending-fields">
+          <input type="text" placeholder="Title" [(ngModel)]="item.title" />
+          <input type="text" placeholder="Artist" [(ngModel)]="item.artist" />
+          <input type="text" placeholder="Album (optional)" [(ngModel)]="item.album" />
+        </div>
+        <button class="add-music-pending-remove" (click)="removePending(i)">✕</button>
       </div>
-      <button class="add-music-pending-remove" (click)="removePending(i)">✕</button>
-    </div>
+      <p class="add-music-duplicate" *ngIf="item.duplicateOf as existing">
+        Looks like a duplicate of <strong>{{ existing }}</strong> — you can still add it.
+      </p>
+    </ng-container>
 
     <label class="add-music-cloud" *ngIf="pending().length > 0 && auth.isAdmin()">
       <input type="checkbox" [checked]="uploadToCloud()" (change)="uploadToCloud.set($any($event.target).checked)" />
