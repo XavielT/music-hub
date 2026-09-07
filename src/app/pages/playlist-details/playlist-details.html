@@ -32,6 +32,7 @@
       [active]="player.current()?.id === song.id"
       (play)="player.play(song, songs())"
       (remove)="library.removeFromPlaylist(p.id, song.id)"
+      [canUpload]="auth.isAdmin()"
       (upload)="sync.uploadOne(song)"
       (download)="library.downloadSong(song)"
       (removeDownload)="library.removeDownload(song)"

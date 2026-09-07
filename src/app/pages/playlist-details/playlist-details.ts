@@ -1,6 +1,7 @@
 import { Component, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '../../../shared/services/auth.service';
 import { LibraryService } from '../../../shared/services/library.service';
 import { PlayerService } from '../../../shared/services/player.service';
 import { SyncService } from '../../../shared/services/sync.service';
@@ -28,7 +29,8 @@ export class PlaylistDetailsComponent {
     private router: Router,
     public library: LibraryService,
     public player: PlayerService,
-    public sync: SyncService
+    public sync: SyncService,
+    public auth: AuthService
   ) {
     this.id = route.snapshot.paramMap.get('id') ?? '';
   }

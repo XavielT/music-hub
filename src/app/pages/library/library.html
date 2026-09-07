@@ -27,16 +27,19 @@
     <div class="library-cloud-bar">
       <div class="library-cloud-bar-fill" [class.warn]="nearQuota()" [style.width.%]="usedPercent()"></div>
     </div>
-    <p class="library-cloud-warn" *ngIf="nearQuota()">
+    <p class="library-cloud-warn" *ngIf="nearQuota() && auth.isAdmin()">
       You are close to the 1 GB free limit. Delete a few cloud songs before adding more.
     </p>
 
-    <div class="library-cloud-upload" *ngIf="pendingUploads() > 0">
+    <div class="library-cloud-upload" *ngIf="pendingUploads() > 0 && auth.isAdmin()">
       <span>{{ pendingUploads() }} song(s) only on this device</span>
       <button (click)="sync.uploadAll()" [disabled]="sync.uploading()">
         {{ sync.uploading() ? 'Uploading...' : 'Upload all' }}
       </button>
     </div>
+    <p class="library-cloud-note" *ngIf="pendingUploads() > 0 && !auth.isAdmin()">
+      {{ pendingUploads() }} song(s) stay on this device — the shared library is added to by Xaviel.
+    </p>
     <p class="library-cloud-progress" *ngIf="sync.uploadProgress() as p">
       {{ p.done + 1 }} / {{ p.total }} — {{ p.title }}
     </p>
@@ -60,6 +63,7 @@
       *ngFor="let song of library.songs()"
       [song]="song"
       [active]="player.current()?.id === song.id"
+      [canUpload]="auth.isAdmin()"
       (play)="player.play(song, library.songs())"
       (addToPlaylist)="pickerFor.set(song)"
       (remove)="library.removeSong(song.id)"
@@ -93,6 +97,7 @@
         [song]="song"
         [removable]="false"
         [active]="player.current()?.id === song.id"
+      [canUpload]="auth.isAdmin()"
         (play)="player.play(song, group.songs)"
         (addToPlaylist)="pickerFor.set(song)"
         (upload)="sync.uploadOne(song)"

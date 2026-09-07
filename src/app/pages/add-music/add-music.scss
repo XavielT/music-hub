@@ -267,3 +267,11 @@
     flex-shrink: 0;
   }
 }
+
+// Members cannot add to the shared cloud library; explain instead of a toggle.
+.add-music-cloud-note {
+  color: var(--main-ultra-light);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  margin-top: 8px;
+}

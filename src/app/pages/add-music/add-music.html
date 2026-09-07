@@ -70,10 +70,14 @@
       <button class="add-music-pending-remove" (click)="removePending(i)">✕</button>
     </div>
 
-    <label class="add-music-cloud" *ngIf="pending().length > 0">
+    <label class="add-music-cloud" *ngIf="pending().length > 0 && auth.isAdmin()">
       <input type="checkbox" [checked]="uploadToCloud()" (change)="uploadToCloud.set($any($event.target).checked)" />
-      <span>Upload to the cloud so they play on your other devices</span>
+      <span>Upload to the shared library so they play on every device</span>
     </label>
+    <p class="add-music-cloud-note" *ngIf="pending().length > 0 && !auth.isAdmin()">
+      These songs stay on this device. The shared cloud library is added to by Xaviel — everything
+      in it is already available to you to play and download.
+    </p>
 
     <button class="add-music-save" *ngIf="pending().length > 0" [disabled]="saving()" (click)="saveAll()">
       {{ saving() ? 'Saving...' : 'Save ' + pending().length + ' song(s)' }}

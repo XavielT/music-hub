@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Capacitor } from '@capacitor/core';
+import { AuthService } from '../../../shared/services/auth.service';
 import { LibraryService } from '../../../shared/services/library.service';
 import { YoutubeService, YoutubeResult } from '../../../shared/services/youtube.service';
 
@@ -52,7 +53,11 @@ export class AddMusicComponent {
   // whenever there is a connection.
   uploadToCloud = signal(navigator.onLine);
 
-  constructor(private library: LibraryService, private youtube: YoutubeService) {}
+  constructor(
+    private library: LibraryService,
+    public auth: AuthService,
+    private youtube: YoutubeService
+  ) {}
 
   async ytSearch(): Promise<void> {
     const query = this.ytQuery.trim();
@@ -156,7 +161,7 @@ export class AddMusicComponent {
     if (this.saving()) return;
     this.saving.set(true);
     const items = this.pending();
-    const toCloud = this.uploadToCloud() && navigator.onLine;
+    const toCloud = this.uploadToCloud() && navigator.onLine && this.auth.isAdmin();
     const added: string[] = [];
     for (const item of items) {
       const song = await this.library.addLocalSong(

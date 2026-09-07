@@ -12,6 +12,9 @@ import { SongModel } from '../../models/song.model';
 })
 export class SongItem {
   song = input.required<SongModel>();
+  // Members cannot push to the shared library, so their local-only songs
+  // show as "stays on this device" rather than a tappable upload prompt.
+  canUpload = input(true);
   @Input() active = false;
   @Input() removable = true;
   @Output() play = new EventEmitter<void>();
@@ -30,7 +33,9 @@ export class SongItem {
     if (song.syncState === 'uploading') return { icon: '⋯', title: 'Uploading…', kind: 'busy' };
     if (song.syncState === 'downloading') return { icon: '⋯', title: 'Downloading…', kind: 'busy' };
     if (song.syncState === 'local-only')
-      return { icon: '↑', title: 'On this device only — tap to upload', kind: 'local' };
+      return this.canUpload()
+        ? { icon: '↑', title: 'On this device only — tap to upload', kind: 'local' }
+        : { icon: '↑', title: 'On this device only', kind: 'local' };
     if (song.downloaded) return { icon: '●', title: 'In the cloud, available offline', kind: 'offline' };
     // A song added from a URL has no stored audio, so it can only stream.
     if (!song.storagePath) return { icon: '☁', title: 'Streams from a link — needs a connection', kind: 'cloud' };
@@ -45,7 +50,9 @@ export class SongItem {
 
   onBadgeClick(): void {
     const song = this.song();
-    if (song.syncState === 'local-only') this.upload.emit();
+    if (song.syncState === 'local-only') {
+      if (this.canUpload()) this.upload.emit();
+    }
     else if (song.syncState === 'synced' && !song.downloaded && song.storagePath) this.download.emit();
     else if (song.syncState === 'synced' && song.downloaded) this.removeDownload.emit();
   }

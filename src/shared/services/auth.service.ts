@@ -26,6 +26,10 @@ export class AuthService {
   loading = this._loading.asReadonly();
 
   signedIn = computed(() => this._user() !== null);
+  // Only admins may write to the shared cloud library. Defaults to false while
+  // the profile is still loading (or offline), so the UI never offers an upload
+  // that the database would reject.
+  isAdmin = computed(() => this._profile()?.is_admin === true);
   // Best label we have for the current user: display name, else email.
   displayName = computed(() => this._profile()?.display_name?.trim() || this._user()?.email || '');
 
@@ -193,7 +197,7 @@ export class AuthService {
     try {
       const { data, error } = await this.supabase.client
         .from('profiles')
-        .select('id, display_name, created_at')
+        .select('id, display_name, created_at, is_admin')
         .eq('id', userId)
         .maybeSingle();
       if (!error && data) this._profile.set(data as ProfileModel);
@@ -208,7 +212,7 @@ export class AuthService {
     try {
       const { data } = await this.supabase.client
         .from('profiles')
-        .select('id, display_name, created_at')
+        .select('id, display_name, created_at, is_admin')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -222,7 +226,7 @@ export class AuthService {
       const { data: inserted } = await this.supabase.client
         .from('profiles')
         .insert({ id: user.id, display_name: fallbackName })
-        .select('id, display_name, created_at')
+        .select('id, display_name, created_at, is_admin')
         .maybeSingle();
       if (inserted) this._profile.set(inserted as ProfileModel);
     } catch {

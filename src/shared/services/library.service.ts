@@ -1,4 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
+import { AuthService } from './auth.service';
 import { DbService } from './db.service';
 import {
   CloudLibraryService,
@@ -40,6 +41,7 @@ export class LibraryService {
   constructor(
     private db: DbService,
     private cloud: CloudLibraryService,
+    private auth: AuthService,
     private toast: ToastService
   ) {}
 
@@ -160,8 +162,9 @@ export class LibraryService {
     await this.db.put('songs', song);
     this._songs.update(list => [song, ...list]);
 
-    // A URL song is just a row in the cloud — nothing to upload.
-    if (this.online()) {
+    // A URL song is just a row in the cloud — nothing to upload. Members are
+    // not allowed to add to the shared library, so theirs stays local.
+    if (this.online() && this.auth.isAdmin()) {
       try {
         const row = await this.cloud.insertRemoteSong(song, url);
         await this.applyRow(row, false);
@@ -176,6 +179,17 @@ export class LibraryService {
   // Pushes one local-only song (and its audio) to Supabase.
   async uploadSong(song: SongModel): Promise<boolean> {
     if (song.syncState === 'synced' || song.syncState === 'uploading') return true;
+
+    // The cloud library is shared and its 1 GB is finite, so only admins fill
+    // it. Members keep their own additions on their own device. The database
+    // enforces this too — this is here so they get a sentence instead of a
+    // policy violation.
+    if (!this.auth.isAdmin()) {
+      this.toast.error(
+        `"${song.title}" stays on this device — only Xaviel can add songs to the shared library.`
+      );
+      return false;
+    }
 
     const file = await this.getSongFile(song.id);
     if (!file) {
@@ -245,6 +259,16 @@ export class LibraryService {
 
   async removeSong(id: string): Promise<void> {
     const song = this._songs().find(s => s.id === id);
+
+    // A synced song belongs to the shared library, not to the member looking
+    // at it. Freeing space on their own device is what they actually want.
+    if (song?.syncState === 'synced' && !this.auth.isAdmin()) {
+      this.toast.error(
+        'This song is part of the shared library — only Xaviel can remove it. Tap ● to free up space on this device.'
+      );
+      return;
+    }
+
     if (song?.syncState === 'synced' && this.online()) {
       try {
         await this.cloud.deleteSong(song);

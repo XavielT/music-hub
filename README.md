@@ -106,6 +106,46 @@ code change is needed — after which `flowType` can go back to `'pkce'`.
 Note the free tier allows only **2 auth emails per hour**; a 429 during testing is
 that limit, not a bug.
 
+## Shared library: admins upload, everyone listens
+
+The cloud library is **shared and has one 1 GB budget**, so only admins add to it.
+Members read, stream and download everything in it, and can still add songs on
+their own device — those simply stay local and are never uploaded.
+
+Enforced in the database, not just the UI: `songs` and the `songs`/`covers` buckets
+are readable by any signed-in member but writable only where `public.is_admin()`.
+Playlists stay per-person, so everyone curates their own from the shared songs.
+
+To make someone an admin:
+
+```sql
+update public.profiles set is_admin = true where id = '<their auth user id>';
+```
+
+### Compressing before upload
+
+At 320 kbps a song is ~7 MB, so 1 GB is only ~140 songs. Re-encoding to AAC 160k
+roughly halves that to ~3.6 MB (~280 songs):
+
+```bash
+./tools/compress-for-cloud.sh ~/Music/originals ~/Music/for-cloud
+# then add the .m4a files through the app's ＋ tab
+BITRATE=128k ./tools/compress-for-cloud.sh ...   # ~2.9 MB/song if you want more room
+```
+
+Needs `ffmpeg`. Originals are never modified — keep them as your masters. Tags and
+embedded cover art are carried over, nested folders are preserved, and re-running
+skips anything already converted.
+
+**This is a re-encode, not lossless.** An MP3 is already lossy, so nothing can
+shrink it without a second lossy pass — true lossless (FLAC) would make a 7 MB MP3
+into roughly 25 MB. AAC 160k is transparent for phone and earbud listening and
+plays natively everywhere, iOS included. Only convert from your best available
+source; never re-run it on an already-converted file.
+
+Storage is not the only free-tier limit — **egress is 5 GB/month**. Smaller files
+help, and songs downloaded for offline stream once instead of on every play.
+
 ## Invite-only sign-ups
 
 Registration is open in the UI but the database rejects unknown emails: a

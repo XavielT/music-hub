@@ -326,3 +326,11 @@
   font-size: 0.72rem;
   margin: 8px 0 0;
 }
+
+// Shown to members in place of the "Upload all" action.
+.library-cloud-note {
+  color: var(--main-ultra-light);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  margin-top: 8px;
+}
