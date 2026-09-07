@@ -68,6 +68,12 @@ export class UpdateService {
   private _error = signal<string | null>(null);
   error = this._error.asReadonly();
 
+  // Android 8+ gates "install unknown apps" per app, and revokes it again for
+  // apps it decides are unused — so an install that worked last month can stop
+  // working with no warning. null means the question does not apply (web).
+  private _canInstall = signal<boolean | null>(null);
+  canInstall = this._canInstall.asReadonly();
+
   private downloadedPath: string | null = null;
 
   constructor(private updates: SwUpdate, private toast: ToastService) {
@@ -78,6 +84,7 @@ export class UpdateService {
         .then(info => this._currentVersion.set(info.versionName))
         .catch(() => undefined);
       void AppUpdate.addListener('downloadProgress', p => this._progress.set(p.percent));
+      void this.refreshInstallPermission();
       // A check on launch is what makes this feel like a store app; failures
       // here are silent because nobody asked for it.
       void this.check(false);
@@ -91,6 +98,31 @@ export class UpdateService {
           this._available.set({ version: '', notes: '' });
           this._status.set('ready');
         });
+    }
+  }
+
+  // Re-reads whether the app may install updates. Worth calling whenever the
+  // settings screen is opened, since the answer changes outside the app.
+  async refreshInstallPermission(): Promise<void> {
+    if (!this.isNative) return;
+    try {
+      const { granted } = await AppUpdate.canInstall();
+      this._canInstall.set(granted);
+    } catch {
+      this._canInstall.set(null);
+    }
+  }
+
+  // Sends the user to the one system screen that can grant it, and reports
+  // back what they chose.
+  async requestInstallPermission(): Promise<boolean> {
+    if (!this.isNative) return false;
+    try {
+      const { granted } = await AppUpdate.openInstallSettings();
+      this._canInstall.set(granted);
+      return granted;
+    } catch {
+      return false;
     }
   }
 
@@ -200,9 +232,11 @@ export class UpdateService {
   // package installer. Ask for it at the moment it is needed, not on launch.
   private async ensureInstallPermission(): Promise<boolean> {
     const { granted } = await AppUpdate.canInstall();
+    this._canInstall.set(granted);
     if (granted) return true;
     this.toast.show('Allow Music Hub to install apps, then press Update again.');
     const result = await AppUpdate.openInstallSettings();
+    this._canInstall.set(result.granted);
     return result.granted;
   }
 

@@ -1,6 +1,6 @@
 import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { PlayerBar } from './components/player-bar/player-bar';
 import { BottomNav } from './components/bottom-nav/bottom-nav';
@@ -13,7 +13,7 @@ import { ToastHost } from '../shared/ui/toast/toast';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, PlayerBar, BottomNav, UpdateBanner, ToastHost],
+  imports: [CommonModule, RouterOutlet, RouterLink, PlayerBar, BottomNav, UpdateBanner, ToastHost],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -24,6 +24,10 @@ export class App {
   // session (the recovery link signs the user in), so signedIn() alone would
   // drop the player bar and nav on top of its form.
   showChrome = computed(() => this.auth.signedIn() && !this.url().startsWith('/auth'));
+
+  // The settings page has its own back button and title, so the floating gear
+  // would only sit on top of them.
+  showSettingsButton = computed(() => this.showChrome() && !this.url().startsWith('/settings'));
 
   // SyncService is injected so it starts watching the session right away: it
   // pulls the cloud library as soon as a user is available. UpdateService for

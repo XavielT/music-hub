@@ -1,50 +1,6 @@
 <div class="library">
   <h1 class="library-title">Your library</h1>
 
-  <!-- Account -->
-  <div class="library-account">
-    <div class="library-account-avatar">{{ accountInitial() }}</div>
-    <div class="library-account-info">
-      <span class="library-account-name">{{ auth.displayName() }}</span>
-      <span class="library-account-email" *ngIf="auth.displayName() !== auth.user()?.email">
-        {{ auth.user()?.email }}
-      </span>
-    </div>
-    <button class="library-account-signout" (click)="signOut()">Sign out</button>
-  </div>
-
-  <!-- Cloud status -->
-  <div class="library-cloud">
-    <div class="library-cloud-row">
-      <span class="library-cloud-label">Cloud storage</span>
-      <span class="library-cloud-usage" [class.warn]="nearQuota()">
-        {{ usedLabel() }} / {{ quotaLabel }}
-      </span>
-      <button class="library-cloud-refresh" (click)="sync.sync()" [disabled]="sync.syncing()" title="Sync with the cloud">
-        {{ sync.syncing() ? '⋯' : '⟳' }}
-      </button>
-    </div>
-    <div class="library-cloud-bar">
-      <div class="library-cloud-bar-fill" [class.warn]="nearQuota()" [style.width.%]="usedPercent()"></div>
-    </div>
-    <p class="library-cloud-warn" *ngIf="nearQuota() && auth.isAdmin()">
-      You are close to the 1 GB free limit. Delete a few cloud songs before adding more.
-    </p>
-
-    <div class="library-cloud-upload" *ngIf="pendingUploads() > 0 && auth.isAdmin()">
-      <span>{{ pendingUploads() }} song(s) only on this device</span>
-      <button (click)="sync.uploadAll()" [disabled]="sync.uploading()">
-        {{ sync.uploading() ? 'Uploading...' : 'Upload all' }}
-      </button>
-    </div>
-    <p class="library-cloud-note" *ngIf="pendingUploads() > 0 && !auth.isAdmin()">
-      {{ pendingUploads() }} song(s) stay on this device — the shared library is added to by Xaviel.
-    </p>
-    <p class="library-cloud-progress" *ngIf="sync.uploadProgress() as p">
-      {{ p.done + 1 }} / {{ p.total }} — {{ p.title }}
-    </p>
-  </div>
-
   <!-- Tabs -->
   <div class="library-tabs">
     <button
@@ -68,7 +24,6 @@
         Shuffle
       </button>
     </div>
-    <app-artwork-backfill></app-artwork-backfill>
     <app-song-item
       *ngFor="let song of library.songs()"
       [song]="song"
@@ -140,12 +95,6 @@
       <span class="library-playlist-count">{{ p.songIds.length }} songs</span>
     </a>
   </div>
-
-  <!-- How to install as an app (hidden once installed) -->
-  <app-install-hint></app-install-hint>
-
-  <!-- Version + "check for updates" -->
-  <app-update-panel></app-update-panel>
 
   <!-- Playlist picker overlay -->
   <app-playlist-picker

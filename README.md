@@ -181,6 +181,27 @@ on conflict (email) do nothing;
 list cannot be enumerated through the API. A blocked sign-up shows
 "Sign-ups are invite-only. Ask Xaviel to add your email, then register."
 
+## Settings
+
+The gear in the top right of every signed-in page opens `/settings`, which holds
+everything about the app and the account so the library can be about music: the
+account and its admin badge, a password change (an emailed link — there is no
+new-password form to get wrong here), sign out, cloud storage and sync, the
+cover-art lookup, and updates.
+
+Two things are worth knowing:
+
+- **The recovery link's origin differs by platform.** Inside the Capacitor
+  WebView `location.origin` is `https://localhost`, which is not somewhere an
+  emailed link can go, so the native app points recovery links at
+  `environment.siteUrl` instead. The web keeps using its own origin, so
+  localhost still works in development.
+- **Android revokes "install unknown apps".** It is granted per app and taken
+  back again for apps Android decides are unused, so an update that installed
+  itself last month can stop being able to. Settings reads the permission fresh
+  every time it opens and offers to fix it, rather than the user only finding
+  out in the middle of an update.
+
 ## Updating the app
 
 Both builds update themselves from inside the app — there is a **Music Hub

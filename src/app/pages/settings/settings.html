@@ -1,0 +1,115 @@
+<div class="settings">
+  <header class="settings-header">
+    <button class="settings-back" (click)="back()" title="Back">‹</button>
+    <h1 class="settings-title">Settings</h1>
+  </header>
+
+  <!-- Account -->
+  <section class="settings-section">
+    <h2 class="settings-section-title">Account</h2>
+    <div class="settings-account">
+      <div class="settings-account-avatar">{{ accountInitial() }}</div>
+      <div class="settings-account-info">
+        <span class="settings-account-name">{{ auth.displayName() }}</span>
+        <span class="settings-account-email">{{ auth.user()?.email }}</span>
+      </div>
+      <span class="settings-badge" *ngIf="auth.isAdmin()">Admin</span>
+    </div>
+
+    <button class="settings-row-btn" (click)="sendPasswordReset()" [disabled]="sendingReset()">
+      <span>
+        <strong>Change password</strong>
+        <em>We email you a link — nothing to type in here.</em>
+      </span>
+      <span class="settings-row-action">{{ sendingReset() ? 'Sending…' : 'Send link' }}</span>
+    </button>
+
+    <button class="settings-row-btn settings-row-btn--danger" (click)="signOut()">
+      <span>
+        <strong>Sign out</strong>
+        <em>Downloaded songs stay on this device for the next sign-in.</em>
+      </span>
+      <span class="settings-row-action">Sign out</span>
+    </button>
+  </section>
+
+  <!-- Cloud library -->
+  <section class="settings-section">
+    <h2 class="settings-section-title">Shared library</h2>
+
+    <div class="settings-quota">
+      <div class="settings-quota-row">
+        <span>Cloud storage</span>
+        <span class="settings-quota-usage" [class.warn]="nearQuota()">
+          {{ usedLabel() }} / {{ quotaLabel }}
+        </span>
+        <button class="settings-icon-btn" (click)="sync.sync()" [disabled]="sync.syncing()" title="Sync now">
+          {{ sync.syncing() ? '⋯' : '⟳' }}
+        </button>
+      </div>
+      <div class="settings-quota-bar">
+        <div class="settings-quota-bar-fill" [class.warn]="nearQuota()" [style.width.%]="usedPercent()"></div>
+      </div>
+      <p class="settings-note" *ngIf="nearQuota() && auth.isAdmin()">
+        Close to the 1 GB limit — delete a few cloud songs before adding more.
+      </p>
+    </div>
+
+    <div class="settings-row" *ngIf="pendingUploads() > 0 && auth.isAdmin()">
+      <span>
+        <strong>{{ pendingUploads() }} song(s) only on this device</strong>
+        <em>Upload them so they play everywhere.</em>
+      </span>
+      <button class="settings-row-action-btn" (click)="sync.uploadAll()" [disabled]="sync.uploading()">
+        {{ sync.uploading() ? 'Uploading…' : 'Upload all' }}
+      </button>
+    </div>
+    <p class="settings-note" *ngIf="pendingUploads() > 0 && !auth.isAdmin()">
+      {{ pendingUploads() }} song(s) stay on this device — the shared library is added to by Xaviel.
+    </p>
+    <p class="settings-note" *ngIf="sync.uploadProgress() as p">
+      {{ p.done + 1 }} / {{ p.total }} — {{ p.title }}
+    </p>
+
+    <p class="settings-note">
+      {{ downloadedCount() }} of {{ library.songs().length }} song(s) are downloaded for offline play.
+    </p>
+  </section>
+
+  <!-- Artwork -->
+  <section class="settings-section">
+    <h2 class="settings-section-title">Cover art</h2>
+    <p class="settings-note">
+      Artwork is read from each file's tags. Songs that carry none can be looked up online.
+    </p>
+    <app-artwork-backfill></app-artwork-backfill>
+    <p class="settings-note" *ngIf="library.missingArtwork().length === 0">
+      Every song has artwork, or has already been looked up.
+    </p>
+  </section>
+
+  <!-- Updates -->
+  <section class="settings-section">
+    <h2 class="settings-section-title">Updates</h2>
+
+    <!-- Android only: the app cannot install its own updates without this, and
+         Android revokes it again for apps it thinks are unused. -->
+    <div class="settings-row" *ngIf="isNative && update.canInstall() === false">
+      <span>
+        <strong>Allow Music Hub to install updates</strong>
+        <em>Off right now, so an update has to be installed by hand.</em>
+      </span>
+      <button class="settings-row-action-btn" (click)="allowInstalls()">Allow</button>
+    </div>
+    <p class="settings-note settings-note--ok" *ngIf="isNative && update.canInstall() === true">
+      ✓ Music Hub can install its own updates.
+    </p>
+
+    <app-update-panel></app-update-panel>
+  </section>
+
+  <!-- Install as an app (hidden once installed, and inside the Android app) -->
+  <section class="settings-section">
+    <app-install-hint></app-install-hint>
+  </section>
+</div>

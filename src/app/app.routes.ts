@@ -35,6 +35,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/playlist-details/playlist-details').then(m => m.PlaylistDetailsComponent),
   },
   {
+    path: 'settings',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/settings/settings').then(m => m.SettingsComponent),
+  },
+  {
     path: 'add',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/add-music/add-music').then(m => m.AddMusicComponent),

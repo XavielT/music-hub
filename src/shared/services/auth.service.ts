@@ -1,7 +1,9 @@
 import { Injectable, computed, signal } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { EmailOtpType, Session, User } from '@supabase/supabase-js';
 import { AUTH_STORAGE_KEY, SupabaseService } from './supabase.service';
 import { ProfileModel } from '../models/profile.model';
+import { environment } from '../../environments/environment';
 
 export interface AuthResult {
   ok: boolean;
@@ -111,7 +113,7 @@ export class AuthService {
     this._loading.set(true);
     try {
       const { error } = await this.supabase.client.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth/reset`,
+        redirectTo: `${this.resetOrigin()}/auth/reset`,
       });
       if (error) return { ok: false, message: this.friendlyError(error) };
       return { ok: true, message: 'Reset link sent — check your inbox (and the spam folder).' };
@@ -120,6 +122,14 @@ export class AuthService {
     } finally {
       this._loading.set(false);
     }
+  }
+
+  // Inside the Capacitor WebView the origin is https://localhost, which is not
+  // a place an email link can go, so the native app points recovery links at
+  // the deployed site instead. On the web the current origin is right, and
+  // keeps localhost working during development.
+  private resetOrigin(): string {
+    return Capacitor.isNativePlatform() ? environment.siteUrl : window.location.origin;
   }
 
   // Exchanges the `token_hash` from a recovery email for a session. Unlike the
