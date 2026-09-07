@@ -27,7 +27,19 @@ Supabase, and still fully playable offline.
 ```bash
 npm install
 npm start          # web preview at localhost:4200
+npm test           # unit tests, headless
 ```
+
+`ng test` needs a Chrome to drive. If there is no system Chrome, point it at
+the one Puppeteer already downloaded:
+
+```bash
+export CHROME_BIN=$(ls -d ~/.cache/puppeteer/chrome/*/chrome-linux64/chrome | tail -1)
+npx ng test --watch=false --browsers=ChromeHeadless
+```
+
+The suite is deliberately small — it covers the IndexedDB upgrade, which runs
+against libraries nobody can get back if it goes wrong.
 
 The Supabase URL and **anon** key live in `src/environments/`. They are public-safe
 (Row Level Security protects the data) and are committed on purpose. The
