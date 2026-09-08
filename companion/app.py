@@ -84,9 +84,11 @@ def _ydl_options(extra: dict) -> dict:
         "quiet": True,
         "no_warnings": True,
         "noplaylist": True,
-        # The clients that still hand out audio URLs. yt-dlp reorders these as
-        # YouTube changes; naming them keeps a known-good set in front.
-        "extractor_args": {"youtube": {"player_client": ["android", "ios", "web"]}},
+        # Deliberately no player_client pin. The clients that used to be the
+        # good ones (android, ios) are the ones that cannot carry a
+        # proof-of-origin token, so pinning them here defeated the provider
+        # this image exists to run. yt-dlp's own default order already prefers
+        # what works, and it changes faster than this file will.
         **extra,
     }
     if COOKIES_FILE and Path(COOKIES_FILE).is_file():

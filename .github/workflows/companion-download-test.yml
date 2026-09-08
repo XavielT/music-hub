@@ -1,0 +1,67 @@
+name: Companion download test
+
+# The question this answers cannot be answered from a laptop: yt-dlp works fine
+# from a home connection and gets "Sign in to confirm you're not a bot" from a
+# datacenter one. GitHub's runners are datacenter addresses, so this reproduces
+# the failure that matters and tells us whether the POT provider fixes it —
+# in minutes, instead of blind-deploying to Render and asking someone to try.
+#
+# Manual only. It talks to YouTube, and that is not something to do on a push.
+on:
+  workflow_dispatch:
+    inputs:
+      video_id:
+        description: 'YouTube id to try (default: a Creative Commons track)'
+        default: '0mmKw8WNPSY'
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build the image
+        run: docker build -f companion/Dockerfile -t companion .
+
+      - name: Start it
+        run: |
+          docker run -d --name companion -p 127.0.0.1:8080:8080 \
+            -e MUSIC_HUB_TOKEN=ci-token \
+            -e ALLOWED_ORIGINS=http://localhost:4200 \
+            companion
+          for _ in $(seq 1 60); do
+            if curl -sf -m 3 http://127.0.0.1:8080/health >/dev/null; then break; fi
+            sleep 2
+          done
+          curl -s http://127.0.0.1:8080/health; echo
+
+      - name: Is the POT provider actually running?
+        run: |
+          docker logs companion 2>&1 | tail -20
+          docker logs companion 2>&1 | grep -q "POT provider up" \
+            || { echo "::error::The POT provider never came up — a download would fail as a bot check and hide the real cause."; exit 1; }
+
+      - name: Download from a datacenter IP, which is the whole point
+        id: dl
+        run: |
+          echo "runner address: $(curl -s -m 10 https://api.ipify.org || echo unknown)"
+          code=$(curl -s -m 300 -o /tmp/out.m4a -w '%{http_code}' \
+            -H "Authorization: Bearer ci-token" \
+            "http://127.0.0.1:8080/download?id=${{ inputs.video_id }}")
+          size=$(stat -c%s /tmp/out.m4a 2>/dev/null || echo 0)
+          echo "http $code, $size bytes"
+          if [ "$code" != "200" ]; then
+            echo "--- what the service said ---"
+            cat /tmp/out.m4a
+            echo
+            echo "--- container log ---"
+            docker logs companion 2>&1 | tail -40
+            exit 1
+          fi
+          ffprobe -v error -show_entries format=duration,bit_rate -of default=nw=1 /tmp/out.m4a
+          [ "$size" -gt 100000 ] || { echo "::error::Suspiciously small."; exit 1; }
+          echo "✅ downloaded $size bytes from a datacenter IP"
+
+      - name: Clean up
+        if: always()
+        run: docker rm -f companion || true
