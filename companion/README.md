@@ -66,6 +66,43 @@ token is never synced through the shared library.
 - **Cold starts.** A free container sleeps. The first search after a quiet spell
   can take 30–60 seconds or time out; the second is fine.
 
+## Bot protection: measured, not guessed
+
+Tested on 2026-09-08 across four datacenter addresses — Render, and three
+GitHub Actions runners — with the POT provider confirmed running and Node
+confirmed as the JS runtime:
+
+| | From a home connection | From a datacenter |
+|---|---|---|
+| `/health` | ✅ | ✅ |
+| `/search` | ✅ | ✅ |
+| `/info`, `/download` | ✅ | ❌ "Sign in to confirm you're not a bot" |
+
+Search survives because it never touches the player; extraction does, and that
+is what gets refused. **A proof-of-origin token is not sufficient on its own** —
+the provider's own README says as much, and this is what that looks like in
+practice.
+
+So a hosted companion needs cookies. There is no free, always-on, no-account
+way around this: YouTube is specifically preventing it.
+
+### Cookies on Render
+
+1. Sign in to YouTube in a browser — **use a throwaway Google account.** These
+   cookies are that account's session, and Google does suspend accounts it
+   decides are automating. Do not use the account your email is on.
+2. Export `cookies.txt` for youtube.com with a Netscape-format cookie
+   extension.
+3. Render → the service → **Environment → Secret Files → Add file**, name it
+   `cookies.txt`, paste the contents. `YTDLP_COOKIES_FILE` already points at
+   `/etc/secrets/cookies.txt`.
+4. The service reports it: *Settings → YouTube companion → Save and test* says
+   "with cookies" when they are loaded.
+
+They expire — weeks, sometimes months — and the symptom is the bot check
+returning. Re-export and replace the file. That is the maintenance cost of
+always-on, and it is the honest price.
+
 ## Bot protection, which is the real problem
 
 YouTube treats datacenter IPs as guilty. A request from a free-tier container

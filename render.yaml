@@ -25,3 +25,9 @@ services:
         value: https://music-hub-xaviel.vercel.app,http://localhost:4200,https://localhost
       - key: MAX_DURATION_SECONDS
         value: "1800"
+      # YouTube refuses datacenter addresses without a signed-in session, so a
+      # hosted companion needs cookies. Upload them as a Render Secret File
+      # named cookies.txt; this is where they land. Harmless when absent — the
+      # service checks the file exists before using it.
+      - key: YTDLP_COOKIES_FILE
+        value: /etc/secrets/cookies.txt
