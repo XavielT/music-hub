@@ -1,5 +1,11 @@
 <!-- Mini player -->
-<div class="player-bar" *ngIf="player.current() as song" (click)="expanded.set(true)">
+<div
+  class="player-bar"
+  *ngIf="player.current() as song"
+  (click)="onMiniClick()"
+  (touchstart)="onTouchStart($event)"
+  (touchend)="onTouchEnd($event, 'mini')"
+>
   <div class="player-bar-cover">
     <app-cover [name]="song.artist" [color]="song.coverColor" [imageUrl]="library.coverSrc(song)"></app-cover>
   </div>
@@ -17,7 +23,12 @@
 </div>
 
 <!-- Full screen player -->
-<div class="player-full" *ngIf="expanded() && player.current() as song">
+<div
+  class="player-full"
+  *ngIf="expanded() && player.current() as song"
+  (touchstart)="onTouchStart($event)"
+  (touchend)="onTouchEnd($event, 'full')"
+>
   <button class="player-full-close" (click)="collapse()">⌄</button>
 
   <div class="player-full-cover">
@@ -91,6 +102,44 @@
       (input)="onVolume($event)"
       aria-label="Volume"
     />
+  </div>
+
+  <!-- Speed and sleep timer -->
+  <div class="player-extras">
+    <button
+      class="player-extra-btn"
+      [class.on]="player.speed() !== 1"
+      (click)="player.cycleSpeed()"
+      title="Playback speed"
+    >
+      {{ speedLabel() }}
+    </button>
+    <button
+      class="player-extra-btn"
+      [class.on]="player.sleepArmed()"
+      (click)="showSleep.set(!showSleep())"
+      title="Sleep timer"
+    >
+      ☾ {{ sleepLabel() }}
+    </button>
+  </div>
+
+  <div class="player-sleep" *ngIf="showSleep()">
+    <button
+      class="player-sleep-choice"
+      *ngFor="let choice of sleepChoices"
+      (click)="pickSleep(choice.value)"
+    >
+      {{ choice.label }}
+    </button>
+    <button
+      class="player-sleep-choice player-sleep-choice--off"
+      *ngIf="player.sleepArmed()"
+      (click)="cancelSleep()"
+    >
+      Off
+    </button>
+    <p class="player-sleep-note">Playback pauses — the queue and the position stay put.</p>
   </div>
 
   <!-- Queue -->

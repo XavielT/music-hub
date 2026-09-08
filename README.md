@@ -299,6 +299,26 @@ The volume slider is hidden inside Capacitor, where the hardware buttons rule,
 and on iOS Safari, which ignores assignments to `HTMLMediaElement.volume` — a
 slider there is a dead control.
 
+**Swipe** on the mini player: left and right change song, up opens the full
+player, down closes it again. A swipe has to travel 45 px in under 700 ms and
+be clearly more one axis than the other (1.4×), or it is a tap that wandered or
+a scroll going past. The browser sends a click at the end of a swipe regardless,
+so the first click after one is eaten — otherwise every sideways flick would
+change song *and* open the player.
+
+**Playback speed** cycles 0.75× → 2× with 1× in the middle of the list, so
+getting back to normal is never a hunt for an end. It is re-applied on every
+new source, because the element resets `playbackRate` when `src` changes — the
+kind of thing that works in a demo and quietly stops working on the second
+song.
+
+**The sleep timer** takes 15/30/45/60 minutes or "end of song", and *pauses*
+rather than stopping, so the morning is one tap from carrying on. It counts
+from a wall-clock deadline instead of decrementing a counter: a backgrounded
+WebView throttles intervals until they effectively stop, and waking up with the
+full time still on the clock is the opposite of what a sleep timer is for. "End
+of song" also outranks repeat-one, which would otherwise never reach an end.
+
 ## Settings
 
 The gear in the top right of every signed-in page opens `/settings`, which holds

@@ -42,6 +42,10 @@ describe('PlayerBar queue screen', () => {
       duration: signal(100).asReadonly(),
       progress: signal(0.12).asReadonly(),
       volume: signal(0.5).asReadonly(),
+      speed: signal(1).asReadonly(),
+      sleepRemainingMs: signal<number | null>(null).asReadonly(),
+      sleepAtEnd: signal(false).asReadonly(),
+      sleepArmed: signal(false).asReadonly(),
       shuffle: signal(false).asReadonly(),
       repeat: signal<'off' | 'all' | 'one'>('off').asReadonly(),
       upNext: signal(queue.slice(2).map((s, offset) => ({ song: s, index: 2 + offset }))).asReadonly(),
@@ -53,6 +57,9 @@ describe('PlayerBar queue screen', () => {
       cycleRepeat: () => calls.push('repeat'),
       seek: (t: number) => calls.push(`seek:${t}`),
       setVolume: (v: number) => calls.push(`volume:${v}`),
+      cycleSpeed: () => calls.push('speed'),
+      setSleepTimer: (c: number | 'end') => calls.push(`sleep:${c}`),
+      clearSleepTimer: () => calls.push('sleep:off'),
       jumpTo: (i: number) => calls.push(`jump:${i}`),
       moveInQueue: (from: number, to: number) => calls.push(`move:${from}->${to}`),
       removeFromQueue: (i: number) => calls.push(`remove:${i}`),
@@ -136,5 +143,100 @@ describe('PlayerBar queue screen', () => {
   it('hides it where the platform ignores it', async () => {
     const fixture = await render(false);
     expect((fixture.nativeElement as HTMLElement).querySelector('.player-full-volume')).toBeNull();
+  });
+});
+
+// A swipe and a tap arrive as the same click, and a scroll arrives as the same
+// touch. Telling them apart is the whole of this feature, so it is driven
+// directly rather than through the DOM, which cannot fake a real finger.
+
+function swipe(
+  panel: { onTouchStart(e: TouchEvent): void; onTouchEnd(e: TouchEvent, from: 'mini' | 'full'): void },
+  from: 'mini' | 'full',
+  dx: number,
+  dy: number
+): void {
+  const at = (x: number, y: number) =>
+    ({ changedTouches: [{ clientX: x, clientY: y }] }) as unknown as TouchEvent;
+  panel.onTouchStart(at(150, 300));
+  panel.onTouchEnd(at(150 + dx, 300 + dy), from);
+}
+
+describe('PlayerBar swipe', () => {
+  let calls: string[];
+  let panel: PlayerBar;
+
+  beforeEach(async () => {
+    calls = [];
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [PlayerBar],
+      providers: [
+        {
+          provide: PlayerService,
+          useValue: {
+            queue: signal([]).asReadonly(),
+            queueIndex: signal(-1).asReadonly(),
+            current: signal(null).asReadonly(),
+            isPlaying: signal(false).asReadonly(),
+            currentTime: signal(0).asReadonly(),
+            duration: signal(0).asReadonly(),
+            progress: signal(0).asReadonly(),
+            volume: signal(1).asReadonly(),
+            speed: signal(1).asReadonly(),
+            shuffle: signal(false).asReadonly(),
+            repeat: signal<'off' | 'all' | 'one'>('off').asReadonly(),
+            upNext: signal([]).asReadonly(),
+            sleepRemainingMs: signal<number | null>(null).asReadonly(),
+            sleepAtEnd: signal(false).asReadonly(),
+            sleepArmed: signal(false).asReadonly(),
+            volumeSupported: true,
+            next: () => calls.push('next'),
+            previous: () => calls.push('previous'),
+          },
+        },
+        { provide: LibraryService, useValue: { coverSrc: () => null } },
+      ],
+    }).compileComponents();
+    panel = TestBed.createComponent(PlayerBar).componentInstance;
+  });
+
+  it('changes song sideways and opens the player upward', () => {
+    swipe(panel, 'mini', -80, 4);
+    expect(calls).toEqual(['next']);
+
+    swipe(panel, 'mini', 80, -6);
+    expect(calls).toEqual(['next', 'previous']);
+
+    swipe(panel, 'mini', 3, -70);
+    expect(panel.expanded()).toBe(true);
+  });
+
+  it('closes the full player downward, and never the other way round', () => {
+    panel.expanded.set(true);
+    // Down on the mini player is nothing: there is nowhere further to go.
+    swipe(panel, 'mini', 0, 90);
+    expect(panel.expanded()).toBe(true);
+
+    swipe(panel, 'full', 0, 90);
+    expect(panel.expanded()).toBe(false);
+  });
+
+  it('ignores a short move, and a diagonal that is really a scroll', () => {
+    swipe(panel, 'mini', -20, 0);
+    swipe(panel, 'mini', -50, -48);
+    expect(calls).toEqual([]);
+    expect(panel.expanded()).toBe(false);
+  });
+
+  it('eats the click a swipe leaves behind', () => {
+    swipe(panel, 'mini', -80, 0);
+    // Without this, the swipe would change song *and* open the full player.
+    panel.onMiniClick();
+    expect(panel.expanded()).toBe(false);
+
+    // The next real tap still works.
+    panel.onMiniClick();
+    expect(panel.expanded()).toBe(true);
   });
 });

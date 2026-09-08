@@ -330,3 +330,59 @@
     color: var(--Hub);
   }
 }
+
+// --- speed and sleep timer ---
+
+.player-extras {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.player-extra-btn {
+  background: none;
+  border: 1px solid #2d2d2d;
+  border-radius: 16px;
+  color: var(--main-ultra-light);
+  font-family: var(--font-btns);
+  font-size: 0.74rem;
+  padding: 7px 14px;
+  cursor: pointer;
+
+  &.on {
+    border-color: var(--Hub);
+    color: var(--Hub);
+  }
+}
+
+.player-sleep {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.player-sleep-choice {
+  background: var(--secondary);
+  border: none;
+  border-radius: 14px;
+  color: #fff;
+  font-family: var(--font-btns);
+  font-size: 0.72rem;
+  padding: 7px 12px;
+  cursor: pointer;
+
+  &--off {
+    color: #ff5f5f;
+  }
+}
+
+.player-sleep-note {
+  flex-basis: 100%;
+  margin: 0;
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--main-ultra-light);
+}

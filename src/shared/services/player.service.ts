@@ -29,6 +29,15 @@ interface SavedSession {
 
 const PREFS_KEY = 'music-hub.player-prefs';
 const VOLUME_KEY = 'music-hub.volume';
+const SPEED_KEY = 'music-hub.speed';
+
+// What the speed control offers. 1 is in the middle of the list on purpose:
+// getting back to normal should not mean hunting for an end.
+export const PLAYBACK_SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2] as const;
+
+// Sleep timer choices, in minutes. `end` is "when this song finishes", which
+// is the one people actually reach for at night.
+export type SleepChoice = number | 'end';
 const SESSION_STORE = 'player';
 const SESSION_KEY = 'session';
 // Often enough that a crash loses seconds, rare enough to not thrash IndexedDB.
@@ -78,6 +87,24 @@ export class PlayerService {
   private _volume = signal(1);
   volume = this._volume.asReadonly();
 
+  private _speed = signal(1);
+  speed = this._speed.asReadonly();
+
+  // Milliseconds left on the sleep timer, or null when it is off. Counted down
+  // from a wall-clock deadline rather than by decrementing, so a phone that
+  // suspends its timers does not wake up owing time.
+  private _sleepRemainingMs = signal<number | null>(null);
+  sleepRemainingMs = this._sleepRemainingMs.asReadonly();
+
+  // True when the timer is set to stop at the end of the current song.
+  private _sleepAtEnd = signal(false);
+  sleepAtEnd = this._sleepAtEnd.asReadonly();
+
+  sleepArmed = computed(() => this._sleepAtEnd() || this._sleepRemainingMs() !== null);
+
+  private sleepDeadline: number | null = null;
+  private sleepTicker: ReturnType<typeof setInterval> | null = null;
+
   // Android has hardware buttons, and iOS Safari ignores assignments to
   // HTMLMediaElement.volume entirely — a slider there is a dead control.
   readonly volumeSupported = !Capacitor.isNativePlatform() && !isIosWeb();
@@ -107,6 +134,7 @@ export class PlayerService {
     this.audio.setAttribute('playsinline', '');
     this.audio.preload = 'auto';
     this.audio.volume = this._volume();
+    this.audio.playbackRate = this._speed();
 
     this.audio.addEventListener('timeupdate', () => {
       this._currentTime.set(this.audio.currentTime);
@@ -137,7 +165,17 @@ export class PlayerService {
     });
     // `true` marks this as the queue advancing on its own, which is the only
     // case where the repeat mode has a say.
-    this.audio.addEventListener('ended', () => this.next(true));
+    this.audio.addEventListener('ended', () => {
+      // "Stop at the end of this song" outranks the repeat mode: under
+      // repeat-one it would otherwise never arrive at an end at all.
+      if (this._sleepAtEnd()) {
+        this.clearSleepTimer();
+        this.fallAsleep();
+        this.seek(0);
+        return;
+      }
+      void this.next(true);
+    });
 
     this.setupMediaSession();
   }
@@ -253,6 +291,73 @@ export class PlayerService {
     }
   }
 
+  // Playback speed. Kept across songs and across restarts, because it is a
+  // way of listening rather than a property of one track — and it has to be
+  // re-applied on every new source, since the element resets it.
+  setSpeed(value: number): void {
+    const clamped = Math.min(4, Math.max(0.25, value));
+    this._speed.set(clamped);
+    this.audio.playbackRate = clamped;
+    try {
+      localStorage.setItem(SPEED_KEY, String(clamped));
+    } catch {
+      // Private mode: the speed lasts for this session only.
+    }
+  }
+
+  // Steps through PLAYBACK_SPEEDS, wrapping — one control rather than six.
+  cycleSpeed(): void {
+    const at = PLAYBACK_SPEEDS.indexOf(this._speed() as (typeof PLAYBACK_SPEEDS)[number]);
+    const next = PLAYBACK_SPEEDS[(at + 1) % PLAYBACK_SPEEDS.length];
+    this.setSpeed(next);
+  }
+
+  // --- sleep timer ---
+
+  // `minutes` stops playback after that long; 'end' stops when the current
+  // song finishes. Setting one replaces the other.
+  setSleepTimer(choice: SleepChoice): void {
+    this.clearSleepTimer();
+    if (choice === 'end') {
+      this._sleepAtEnd.set(true);
+      return;
+    }
+    if (!(choice > 0)) return;
+
+    // A deadline, not a countdown: a backgrounded WebView throttles intervals
+    // to the point of stopping, and waking up with the full time left would
+    // be the opposite of what a sleep timer is for.
+    this.sleepDeadline = Date.now() + choice * 60_000;
+    this._sleepRemainingMs.set(choice * 60_000);
+    this.sleepTicker = setInterval(() => this.tickSleep(), 1000);
+  }
+
+  clearSleepTimer(): void {
+    if (this.sleepTicker) clearInterval(this.sleepTicker);
+    this.sleepTicker = null;
+    this.sleepDeadline = null;
+    this._sleepRemainingMs.set(null);
+    this._sleepAtEnd.set(false);
+  }
+
+  private tickSleep(): void {
+    if (this.sleepDeadline == null) return;
+    const left = this.sleepDeadline - Date.now();
+    if (left > 0) {
+      this._sleepRemainingMs.set(left);
+      return;
+    }
+    this.clearSleepTimer();
+    this.fallAsleep();
+  }
+
+  // Pause rather than stop: the queue and the position stay exactly where they
+  // were, so the morning is one tap from carrying on.
+  private fallAsleep(): void {
+    if (!this.audio.paused) this.audio.pause();
+    this.toast.show('Sleep timer — playback paused.');
+  }
+
   // --- queue editing ---
 
   // Straight after the song playing now.
@@ -360,6 +465,7 @@ export class PlayerService {
   // Full teardown, used when the account changes: audio from the previous
   // user must not keep playing (or stay queued) for the next one.
   stop(): void {
+    this.clearSleepTimer();
     this.clearPlayback();
     this._queue.set([]);
     this.originalQueue = [];
@@ -454,6 +560,9 @@ export class PlayerService {
     this.pendingSeek = null;
     this.audio.src = src;
     this.audio.volume = this._volume();
+    // A new source resets the rate on the element, so it is set per song
+    // rather than once.
+    this.audio.playbackRate = this._speed();
     this.updateMetadata(song);
     void this.audio.play().catch(() => this._isPlaying.set(false));
     void this.saveSession();
@@ -588,6 +697,8 @@ export class PlayerService {
       }
       const volume = Number(localStorage.getItem(VOLUME_KEY));
       if (isFinite(volume) && volume >= 0 && volume <= 1) this._volume.set(volume);
+      const speed = Number(localStorage.getItem(SPEED_KEY));
+      if (isFinite(speed) && speed >= 0.25 && speed <= 4) this._speed.set(speed);
     } catch {
       // Corrupt or unavailable storage: the defaults are fine.
     }
