@@ -26,9 +26,12 @@ jobs:
         with:
           ref: ${{ github.event.inputs.tag || github.ref_name }}
 
+      # Capacitor 8's CLI refuses to run on anything below Node 22, and the
+      # failure is at `cap sync` — after the build, before the signing — which
+      # is a slow place to find out.
       - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       # Capacitor 8 needs exactly JDK 21: 17 cannot compile capacitor-android,
