@@ -46,8 +46,11 @@ jobs:
       # different causes — including the plugin silently not being loaded.
       - name: What does yt-dlp think it is doing
         run: |
-          docker exec companion yt-dlp -v --simulate \
-            "https://www.youtube.com/watch?v=${{ inputs.video_id }}" 2>&1 | head -60 || true
+          # Same options the API uses, so this is a like-for-like account of
+          # the failing request rather than a different one that also fails.
+          docker exec companion yt-dlp -v --js-runtimes node --simulate \
+            "https://www.youtube.com/watch?v=${{ inputs.video_id }}" 2>&1 \
+            | grep -iE "pot|po token|js runtime|runtime|client|Sign in|ERROR|WARNING" | head -40 || true
           echo "--- plugin visible to python? ---"
           docker exec companion python3 -c "
           import importlib.util as u
