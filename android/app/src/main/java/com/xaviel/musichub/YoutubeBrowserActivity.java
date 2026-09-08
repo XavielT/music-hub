@@ -101,6 +101,7 @@ public class YoutubeBrowserActivity extends Activity {
     private FileOutputStream downloadOut;
     private String currentId;
     private String loggedFor;
+    private volatile String harvestedPot;
     private int probes;
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -308,6 +309,12 @@ public class YoutubeBrowserActivity extends Activity {
                 Log.i(TAG, "resolved " + id + " via " + p.optString("client")
                     + " itag=" + p.optInt("itag") + " " + p.optString("mime")
                     + " " + p.optLong("size") + " bytes");
+            }
+            // The resolved URL is metered to about a megabyte without a token.
+            // With the player's own token appended it is served whole.
+            if (harvestedPot != null && !url.contains("&pot=")) {
+                url = url + "&pot=" + harvestedPot;
+                Log.i(TAG, "appended harvested pot to the audio URL");
             }
             audioUrl.set(url);
             audioMime.set(p.optString("mime", "audio/mp4"));
