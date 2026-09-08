@@ -1,0 +1,53 @@
+<div class="invites" *ngIf="auth.isAdmin()">
+  <p class="invites-note">
+    Registration is open in the app but the database turns away anyone not on this list. Adding
+    an address lets that person create their own account.
+  </p>
+
+  <div class="invites-add">
+    <input
+      type="email"
+      placeholder="name@example.com"
+      autocomplete="off"
+      [(ngModel)]="email"
+      (keyup.enter)="add()"
+    />
+    <input type="text" placeholder="Who is it? (optional)" [(ngModel)]="note" (keyup.enter)="add()" />
+    <button (click)="add()" [disabled]="invites.busy() || !email.trim()">Invite</button>
+  </div>
+
+  <p class="invites-note" *ngIf="invites.loading()">Loading the list…</p>
+
+  <div class="invites-row" *ngFor="let invite of invites.invites()">
+    <span class="invites-who">
+      <strong>{{ invite.email }}</strong>
+      <em *ngIf="invite.note">{{ invite.note }}</em>
+    </span>
+    <span class="invites-state" [class.joined]="invite.has_joined">
+      {{ invite.has_joined ? 'Joined' : 'Not yet' }}
+    </span>
+    <button
+      class="invites-remove"
+      [class.confirming]="confirming() === invite.email"
+      (click)="remove(invite.email)"
+      [disabled]="invites.busy()"
+      [title]="
+        invite.has_joined
+          ? 'Withdraws the invite. Their account stays.'
+          : 'Withdraws the invite before they register.'
+      "
+    >
+      {{ confirming() === invite.email ? 'Confirm' : 'Withdraw' }}
+    </button>
+  </div>
+
+  <p class="invites-note" *ngIf="!invites.loading() && invites.invites().length === 0">
+    Nobody is invited yet — not even you, which means this list could not be read. Check the
+    connection and reopen settings.
+  </p>
+
+  <p class="invites-note">
+    Withdrawing only closes the door to a new sign-up. Someone who already has an account keeps
+    it, along with everything they have downloaded.
+  </p>
+</div>

@@ -128,6 +128,12 @@
     </p>
   </section>
 
+  <!-- Invites -->
+  <section class="settings-section" *ngIf="auth.isAdmin()">
+    <h2 class="settings-section-title">Who can join</h2>
+    <app-invites-panel></app-invites-panel>
+  </section>
+
   <!-- Artwork -->
   <section class="settings-section">
     <h2 class="settings-section-title">Cover art</h2>

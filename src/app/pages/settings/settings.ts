@@ -16,12 +16,13 @@ import {
 import { UpdatePanel } from '../../../shared/components/update-panel/update-panel';
 import { ArtworkBackfill } from '../../../shared/components/artwork-backfill/artwork-backfill';
 import { InstallHint } from '../../../shared/components/install-hint/install-hint';
+import { InvitesPanel } from '../../../shared/components/invites-panel/invites-panel';
 
 // Everything about the app and the account, so the library can be about music.
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, UpdatePanel, ArtworkBackfill, InstallHint],
+  imports: [CommonModule, UpdatePanel, ArtworkBackfill, InstallHint, InvitesPanel],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })

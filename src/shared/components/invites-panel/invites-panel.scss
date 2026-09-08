@@ -1,0 +1,108 @@
+.invites-note {
+  margin: 8px 0;
+  font-size: 0.73rem;
+  line-height: 1.45;
+  color: var(--main-ultra-light);
+}
+
+.invites-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+
+  input {
+    flex: 1 1 140px;
+    min-width: 0;
+    background: var(--secondary);
+    border: 1px solid #2d2d2d;
+    border-radius: 10px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.82rem;
+    padding: 9px 12px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--Hub);
+    }
+  }
+
+  button {
+    background: var(--Hub);
+    border: none;
+    border-radius: 10px;
+    color: var(--on-Hub);
+    font-family: var(--font-btns);
+    font-size: 0.78rem;
+    padding: 9px 16px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+}
+
+.invites-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid #222;
+}
+
+.invites-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+
+  strong {
+    font-size: 0.82rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  em {
+    font-style: normal;
+    font-size: 0.72rem;
+    color: var(--main-ultra-light);
+  }
+}
+
+// "Joined" is the reassuring state, so it is the one that gets a colour.
+.invites-state {
+  flex: none;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--main-ultra-light);
+
+  &.joined {
+    color: #6bcf7f;
+  }
+}
+
+.invites-remove {
+  flex: none;
+  background: none;
+  border: 1px solid #3a3a3a;
+  border-radius: 14px;
+  color: var(--main-ultra-light);
+  font-family: var(--font-btns);
+  font-size: 0.7rem;
+  padding: 6px 11px;
+  cursor: pointer;
+
+  &.confirming {
+    border-color: #ff5f5f;
+    color: #ff5f5f;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}

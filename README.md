@@ -191,19 +191,36 @@ help, and songs downloaded for offline stream once instead of on every play.
 ## Invite-only sign-ups
 
 Registration is open in the UI but the database rejects unknown emails: a
-`before insert on auth.users` trigger checks `public.allowed_emails`. To let a family
-member in, add their address (lowercase) via the Supabase SQL editor:
+`before insert on auth.users` trigger checks `public.allowed_emails`. A blocked
+sign-up shows "Sign-ups are invite-only. Ask Xaviel to add your email, then
+register."
+
+**Admins manage the list in the app**: Settings → *Who can join*. Type an
+address and an optional note, and each row shows whether that person has
+actually registered yet. Withdrawing an invite only closes the door to a *new*
+sign-up — someone who already has an account keeps it, and their downloads with
+it.
+
+`allowed_emails` still has RLS on with **no policies** and no grants, so the
+list cannot be read through the API at all. Three `security definer` functions
+are the only door — `list_invites`, `add_invite`, `remove_invite` — each
+checking `is_admin()` in its own body rather than trusting who holds EXECUTE,
+and each revoked from `PUBLIC` so `anon` cannot even reach them to be refused.
+Addresses are stored `lower(trim())`, matching how the trigger looks them up;
+an invite typed with a capital letter would otherwise never match.
+
+Verified by impersonating both roles against the live policies: a signed-in
+non-admin is refused all three functions *and* a direct read of the table; the
+admin can add, sees the stored address normalised, and gets an error for an
+address with no `@` in it.
+
+The SQL editor still works if you would rather:
 
 ```sql
 insert into public.allowed_emails (email, note)
 values ('someone@example.com', 'sister')
 on conflict (email) do nothing;
 ```
-
-`allowed_emails` has RLS on with **no policies** and no grants to `anon`/
-`authenticated` on purpose — only the `security definer` trigger reads it, so the
-list cannot be enumerated through the API. A blocked sign-up shows
-"Sign-ups are invite-only. Ask Xaviel to add your email, then register."
 
 ## Live sync
 
