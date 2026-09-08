@@ -10,7 +10,10 @@ services:
     plan: free
     region: oregon
     dockerfilePath: ./companion/Dockerfile
-    dockerContext: ./companion
+    # The repo root, matching how CI builds it. The Dockerfile copies
+    # `companion/...` paths, so a context of ./companion looks for
+    # companion/companion/ and fails on the first COPY.
+    dockerContext: .
     healthCheckPath: /health
     envVars:
       # Render generates this and shows it in the dashboard. It never needs to
