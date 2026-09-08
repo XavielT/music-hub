@@ -7,6 +7,10 @@ export interface PickedVideo {
   audioUrl?: string;
   mime?: string;
   userAgent?: string;
+  // Which YouTube client issued the URL; the download has to match it.
+  client?: string;
+  // Where the page wrote the audio it downloaded.
+  path?: string;
   videoId?: string;
   title?: string;
   author?: string;
@@ -30,7 +34,7 @@ export interface YoutubeDownloadProgress {
  */
 export interface YoutubeBrowserPlugin {
   pick(options?: { url?: string }): Promise<PickedVideo>;
-  download(options: { url: string; userAgent?: string }): Promise<{ base64: string; bytes: number }>;
+  readCapture(options: { path: string }): Promise<{ base64: string; bytes: number }>;
   addListener(
     event: 'downloadProgress',
     listener: (progress: YoutubeDownloadProgress) => void

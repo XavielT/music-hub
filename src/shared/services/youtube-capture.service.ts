@@ -31,20 +31,20 @@ export class YoutubeCaptureService {
   async capture(startUrl?: string): Promise<CapturedSong | null> {
     if (!this.available) throw new Error('Adding from YouTube needs the Android app.');
 
+    // The browser screen downloads and shows its own progress: the bytes have
+    // to come through the page, so there is nothing for this side to report
+    // until they are already here.
     const picked: PickedVideo = await YoutubeBrowser.pick(startUrl ? { url: startUrl } : {});
-    if (picked.cancelled || !picked.audioUrl) return null;
+    if (picked.cancelled || !picked.path) return null;
 
-    const listener = await YoutubeBrowser.addListener('downloadProgress', p =>
-      this._progress.set(p.percent)
-    );
-    this._progress.set(0);
+    this._progress.set(99);
     try {
-      const { base64 } = await YoutubeBrowser.download({
-        url: picked.audioUrl,
-        userAgent: picked.userAgent,
-      });
-      const blob = base64ToBlob(base64, picked.mime || 'audio/mp4');
-      const name = `${picked.videoId || 'youtube'}.m4a`;
+      const { base64 } = await YoutubeBrowser.readCapture({ path: picked.path });
+      const mime = picked.mime || 'audio/mp4';
+      const blob = base64ToBlob(base64, mime);
+      // m4a where YouTube gave AAC, webm where it gave opus. The tag reader
+      // handles both, and naming it wrongly is how a file stops playing.
+      const name = `${picked.videoId || 'youtube'}.${mime.includes('webm') ? 'webm' : 'm4a'}`;
       return {
         file: new File([blob], name, { type: blob.type }),
         title: (picked.title || '').trim() || 'Unknown title',
@@ -58,7 +58,6 @@ export class YoutubeCaptureService {
       };
     } finally {
       this._progress.set(null);
-      await listener.remove();
     }
   }
 }

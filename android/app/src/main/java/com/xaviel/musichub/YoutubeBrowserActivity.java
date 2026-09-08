@@ -22,6 +22,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -64,6 +66,8 @@ public class YoutubeBrowserActivity extends Activity {
     public static final String RESULT_DURATION = "duration";
     public static final String RESULT_MIME = "mime";
     public static final String RESULT_USER_AGENT = "userAgent";
+    public static final String RESULT_CLIENT = "client";
+    public static final String RESULT_PATH = "path";
 
     private static final String DEFAULT_URL = "https://m.youtube.com/";
 
@@ -93,6 +97,8 @@ public class YoutubeBrowserActivity extends Activity {
     private final AtomicReference<String> audioMime = new AtomicReference<>(null);
     // What the page says it is playing, refreshed by the poller.
     private org.json.JSONObject details;
+    private File downloadFile;
+    private FileOutputStream downloadOut;
     private String currentId;
     private String loggedFor;
     private int probes;
@@ -130,6 +136,7 @@ public class YoutubeBrowserActivity extends Activity {
         // page gets plain format URLs or SABR-only. Chosen by experiment, not
         // by taste: see the log line "player … withUrl=".
         settings.setUserAgentString(USER_AGENTS[uaIndex()]);
+        web.addJavascriptInterface(new Bridge(), "MusicHubBridge");
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(web, true);
 
@@ -208,18 +215,27 @@ public class YoutubeBrowserActivity extends Activity {
      */
     private void pollPlayer() {
         if (isFinishing() || isDestroyed()) return;
-        web.evaluateJavascript(PLAYER_SCRIPT, value -> {
-            String json = unwrap(value);
-            if (probes < 6) {
-                probes++;
-                Log.i(TAG, "poll#" + probes + " " + (json == null ? "null" : json));
-            }
-            if (json != null && !json.equals("{}")) applyPlayer(json);
-            web.postDelayed(this::pollPlayer, POLL_MS);
-        });
+        web.evaluateJavascript(RESOLVE_SCRIPT, state -> web.evaluateJavascript(
+            "window.__mhAudio", value -> {
+                String json = unwrap(value);
+                if (json != null && !"null".equals(json)) applyPlayer(json);
+                web.postDelayed(this::pollPlayer, POLL_MS);
+            }));
     }
 
     private static final long POLL_MS = 1500;
+
+    /**
+     * Resolves the playable audio URL for whatever the page is showing.
+     *
+     * Measured on 2026-09-08: the web page's own player response carries 25-29
+     * formats and none with a URL — YouTube's web clients are SABR-only now.
+     * The ANDROID and IOS clients still answer with plain signed URLs, and
+     * asking for them *from inside the page* means the request goes out with
+     * the site's own cookies, API key and origin, from the phone's connection.
+     * That is the whole trick, and it is why this cannot live on a server.
+     */
+    private static final String RESOLVE_SCRIPT = "(function(){\n  var pr = window.ytInitialPlayerResponse || null;\n  var mp = document.querySelector('#movie_player');\n  if ((!pr || !pr.videoDetails) && mp && mp.getPlayerResponse) {\n    try { pr = mp.getPlayerResponse(); } catch (e) {}\n  }\n  var id = (pr && pr.videoDetails) ? pr.videoDetails.videoId : null;\n  if (!id) { var m = location.href.match(/[?&]v=([\\w-]{11})/); if (m) id = m[1]; }\n  if (!id) { window.__mhAudio = null; return 'no-video'; }\n  if (window.__mhAudioFor === id) return 'done';\n  if (window.__mhBusy === id) return 'busy';\n  window.__mhBusy = id;\n\n  var key = (window.ytcfg && ytcfg.get) ? ytcfg.get('INNERTUBE_API_KEY') : null;\n\n  // The web page itself is SABR-only now: 29 formats, no URLs. The ANDROID and\n  // IOS clients still answer with plain, signed URLs, and asking from inside\n  // the page means the request carries the site's own cookies and key.\n  var clients = [\n    {clientName:'ANDROID', clientVersion:'20.10.38', osName:'Android', osVersion:'14',\n     androidSdkVersion:34, hl:'en'},\n    {clientName:'IOS', clientVersion:'20.10.4', deviceMake:'Apple', deviceModel:'iPhone16,2',\n     osName:'iPhone', osVersion:'18.3.2.22D82', hl:'en'}\n  ];\n\n  function score(f){\n    var mime = f.mimeType || '';\n    // m4a first, whatever the bitrate: every device this library syncs to can\n    // play AAC, and opus in webm is a coin toss on Apple hardware.\n    var isM4a = mime.indexOf('audio/mp4') === 0 ? 1 : 0;\n    return isM4a * 1e9 + (f.bitrate || 0);\n  }\n\n  function attempt(i){\n    if (i >= clients.length) {\n      window.__mhAudio = JSON.stringify({id:id, error:'No client returned a playable audio URL.'});\n      window.__mhAudioFor = id; window.__mhBusy = null; return;\n    }\n    fetch('/youtubei/v1/player?key=' + key + '&prettyPrint=false', {\n      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'omit',\n      body: JSON.stringify({videoId:id, context:{client:clients[i]},\n        contentCheckOk:true, racyCheckOk:true})\n    }).then(function(r){ return r.json(); }).then(function(j){\n      var sd = j.streamingData || {};\n      var det = j.videoDetails || (pr && pr.videoDetails) || {};\n      var audio = (sd.adaptiveFormats || []).filter(function(f){\n        return f.url && (f.mimeType || '').indexOf('audio') === 0;\n      }).sort(function(a,b){ return score(b) - score(a); });\n      if (!audio.length) { attempt(i + 1); return; }\n      var best = audio[0];\n      window.__mhAudio = JSON.stringify({\n        id: id, url: best.url, itag: best.itag,\n        mime: (best.mimeType || '').split(';')[0],\n        size: parseInt(best.contentLength || '0', 10),\n        client: clients[i].clientName,\n        title: det.title || '', author: det.author || '',\n        duration: parseInt(det.lengthSeconds || '0', 10)\n      });\n      window.__mhAudioFor = id; window.__mhBusy = null;\n    }).catch(function(e){ attempt(i + 1); });\n  }\n  attempt(0);\n  return 'resolving';\n})()\n";
 
     /**
      * Picks the best audio-only format with a usable URL.
@@ -272,16 +288,26 @@ public class YoutubeBrowserActivity extends Activity {
             org.json.JSONObject p = new org.json.JSONObject(json);
             String id = p.optString("id", "");
             if (id.isEmpty()) return;
-            if (!id.equals(loggedFor)) {
-                loggedFor = id;
-                Log.i(TAG, "player " + id + " adaptive=" + p.optInt("adaptive")
-                    + " withUrl=" + p.optInt("withUrl") + " sabrOnly=" + p.optBoolean("sabrOnly")
-                    + " itag=" + p.optInt("itag") + " mime=" + p.optString("mime"));
-            }
+
             String url = p.optString("url", "");
             if (url.isEmpty()) {
-                if (!id.equals(currentId)) { currentId = id; disarmButton(); }
+                if (!id.equals(currentId)) {
+                    currentId = id;
+                    disarmButton();
+                    String why = p.optString("error", "");
+                    if (!why.isEmpty()) {
+                        Log.w(TAG, "no audio for " + id + ": " + why);
+                        runOnUiThread(() -> status.setText(why));
+                    }
+                }
                 return;
+            }
+
+            if (!id.equals(loggedFor)) {
+                loggedFor = id;
+                Log.i(TAG, "resolved " + id + " via " + p.optString("client")
+                    + " itag=" + p.optInt("itag") + " " + p.optString("mime")
+                    + " " + p.optLong("size") + " bytes");
             }
             audioUrl.set(url);
             audioMime.set(p.optString("mime", "audio/mp4"));
@@ -289,7 +315,7 @@ public class YoutubeBrowserActivity extends Activity {
             currentId = id;
             armButton();
         } catch (Exception err) {
-            Log.w(TAG, "could not read the player response", err);
+            Log.w(TAG, "could not read the resolved audio", err);
         }
     }
 
@@ -351,7 +377,18 @@ public class YoutubeBrowserActivity extends Activity {
         status.setText("Press play so the audio starts, then the button below.");
     }
 
-    /** Everything the poller already gathered, handed back in one go. */
+    /**
+     * Downloads inside the page, then hands back a file path.
+     *
+     * Not in Java, and this was measured rather than assumed: the very same
+     * URL answers 206 to `fetch` from the page and 403 to HttpURLConnection,
+     * whatever headers, user-agent or cookies it is given. googlevideo is
+     * looking at more than the headers — the TLS handshake among it — and the
+     * only client that looks like a browser here is the actual browser.
+     *
+     * A path rather than the bytes because an Intent goes through Binder,
+     * which gives up around a megabyte, and a song is several.
+     */
     private void finishWithCapture() {
         final String url = audioUrl.get();
         if (url == null) {
@@ -359,13 +396,76 @@ public class YoutubeBrowserActivity extends Activity {
             return;
         }
         take.setEnabled(false);
-        take.setText("Adding…");
+        take.setText("Downloading…");
+        try {
+            downloadFile = new File(getCacheDir(), "yt-capture.bin");
+            if (downloadFile.exists() && !downloadFile.delete()) throw new Exception("stale file");
+            downloadOut = new FileOutputStream(downloadFile);
+        } catch (Exception err) {
+            Log.e(TAG, "cannot open the capture file", err);
+            Toast.makeText(this, "No room to save that.", Toast.LENGTH_SHORT).show();
+            take.setEnabled(true);
+            return;
+        }
+        web.evaluateJavascript(DOWNLOAD_JS, v -> Log.i(TAG, "download " + v));
+    }
 
+    private static final String DOWNLOAD_JS = "(function(){\n  // Three things learned by measuring, and the code is shaped by all three.\n  //\n  // 1. googlevideo answers 403 to \"give me the whole file\" and 206 to the same\n  //    bytes asked for as a range. The player only ever asks for ranges.\n  // 2. A URL is good for about a megabyte and then starts refusing, whatever\n  //    the range size \u2014 measured at exactly 1048576 with 256 KB chunks and at\n  //    327680 when the third chunk jumped to 1 MB.\n  // 3. Asking the player API again returns a fresh URL, and a fresh URL comes\n  //    with a fresh allowance. So a long song is a handful of URLs rather than\n  //    one, which is a fair trade against implementing proof-of-origin tokens.\n  var CHUNK = 262144;\n  var got = 0;\n  var url = null, total = 0;\n  var refreshes = 0;\n\n  function current(){\n    var a = window.__mhAudio ? JSON.parse(window.__mhAudio) : null;\n    if (!a || !a.url) return false;\n    url = a.url; total = a.size || 0;\n    return true;\n  }\n\n  function refresh(then){\n    if (refreshes > 40) { MusicHubBridge.failed('Gave up refreshing the link.'); return; }\n    refreshes++;\n    var oldUrl = url;\n    // Clearing both markers makes the resolver run again on its next poll.\n    // Waiting on the id would never finish: it is the same video, so the id\n    // does not change \u2014 the URL is the thing that does.\n    window.__mhAudioFor = null;\n    window.__mhBusy = null;\n    var waited = 0;\n    (function wait(){\n      var a = window.__mhAudio ? JSON.parse(window.__mhAudio) : null;\n      if (a && a.url && a.url !== oldUrl) {\n        url = a.url;\n        if (a.size) total = a.size;\n        then();\n        return;\n      }\n      waited += 250;\n      if (waited > 20000) { MusicHubBridge.failed('The link would not refresh.'); return; }\n      setTimeout(wait, 250);\n    })();\n  }\n\n  function step(){\n    if (total > 0 && got >= total) { MusicHubBridge.done(got); return; }\n    var end = total > 0 ? Math.min(got + CHUNK, total) - 1 : got + CHUNK - 1;\n    fetch(url, {headers: {'Range': 'bytes=' + got + '-' + end}}).then(function(r){\n      if (r.status === 403 && got > 0) { refresh(step); return null; }\n      if (r.status !== 206 && r.status !== 200) {\n        MusicHubBridge.failed('YouTube answered ' + r.status + ' at byte ' + got);\n        return null;\n      }\n      return r.arrayBuffer();\n    }).then(function(buf){\n      if (!buf) return;\n      var bytes = new Uint8Array(buf);\n      if (!bytes.length) { MusicHubBridge.done(got); return; }\n      var SLICE = 192 * 1024;\n      for (var i = 0; i < bytes.length; i += SLICE) {\n        var part = bytes.subarray(i, i + SLICE);\n        var bin = '';\n        for (var j = 0; j < part.length; j++) bin += String.fromCharCode(part[j]);\n        MusicHubBridge.chunk(btoa(bin));\n      }\n      got += bytes.length;\n      MusicHubBridge.progress(got, total);\n      if (total <= 0 && bytes.length < CHUNK) { MusicHubBridge.done(got); return; }\n      step();\n    }).catch(function(e){ MusicHubBridge.failed(String(e).slice(0, 120)); });\n  }\n\n  if (!current()) { MusicHubBridge.failed('Nothing resolved to download.'); return 'no-url'; }\n  step();\n  return 'started';\n})()\n";
+
+    /** Called from the page as the bytes arrive. */
+    private class Bridge {
+        @android.webkit.JavascriptInterface
+        public void chunk(String base64) {
+            try {
+                downloadOut.write(android.util.Base64.decode(base64, android.util.Base64.DEFAULT));
+            } catch (Exception err) {
+                failed("Could not save the audio.");
+            }
+        }
+
+        @android.webkit.JavascriptInterface
+        public void progress(long done, long total) {
+            int percent = total > 0 ? (int) (done * 100 / total) : 0;
+            runOnUiThread(() -> take.setText("Downloading… " + percent + "%"));
+        }
+
+        @android.webkit.JavascriptInterface
+        public void done(long bytes) {
+            runOnUiThread(() -> finishWithFile(bytes));
+        }
+
+        @android.webkit.JavascriptInterface
+        public void failed(String why) {
+            Log.w(TAG, "in-page download failed: " + why);
+            runOnUiThread(() -> {
+                closeQuietly();
+                Toast.makeText(YoutubeBrowserActivity.this, why, Toast.LENGTH_LONG).show();
+                take.setEnabled(true);
+                take.setText("Add this song to Music Hub");
+            });
+        }
+    }
+
+    private void closeQuietly() {
+        try { if (downloadOut != null) downloadOut.close(); } catch (Exception ignored) { }
+        downloadOut = null;
+    }
+
+    private void finishWithFile(long bytes) {
+        closeQuietly();
+        if (bytes < 10_000) {
+            Toast.makeText(this, "That came back empty.", Toast.LENGTH_SHORT).show();
+            take.setEnabled(true);
+            return;
+        }
+        Log.i(TAG, "downloaded " + bytes + " bytes in the page");
         Intent data = new Intent();
-        data.putExtra(RESULT_AUDIO_URL, url);
+        data.putExtra(RESULT_PATH, downloadFile.getAbsolutePath());
+        data.putExtra(RESULT_AUDIO_URL, audioUrl.get());
         data.putExtra(RESULT_MIME, audioMime.get());
         data.putExtra(RESULT_USER_AGENT, web.getSettings().getUserAgentString());
         if (details != null) {
+            data.putExtra(RESULT_CLIENT, details.optString("client", ""));
             data.putExtra(RESULT_VIDEO_ID, details.optString("id", ""));
             data.putExtra(RESULT_TITLE, details.optString("title", ""));
             data.putExtra(RESULT_AUTHOR, details.optString("author", ""));

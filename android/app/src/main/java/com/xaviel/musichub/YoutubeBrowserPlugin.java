@@ -18,6 +18,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import android.util.Log;
+
 /**
  * The bridge to {@link YoutubeBrowserActivity}, plus the download itself.
  *
@@ -28,6 +30,8 @@ import java.net.URL;
  */
 @CapacitorPlugin(name = "YoutubeBrowser")
 public class YoutubeBrowserPlugin extends Plugin {
+
+    private static final String TAG = "MusicHubYT";
 
     private static final int MAX_REDIRECTS = 5;
     // A song is a few megabytes; anything past this is not one, and the
@@ -58,6 +62,8 @@ public class YoutubeBrowserPlugin extends Plugin {
         picked.put("audioUrl", data.getStringExtra(YoutubeBrowserActivity.RESULT_AUDIO_URL));
         picked.put("mime", data.getStringExtra(YoutubeBrowserActivity.RESULT_MIME));
         picked.put("userAgent", data.getStringExtra(YoutubeBrowserActivity.RESULT_USER_AGENT));
+        picked.put("client", data.getStringExtra(YoutubeBrowserActivity.RESULT_CLIENT));
+        picked.put("path", data.getStringExtra(YoutubeBrowserActivity.RESULT_PATH));
         picked.put("videoId", data.getStringExtra(YoutubeBrowserActivity.RESULT_VIDEO_ID));
         picked.put("title", data.getStringExtra(YoutubeBrowserActivity.RESULT_TITLE));
         picked.put("author", data.getStringExtra(YoutubeBrowserActivity.RESULT_AUTHOR));
@@ -74,84 +80,46 @@ public class YoutubeBrowserPlugin extends Plugin {
      * and the WebView, which for a five-megabyte song is a fair trade against
      * inventing a second storage path.
      */
+    /**
+     * Reads the file the page downloaded and hands it over as base64.
+     *
+     * The fetch itself happens in the WebView — measured: the same googlevideo
+     * URL answers 206 to the page and 403 to HttpURLConnection whatever
+     * headers it is given, because more than headers is being inspected. So
+     * this no longer downloads anything; it carries what the browser got.
+     */
     @PluginMethod
-    public void download(PluginCall call) {
-        String url = call.getString("url");
-        if (url == null || url.isEmpty()) {
-            call.reject("No URL to download.");
+    public void readCapture(PluginCall call) {
+        String path = call.getString("path");
+        if (path == null || path.isEmpty()) {
+            call.reject("Nothing was captured.");
             return;
         }
-        String userAgent = call.getString("userAgent", "");
-
         new Thread(() -> {
-            HttpURLConnection connection = null;
+            File file = new File(path);
             try {
-                String current = url;
-                for (int redirect = 0; redirect <= MAX_REDIRECTS; redirect++) {
-                    connection = (HttpURLConnection) new URL(current).openConnection();
-                    connection.setInstanceFollowRedirects(false);
-                    connection.setConnectTimeout(30000);
-                    connection.setReadTimeout(60000);
-                    if (userAgent != null && !userAgent.isEmpty()) {
-                        connection.setRequestProperty("User-Agent", userAgent);
-                    }
-                    // googlevideo wants to know who is asking; without this it
-                    // answers 403 to a request it otherwise just served.
-                    connection.setRequestProperty("Referer", "https://m.youtube.com/");
-                    connection.setRequestProperty("Origin", "https://m.youtube.com");
-                    String cookies = android.webkit.CookieManager.getInstance().getCookie(current);
-                    if (cookies != null) connection.setRequestProperty("Cookie", cookies);
-
-                    int code = connection.getResponseCode();
-                    if (code == HttpURLConnection.HTTP_MOVED_PERM
-                        || code == HttpURLConnection.HTTP_MOVED_TEMP
-                        || code == 307 || code == 308) {
-                        String next = connection.getHeaderField("Location");
-                        connection.disconnect();
-                        if (next == null) throw new Exception("Redirect with no target");
-                        current = new URL(new URL(current), next).toString();
-                        continue;
-                    }
-                    if (code != HttpURLConnection.HTTP_OK && code != HttpURLConnection.HTTP_PARTIAL) {
-                        throw new Exception("YouTube answered " + code);
-                    }
-                    break;
-                }
-
-                long expected = connection.getContentLengthLong();
-                if (expected > MAX_BYTES) throw new Exception("That file is too large to add.");
-
-                java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream();
-                byte[] chunk = new byte[64 * 1024];
-                long total = 0;
-                try (InputStream in = connection.getInputStream()) {
-                    int read;
-                    while ((read = in.read(chunk)) != -1) {
-                        total += read;
-                        if (total > MAX_BYTES) throw new Exception("That file is too large to add.");
-                        buffer.write(chunk, 0, read);
-                        if (expected > 0) {
-                            JSObject progress = new JSObject();
-                            progress.put("loaded", total);
-                            progress.put("total", expected);
-                            progress.put("percent", (int) (total * 100 / expected));
-                            notifyListeners("downloadProgress", progress);
-                        }
+                long size = file.length();
+                if (size < 10_000) throw new Exception("The capture is empty.");
+                if (size > MAX_BYTES) throw new Exception("That file is too large to add.");
+                byte[] bytes = new byte[(int) size];
+                try (InputStream in = new java.io.FileInputStream(file)) {
+                    int off = 0, read;
+                    while (off < bytes.length
+                        && (read = in.read(bytes, off, bytes.length - off)) != -1) {
+                        off += read;
                     }
                 }
-
-                if (total < 10_000) throw new Exception("The download came back empty.");
-
                 JSObject done = new JSObject();
-                done.put("base64", android.util.Base64.encodeToString(
-                    buffer.toByteArray(), android.util.Base64.NO_WRAP));
-                done.put("bytes", total);
+                done.put("base64", android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP));
+                done.put("bytes", size);
                 call.resolve(done);
             } catch (Exception err) {
-                call.reject(err.getMessage() == null ? "Download failed." : err.getMessage());
+                Log.e(TAG, "reading the capture failed", err);
+                call.reject(err.getMessage() == null ? "Could not read the capture." : err.getMessage());
             } finally {
-                if (connection != null) connection.disconnect();
+                if (!file.delete()) Log.w(TAG, "could not remove " + path);
             }
         }).start();
     }
+
 }
