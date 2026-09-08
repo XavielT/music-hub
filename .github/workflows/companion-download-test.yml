@@ -41,6 +41,26 @@ jobs:
           docker logs companion 2>&1 | grep -q "POT provider up" \
             || { echo "::error::The POT provider never came up — a download would fail as a bot check and hide the real cause."; exit 1; }
 
+      # yt-dlp's own account of what it loaded and tried. Without this the
+      # only signal is "bot check", which is the symptom of half a dozen
+      # different causes — including the plugin silently not being loaded.
+      - name: What does yt-dlp think it is doing
+        run: |
+          docker exec companion yt-dlp -v --simulate \
+            "https://www.youtube.com/watch?v=${{ inputs.video_id }}" 2>&1 | head -60 || true
+          echo "--- plugin visible to python? ---"
+          docker exec companion python3 -c "
+          import importlib.util as u
+          for name in ('yt_dlp_plugins', 'yt_dlp_plugins.extractor.getpot_bgutil'):
+              print(name, '->', 'found' if u.find_spec(name) else 'MISSING')
+          " || true
+          echo "--- provider answers? ---"
+          docker exec companion python3 -c "
+          import urllib.request, json
+          req = urllib.request.Request('http://127.0.0.1:4416/ping')
+          print(urllib.request.urlopen(req, timeout=10).read().decode()[:300])
+          " || true
+
       - name: Download from a datacenter IP, which is the whole point
         id: dl
         run: |
