@@ -40,10 +40,12 @@ describe('Playback speed and the sleep timer', () => {
   let db: DbService;
   let songs: SongModel[];
   let messages: string[];
+  let signed: string[];
 
   async function build(list: SongModel[]): Promise<void> {
     songs = list;
     messages = [];
+    signed = [];
     db = new DbService();
     await db.use(USER);
     player = new PlayerService(
@@ -52,11 +54,22 @@ describe('Playback speed and the sleep timer', () => {
         songs: () => songs,
         whenReady: async () => undefined,
         coverSrc: () => null,
-        getSongFile: async () => new Blob(['audio']),
+        getSongFile: async (id: string) =>
+          songs.find(s => s.id === id)?.downloaded ? new Blob(['audio']) : undefined,
       } as never,
-      { getStreamUrl: async () => 'https://example.test/stream' } as never,
+      {
+        getStreamUrl: async (song: SongModel) => {
+          signed.push(song.id);
+          return 'https://example.test/stream';
+        },
+      } as never,
       { error: (t: string) => messages.push(t), show: (t: string) => messages.push(t) } as never
     );
+  }
+
+  // A song that streams: no local copy, but an object in the bucket.
+  function streamed(id: string): SongModel {
+    return { ...song(id), downloaded: false, storagePath: `owner/${id}.mp3` };
   }
 
   // The element behind the service, for checking what actually reached it.
@@ -118,6 +131,41 @@ describe('Playback speed and the sleep timer', () => {
       expect(player.speed()).toBe(4);
       player.setSpeed(0);
       expect(player.speed()).toBe(0.25);
+    });
+  });
+
+  describe('warming the next song', () => {
+    it('signs the next streamed song while this one is still playing', async () => {
+      const list = [streamed('a'), streamed('b'), streamed('c')];
+      await build(list);
+      await player.play(list[0], list);
+      await new Promise(r => setTimeout(r, 10));
+
+      // "a" because it is playing, "b" because it is next — and not "c".
+      expect(signed).toEqual(['a', 'b']);
+    });
+
+    it('does not sign a song that is already on the device', async () => {
+      const list = [streamed('a'), song('b')];
+      await build(list);
+      await player.play(list[0], list);
+      await new Promise(r => setTimeout(r, 10));
+
+      expect(signed).toEqual(['a']);
+    });
+
+    it('leaves the last song alone unless the queue wraps', async () => {
+      const list = [streamed('a'), streamed('b')];
+      await build(list);
+      await player.play(list[1], list); // starting on the last one
+      await new Promise(r => setTimeout(r, 10));
+      expect(signed).toEqual(['b']);
+
+      // With repeat on, the song after the last one is the first one.
+      player.cycleRepeat(); // off -> all
+      await player.jumpTo(1);
+      await new Promise(r => setTimeout(r, 10));
+      expect(signed).toContain('a');
     });
   });
 

@@ -333,6 +333,38 @@ WebView throttles intervals until they effectively stop, and waking up with the
 full time still on the clock is the opposite of what a sleep timer is for. "End
 of song" also outranks repeat-one, which would otherwise never reach an end.
 
+### Gapless and crossfade — looked at, not built
+
+The round-4 plan listed this as an exploration, and the exploration says no.
+
+The gap between two songs has three parts: signing a URL, fetching enough bytes
+to start, and decoding. **The first is now gone** — the next song's signed URL
+is requested while the current one is still playing, so a change of song costs
+a decode instead of a network round trip. It is only the URL, and only for a
+streamed song; a downloaded one has nothing to sign.
+
+Closing the other two means a second audio element holding the next song
+already decoded, and crossfade means both playing at once with volume ramps.
+Three things make that a bad trade here:
+
+- **The media session belongs to one element.** Lock-screen controls, the
+  Android notification and the position state all attach to the element that is
+  playing. Two elements means owning that handover, and getting it wrong shows
+  up as a notification controlling a song that has already finished — on the
+  lock screen, where it is least debuggable.
+- **iOS ignores `volume` outright**, which is what the volume slider is already
+  hidden for. No fade is possible there without routing through Web Audio, and
+  a `MediaElementSourceNode` breaks the media-session integration on exactly
+  the platforms this app needs it on.
+- **The honest benefit is small.** Gapless matters for continuous mixes and
+  live albums. This is a family library played on shuffle, where a decode gap
+  between two unrelated songs is not something anyone has complained about.
+
+If it is ever wanted, the shape is: a second `Audio`, swapped on `ended`, with
+the media session driven from a single wrapper that always reports whichever
+element is live — and crossfade only where `volume` is honoured, which rules
+out iOS by construction.
+
 ## Settings
 
 The gear in the top right of every signed-in page opens `/settings`, which holds

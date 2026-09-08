@@ -566,6 +566,36 @@ export class PlayerService {
     this.updateMetadata(song);
     void this.audio.play().catch(() => this._isPlaying.set(false));
     void this.saveSession();
+    this.warmNext(index);
+  }
+
+  /**
+   * Signs the *next* song's URL while this one is still playing.
+   *
+   * The audible gap between two streamed songs is mostly one network round
+   * trip: `createSignedUrl` cannot be asked for until the song is wanted, and
+   * it is wanted at exactly the moment the last one ended. Asking a few
+   * minutes early puts the answer in the cache the transition already reads
+   * from, so the change of song costs a decode rather than a request.
+   *
+   * Deliberately only the URL. Pre-creating an object URL for the next song —
+   * or holding a second audio element for it — is what real gapless playback
+   * would need, and both mean owning a second playback lifecycle next to the
+   * media session. See the README on why that is not worth it here.
+   */
+  private warmNext(fromIndex: number): void {
+    if (!navigator.onLine) return;
+    const queue = this._queue();
+    if (queue.length < 2) return;
+
+    const atEnd = fromIndex >= queue.length - 1;
+    if (atEnd && this._repeat() === 'off') return;
+    const nextIndex = atEnd ? 0 : fromIndex + 1;
+
+    const next = this.freshest(queue[nextIndex]);
+    // A downloaded song has nothing to sign, and a plain URL needs nothing.
+    if (!next || next.downloaded || !next.storagePath) return;
+    void this.cloud.getStreamUrl(next).catch(() => undefined);
   }
 
   // The library's copy of a song is the current one; the queue's may predate a
