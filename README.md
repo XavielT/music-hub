@@ -393,7 +393,55 @@ The check runs at launch and never blocks anything — no network, no update, no
 complaint. The releases API allows 60 unauthenticated calls per hour per IP,
 which one check per launch stays well inside.
 
-### Cutting a release
+### Releasing from CI
+
+Pushing a `v*` tag builds and signs the APK on GitHub Actions
+(`.github/workflows/release.yml`), so the release no longer depends on which
+machine was to hand. It runs the suite, checks the tag against
+`package.json` (out-of-step versions make the updater either nag forever or
+never notice), builds with JDK 21, signs with the release keystore, **checks
+the signing certificate is the same one every previous release used**, and
+attaches the APK as `music-hub.apk`.
+
+If a release for the tag already exists it uploads into it. If not, it creates
+a **draft** — the release body is what the app shows as its update notes, and
+publishing an empty one automatically would push it to every phone before
+anyone had written it. So: tag, wait, write the notes, publish.
+
+**One-time setup.** Four secrets and one variable, at *Settings → Secrets and
+variables → Actions*:
+
+```bash
+base64 -w0 ~/keystores/music-hub-release.jks    # paste as MUSICHUB_KEYSTORE_BASE64
+```
+
+| Secret | Value |
+|---|---|
+| `MUSICHUB_KEYSTORE_BASE64` | the command above |
+| `MUSICHUB_STORE_PASSWORD` | keystore password |
+| `MUSICHUB_KEY_ALIAS` | `music-hub` |
+| `MUSICHUB_KEY_PASSWORD` | key password |
+
+And one **variable** (not a secret — a certificate fingerprint is public):
+
+| Variable | Value |
+|---|---|
+| `MUSICHUB_CERT_SHA256` | `9ab16caf1ab84719c1b7f03bb99462e20a1a1fb55b20bc8afbcb5a986df40822` |
+
+That fingerprint is what every release from v0.1.0 onwards is signed with. With
+the variable set, a build using any other key fails instead of producing an APK
+that no existing install can accept — the failure mode that otherwise ends in
+"uninstall the app", which takes the downloads with it. Without it the workflow
+only prints a warning, so it is worth two minutes.
+
+The keystore still lives on your machine as the master copy. The secret is a
+copy, and GitHub cannot show it back to you — losing both means never shipping
+an update these phones will accept again.
+
+`.github/workflows/ci.yml` runs the suite and a production build on every push
+and pull request, which is the same thing without the signing.
+
+### Cutting a release by hand
 
 The updater compares the running version against the latest release tag, so
 `package.json`, `src/version.ts` and the Android `versionName`/`versionCode`
@@ -463,8 +511,9 @@ Both neighbours fail, in opposite directions:
 If a build fails right after changing JDKs, run `./gradlew --stop` first — a stale
 daemon on the old JVM will otherwise be reused.
 
-To publish it for others, follow *Cutting a release* above: it covers the version
-bump the in-app updater depends on as well as the GitHub release itself.
+To publish it for others, bump the version with `./tools/set-version.sh` and push
+the tag — *Releasing from CI* above takes it from there, or *Cutting a release by
+hand* if you would rather do it locally.
 
 ## Signed release builds
 

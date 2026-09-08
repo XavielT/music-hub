@@ -1,0 +1,31 @@
+name: CI
+
+# Every push and pull request. The suite is the only thing standing between a
+# refactor and somebody's library, so it runs before anything is merged.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # The runner image ships Chrome, but karma has to be told where it is,
+      # and the CI launcher drops the sandbox for runners that are root.
+      - name: Unit tests
+        run: |
+          export CHROME_BIN=$(command -v google-chrome || command -v chromium-browser || command -v chromium)
+          npx ng test --watch=false --browsers=ChromeHeadlessCI
+
+      - name: Production build
+        run: npm run build
