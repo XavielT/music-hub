@@ -760,14 +760,29 @@ audio is not hashed. It is a warning, not a gate — adding it anyway is allowed
 
 ## Importing from YouTube
 
-Search works inside the Android app (native HTTP bypasses CORS) and nowhere else, and
-the audio download works nowhere at all: YouTube stopped serving playable URLs to the
-clients a browser or a WebView can be. Both go through **`companion/`** instead — a
-small yt-dlp service you run, with its own README covering deployment, the bearer
-token, and the bot-protection problem that decides where it is worth hosting.
+**On Android: browse YouTube in the app.** *Add → Browse YouTube and add a song*
+opens the real mobile site in a WebView. Find a song, press play, tap **Add this song
+to Music Hub**. No server, no account, no setup.
 
-Point the app at it in **Settings → YouTube companion** (admin only). The address and
-token stay on that device.
+It works for one reason: the request comes from the phone. Measured on 2026-09-08
+across four datacenter addresses (Render and three GitHub runners) versus a home
+connection — extraction is refused from every datacenter and fine from home, with a
+POT provider and a JS runtime in place either way. The phone is the connection
+YouTube does not object to, and this uses it.
+
+Nothing is deciphered or reconstructed. While the page plays, it fetches its own audio
+from `googlevideo.com` with a fully-signed URL; `YoutubeBrowserActivity` watches those
+requests go by and keeps the audio one, minus the byte range. Signature descrambling,
+PO tokens and cookie files all become somebody else's problem — the page already
+solved them. The download then runs natively, because a googlevideo URL is bound to
+the client it was issued to: same connection, same user-agent, same cookies, and
+fetching it from the web layer would drop all three for a 403.
+
+Android only. A browser cannot read another site's traffic, and should not be able to.
+
+**In a browser**, the fallback is still `companion/` — a small yt-dlp service you host,
+pointed at from **Settings → YouTube companion** (admin only). Hosted anywhere but
+home it needs a `cookies.txt`; its README covers that.
 
 Downloading copyrighted music from YouTube is against YouTube's terms — use it for
 your own uploads, Creative Commons and public-domain material.

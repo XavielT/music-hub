@@ -318,3 +318,25 @@
     overflow-wrap: anywhere;
   }
 }
+
+// The in-app YouTube browser: the route that needs no setup, so it leads.
+.add-music-browse {
+  margin-bottom: 14px;
+}
+
+.add-music-browse-btn {
+  width: 100%;
+  background: var(--Hub);
+  border: none;
+  border-radius: 12px;
+  color: var(--on-Hub);
+  font-family: var(--font-btns);
+  font-size: 0.9rem;
+  padding: 13px 16px;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}

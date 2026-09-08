@@ -20,6 +20,14 @@
             </intent-filter>
         </activity>
 
+        <!-- YouTube, in a real browser, on the user's own connection. Not
+             exported: nothing outside this app has any business starting it. -->
+        <activity
+            android:name=".YoutubeBrowserActivity"
+            android:exported="false"
+            android:label="Add from YouTube"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

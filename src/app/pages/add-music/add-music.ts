@@ -6,6 +6,7 @@ import { AuthService } from '../../../shared/services/auth.service';
 import { LibraryService } from '../../../shared/services/library.service';
 import { YoutubeService, YoutubeResult } from '../../../shared/services/youtube.service';
 import { CompanionService } from '../../../shared/services/companion.service';
+import { YoutubeCaptureService } from '../../../shared/services/youtube-capture.service';
 import { readTags } from '../../../shared/services/tags';
 import {
   HIGH_BITRATE_BPS,
@@ -34,6 +35,12 @@ interface PendingSong {
 // them, so the section is offered read-only there instead of hanging.
 const YT_BROWSER_HINT =
   'YouTube search only works in the installed Android app. Here in the browser, add songs from your device or a direct audio URL below.';
+
+// Opens the in-app browser straight on a search rather than YouTube's home
+// page, so a typed query is not thrown away.
+function searchUrl(query: string): string {
+  return `https://m.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+}
 
 // Safety net: the YouTube client can hang instead of failing, and the UI must
 // never sit on a spinner forever.
@@ -74,6 +81,7 @@ export class AddMusicComponent implements OnDestroy {
   ytResults = signal<YoutubeResult[]>([]);
   ytSearching = signal(false);
   ytDownloading = signal<string | null>(null);
+  ytBrowsing = signal(false);
   ytError = signal('');
   // False in the browser preview, true in the installed app.
   // Search works natively inside the Android shell, and through the companion
@@ -93,7 +101,8 @@ export class AddMusicComponent implements OnDestroy {
     public library: LibraryService,
     public auth: AuthService,
     private youtube: YoutubeService,
-    public companion: CompanionService
+    public companion: CompanionService,
+    public capture: YoutubeCaptureService
   ) {}
 
   async ytSearch(): Promise<void> {
@@ -182,6 +191,31 @@ export class AddMusicComponent implements OnDestroy {
       );
     }
     this.ytDownloading.set(null);
+  }
+
+  // Browse YouTube in a real browser and take the song that plays. The only
+  // route that works without a server, an account or a cookie file, because
+  // the phone's own connection is the one YouTube does not object to.
+  async browseYoutube(): Promise<void> {
+    if (this.ytBrowsing()) return;
+    this.ytError.set('');
+    this.ytBrowsing.set(true);
+    try {
+      const song = await this.capture.capture(this.ytQuery.trim() ? searchUrl(this.ytQuery) : undefined);
+      if (!song) return; // backed out of the browser
+      await this.library.addLocalSong(song.file, {
+        title: song.title,
+        artist: song.artist,
+        album: 'YouTube',
+        coverUrl: song.coverUrl,
+        duration: song.duration,
+      });
+      this.savedMessage.set(`"${song.title}" added to your library ✔`);
+    } catch (err) {
+      this.ytError.set((err as Error)?.message ?? 'Could not add that song.');
+    } finally {
+      this.ytBrowsing.set(false);
+    }
   }
 
   formatDuration(seconds: number): string {

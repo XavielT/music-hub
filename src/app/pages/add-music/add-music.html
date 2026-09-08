@@ -14,6 +14,21 @@
       Downloads go through your companion.
     </p>
 
+    <!-- The one that works on a phone: browse YouTube for real and take what
+         plays. Offered first because it needs no server and no setup. -->
+    <div class="add-music-browse" *ngIf="capture.available">
+      <button class="add-music-browse-btn" (click)="browseYoutube()" [disabled]="ytBrowsing()">
+        {{ ytBrowsing() ? 'Opening YouTube…' : '▶ Browse YouTube and add a song' }}
+      </button>
+      <p class="add-music-note">
+        Opens YouTube here in the app. Find a song, press play, then tap
+        <strong>Add this song to Music Hub</strong>. Nothing to set up.
+      </p>
+      <p class="add-music-note" *ngIf="capture.progress() !== null">
+        Downloading — {{ capture.progress() }}%
+      </p>
+    </div>
+
     <div class="add-music-yt-search">
       <input
         type="text"

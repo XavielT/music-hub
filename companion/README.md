@@ -1,5 +1,11 @@
 # Music Hub companion
 
+> **Read this first.** On Android there is now a better route that needs none
+> of this: *Add → Browse YouTube and add a song* opens YouTube in the app and
+> takes the audio the page itself plays. No server, no cookies, no account.
+> This companion is still the only way to add from YouTube **in a browser**,
+> and it still needs cookies to work from a hosting provider.
+
 A small yt-dlp service. The app talks to it to search YouTube and to fetch a
 song's audio; everything else stays in the app.
 
