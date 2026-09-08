@@ -54,6 +54,12 @@ export class PlaylistDetailsComponent {
     void this.player.shufflePlay(this.songs());
   }
 
+  // Opens the playlist to the household, or closes it again.
+  toggleShared(): void {
+    const p = this.playlist();
+    if (p) void this.library.setPlaylistShared(p.id, !p.isShared);
+  }
+
   async deletePlaylist(): Promise<void> {
     await this.library.deletePlaylist(this.id);
     this.router.navigate(['/library']);

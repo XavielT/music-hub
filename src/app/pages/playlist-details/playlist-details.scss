@@ -93,6 +93,35 @@
   transition: all 0.15s ease;
 }
 
+// Same shape as Delete; the accent border is what says it is on.
+.playlist-details__share {
+  background: none;
+  border: 1px solid #2d2d2d;
+  border-radius: 20px;
+  color: var(--main-ultra-light);
+  font-family: var(--font-btns);
+  padding: 9px 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &.on {
+    border-color: var(--Hub);
+    color: var(--Hub);
+  }
+}
+
+.playlist-details__by,
+.playlist-details__hint {
+  color: var(--main-ultra-light);
+}
+
+.playlist-details__hint {
+  margin-top: 8px;
+  font-size: 0.73rem;
+  line-height: 1.45;
+  max-width: 46ch;
+}
+
 .playlist-details__empty {
   color: var(--main-ultra-light);
   text-align: center;

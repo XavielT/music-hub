@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
 import { SongModel } from '../models/song.model';
 import { PlaylistModel } from '../models/playlist.model';
+import { ProfileModel } from '../models/profile.model';
 
 // --- Row shapes (mirror the Supabase schema exactly) ---
 
@@ -27,6 +28,10 @@ export interface PlaylistRow {
   owner_id: string;
   name: string;
   cover_color: string;
+  // Shared playlists are visible to every member, and any of them can change
+  // which songs are in one. Renaming, unsharing and deleting stay with the
+  // owner, which RLS enforces rather than the UI.
+  is_shared: boolean;
   created_at: string;
 }
 
@@ -38,7 +43,7 @@ export interface PlaylistSongRow {
 
 const SONG_COLUMNS =
   'id, owner_id, title, artist, album, duration, storage_path, remote_url, cover_url, cover_path, cover_color, size_bytes, created_at';
-const PLAYLIST_COLUMNS = 'id, owner_id, name, cover_color, created_at';
+const PLAYLIST_COLUMNS = 'id, owner_id, name, cover_color, is_shared, created_at';
 
 // navigator.onLine is unreliable in the Android WebView: it keeps reporting
 // true in airplane mode. So a dropped connection has to be recognised from the
@@ -357,11 +362,43 @@ export class CloudLibraryService {
         owner_id: this.userId(),
         name: playlist.name,
         cover_color: playlist.coverColor,
+        is_shared: playlist.isShared,
       })
       .select(PLAYLIST_COLUMNS)
       .single();
     if (error) throw new Error(error.message);
     return data as PlaylistRow;
+  }
+
+  // Pushes a playlist that was created or edited offline. An upsert rather
+  // than a delete and a re-insert: the old pair dropped `playlist_songs` by
+  // cascade on the way past, which on a shared playlist would take everyone
+  // else's additions with it.
+  async upsertPlaylist(playlist: PlaylistModel): Promise<PlaylistRow> {
+    const { data, error } = await this.client
+      .from('playlists')
+      .upsert({
+        id: playlist.id,
+        owner_id: this.userId(),
+        name: playlist.name,
+        cover_color: playlist.coverColor,
+        is_shared: playlist.isShared,
+      })
+      .select(PLAYLIST_COLUMNS)
+      .single();
+    if (error) throw new Error(error.message);
+    return data as PlaylistRow;
+  }
+
+  // Opens a playlist to the rest of the household, or closes it again. Only
+  // the owner may: the update policy is owner-scoped, so a member trying it
+  // changes nothing rather than being trusted by the UI.
+  async setPlaylistShared(playlistId: string, isShared: boolean): Promise<void> {
+    const { error } = await this.client
+      .from('playlists')
+      .update({ is_shared: isShared })
+      .eq('id', playlistId);
+    if (error) throw new Error(error.message);
   }
 
   async deletePlaylist(playlistId: string): Promise<void> {
@@ -399,6 +436,18 @@ export class CloudLibraryService {
       p_song_ids: songIds,
     });
     if (error) throw new Error(error.message);
+  }
+
+  // --- People ---
+
+  // Who else is in the household. Only needed to put a name on a shared
+  // playlist — `profiles` is readable by any signed-in member.
+  async listProfiles(): Promise<ProfileModel[]> {
+    const { data, error } = await this.client
+      .from('profiles')
+      .select('id, display_name, created_at, is_admin');
+    if (error) throw new Error(error.message);
+    return (data ?? []) as ProfileModel[];
   }
 
   // --- Helpers ---

@@ -114,11 +114,18 @@ export class SyncService {
     try {
       await this.library.whenReady();
 
-      const [songRows, playlistRows, playlistSongRows] = await Promise.all([
+      const [songRows, playlistRows, playlistSongRows, profiles] = await Promise.all([
         this.cloud.listSongs(),
         this.cloud.listPlaylists(),
         this.cloud.listPlaylistSongs(),
+        // Only needed to put a name on a playlist somebody else shared, so a
+        // failure here must not cost the rest of the sync.
+        this.cloud.listProfiles().catch(() => []),
       ]);
+
+      // Before the playlists: applyPlaylistRow stores the owner's name on the
+      // playlist as it goes, so the map has to be in place first.
+      this.library.setPeople(profiles);
 
       for (const row of songRows) await this.library.applyRow(row);
       // Anything still marked synced but gone upstream was deleted elsewhere.
@@ -167,11 +174,13 @@ export class SyncService {
         // playlist_songs has a FK to songs: only members that already exist
         // in the cloud can be pushed. The rest follow once they are uploaded.
         const songIds = playlist.songIds.filter(id => syncedSongIds.has(id));
-        if (playlist.ownerId) await this.cloud.deletePlaylist(playlist.id).catch(() => undefined);
-        await this.cloud.createPlaylist(playlist);
+        // Somebody else's shared playlist: the songs in it are open to
+        // everyone, the playlist itself is not. Pushing its name or its
+        // sharing back would be refused by the policy anyway.
+        if (this.library.isMine(playlist)) await this.cloud.upsertPlaylist(playlist);
         await this.cloud.replacePlaylistSongs(playlist.id, songIds);
         await this.library.patchPlaylist(playlist.id, {
-          ownerId: this.auth.user()!.id,
+          ownerId: playlist.ownerId || this.auth.user()!.id,
           syncState: 'synced',
         });
       } catch (err) {

@@ -146,9 +146,30 @@
   flex-shrink: 0;
 }
 
+.library-playlist-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .library-playlist-name {
   font-weight: 600;
   font-size: 0.95rem;
+}
+
+// Who shared it, or that you did.
+.library-playlist-by {
+  font-size: 0.72rem;
+  color: var(--main-ultra-light);
+}
+
+.library-subhead {
+  margin: 18px 0 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--main-ultra-light);
 }
 
 .library-playlist-count {

@@ -142,6 +142,28 @@ To make someone an admin:
 update public.profiles set is_admin = true where id = '<their auth user id>';
 ```
 
+### Shared playlists
+
+Playlists start private. **Share** on a playlist's page opens it to everyone
+signed in: they see it under *Shared with you* in the playlists tab, and they
+can add songs to it and take songs out. Renaming, unsharing and deleting stay
+with whoever made it.
+
+That split is enforced by RLS, not by hiding buttons — `playlists` reads as
+`owner_id = auth.uid() or is_shared` while update and delete stay owner-only,
+and `playlist_songs` follows whatever its playlist allows. Verified against the
+live policies by impersonating a second member: before sharing they cannot see
+the playlist or add to it; after sharing they can add songs but renaming and
+deleting are both refused.
+
+Two people editing the same shared playlist **while offline** is last-writer-
+wins: each device pushes the membership it has, whole. Online edits are
+per-song and do not collide.
+
+Names come from `profiles`, and the one shown is stored next to the playlist
+rather than looked up, so a shared playlist is still credited when the app
+opens with no connection.
+
 ### Compressing before upload
 
 At 320 kbps a song is ~7 MB, so 1 GB is only ~140 songs. Re-encoding to AAC 160k

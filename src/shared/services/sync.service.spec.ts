@@ -47,6 +47,7 @@ describe('SyncService with live updates', () => {
       },
       listPlaylists: async () => [],
       listPlaylistSongs: async () => [],
+      listProfiles: async () => [],
       resetSession: () => undefined,
     };
 
@@ -60,6 +61,8 @@ describe('SyncService with live updates', () => {
       dropSyncedSongsMissingFrom: async () => undefined,
       dropSyncedPlaylistsMissingFrom: async () => undefined,
       pushDirtySongs: async () => undefined,
+      setPeople: () => undefined,
+      isMine: () => true,
       songs: signal([]).asReadonly(),
       playlists: signal([]).asReadonly(),
       localOnlySongs: signal([]).asReadonly(),

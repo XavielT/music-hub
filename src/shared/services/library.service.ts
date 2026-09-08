@@ -35,6 +35,15 @@ export class LibraryService {
   // Songs that exist only on this device and could be pushed to the cloud.
   localOnlySongs = computed(() => this._songs().filter(s => s.syncState === 'local-only'));
 
+  // The two halves of the playlists tab: the ones this account owns, and the
+  // ones somebody else opened to the household.
+  myPlaylists = computed(() => this._playlists().filter(p => this.isMine(p)));
+  sharedWithMe = computed(() => this._playlists().filter(p => !this.isMine(p)));
+
+  // display_name by user id, from the last sync. Only used to credit a shared
+  // playlist, so an empty map costs a label rather than anything working.
+  private people: Record<string, string> = {};
+
   // Resolves once the signed-in user's library has been read off IndexedDB.
   // Nothing is loaded until `activate()` names the account to load.
   private ready: Promise<void> = Promise.resolve();
@@ -610,6 +619,7 @@ export class LibraryService {
       createdAt: Date.now(),
       ownerId: '',
       syncState: 'local-only',
+      isShared: false,
     };
     await this.db.put('playlists', playlist);
     this._playlists.update(list => [playlist, ...list]);
@@ -627,8 +637,63 @@ export class LibraryService {
     return playlist;
   }
 
+  // Everyone in the household, by id, so a shared playlist can be credited.
+  setPeople(profiles: { id: string; display_name: string }[]): void {
+    this.people = Object.fromEntries(
+      profiles.map(p => [p.id, (p.display_name || '').trim()]).filter(([, name]) => name)
+    );
+  }
+
+  // A playlist created here has no owner id until it has been pushed, so an
+  // unpushed one is mine by default rather than nobody's.
+  isMine(playlist: PlaylistModel): boolean {
+    return !playlist.ownerId || playlist.ownerId === this.auth.user()?.id;
+  }
+
+  // Renaming, sharing and deleting belong to the owner; RLS says the same, so
+  // this only keeps the UI from offering what the database would refuse.
+  canManagePlaylist(playlist: PlaylistModel): boolean {
+    return this.isMine(playlist);
+  }
+
+  // Whose playlist this is, for the label under its name.
+  playlistOwnerLabel(playlist: PlaylistModel): string {
+    if (this.isMine(playlist)) return '';
+    return playlist.ownerName || 'someone else';
+  }
+
+  // Opens a playlist to the rest of the household, or closes it again.
+  async setPlaylistShared(id: string, isShared: boolean): Promise<void> {
+    const playlist = this._playlists().find(p => p.id === id);
+    if (!playlist || !this.canManagePlaylist(playlist)) return;
+
+    // Local first, like every other playlist edit: the switch answers
+    // immediately and the write follows.
+    await this.patchPlaylist(id, { isShared });
+    if (playlist.syncState !== 'synced') return;
+
+    if (!this.online()) {
+      // Nothing else to do here — a local-only playlist is pushed whole on the
+      // next sync, sharing included.
+      await this.patchPlaylist(id, { syncState: 'local-only' });
+      return;
+    }
+    try {
+      await this.cloud.setPlaylistShared(id, isShared);
+    } catch (err) {
+      await this.patchPlaylist(id, { syncState: 'local-only' });
+      console.warn('setPlaylistShared failed', err);
+    }
+  }
+
   async deletePlaylist(id: string): Promise<void> {
     const playlist = this._playlists().find(p => p.id === id);
+    // Someone else's shared playlist is not this account's to delete: the
+    // policy would refuse it, and the next sync would bring it back anyway.
+    if (playlist && !this.canManagePlaylist(playlist)) {
+      this.toast.error(`Only ${this.playlistOwnerLabel(playlist)} can delete "${playlist.name}".`);
+      return;
+    }
     await this.db.delete('playlists', id);
     this._playlists.update(list => list.filter(p => p.id !== id));
 
@@ -752,6 +817,10 @@ export class LibraryService {
       createdAt: existing?.createdAt ?? (Date.parse(row.created_at) || Date.now()),
       ownerId: row.owner_id,
       syncState: 'synced',
+      isShared: row.is_shared,
+      // Resolved now and stored, so a shared playlist is still credited when
+      // the app opens offline and there is nobody to ask.
+      ownerName: this.people[row.owner_id] ?? existing?.ownerName,
     };
     await this.db.put('playlists', playlist);
     this._playlists.update(list => {

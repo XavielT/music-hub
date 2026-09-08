@@ -93,13 +93,33 @@
       <input type="text" placeholder="New playlist name" [(ngModel)]="newPlaylistName" (keyup.enter)="createPlaylist()" />
       <button (click)="createPlaylist()">Create</button>
     </div>
-    <a class="library-playlist" *ngFor="let p of library.playlists()" [routerLink]="['/playlist', p.id]">
-      <div class="library-playlist-cover">
-        <app-cover [name]="p.name" [color]="p.coverColor"></app-cover>
-      </div>
-      <span class="library-playlist-name">{{ p.name }}</span>
-      <span class="library-playlist-count">{{ p.songIds.length }} songs</span>
-    </a>
+    <ng-container *ngTemplateOutlet="playlistRows; context: { $implicit: library.myPlaylists() }">
+    </ng-container>
+
+    <!-- Playlists other people opened to the household. -->
+    <ng-container *ngIf="library.sharedWithMe().length">
+      <h3 class="library-subhead">Shared with you</h3>
+      <ng-container *ngTemplateOutlet="playlistRows; context: { $implicit: library.sharedWithMe() }">
+      </ng-container>
+    </ng-container>
+
+    <ng-template #playlistRows let-list>
+      <a class="library-playlist" *ngFor="let p of list" [routerLink]="['/playlist', p.id]">
+        <div class="library-playlist-cover">
+          <app-cover [name]="p.name" [color]="p.coverColor"></app-cover>
+        </div>
+        <span class="library-playlist-text">
+          <span class="library-playlist-name">{{ p.name }}</span>
+          <span class="library-playlist-by" *ngIf="library.playlistOwnerLabel(p) as who">
+            by {{ who }}
+          </span>
+          <span class="library-playlist-by" *ngIf="p.isShared && library.isMine(p)">
+            Shared with everyone
+          </span>
+        </span>
+        <span class="library-playlist-count">{{ p.songIds.length }} songs</span>
+      </a>
+    </ng-template>
   </div>
 
   <!-- Playlist picker overlay -->

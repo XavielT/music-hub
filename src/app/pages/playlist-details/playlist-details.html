@@ -8,7 +8,12 @@
     </div>
     <div class="playlist-details__meta">
       <h1 class="playlist-details__name">{{ p.name }}</h1>
-      <p class="playlist-details__count">{{ p.songIds.length }} songs</p>
+      <p class="playlist-details__count">
+        {{ p.songIds.length }} songs
+        <span class="playlist-details__by" *ngIf="library.playlistOwnerLabel(p) as who">
+          · shared by {{ who }}
+        </span>
+      </p>
       <div class="playlist-details__actions">
         <button class="playlist-details__play" (click)="playAll()" [disabled]="songs().length === 0">▶ Play</button>
         <button
@@ -30,8 +35,30 @@
         >
           {{ offlineCount() === songs().length && songs().length > 0 ? '✓ Offline' : '⬇ Download' }}
         </button>
-        <button class="playlist-details__delete" (click)="deletePlaylist()">Delete</button>
+        <button
+          class="playlist-details__share"
+          *ngIf="library.canManagePlaylist(p)"
+          [class.on]="p.isShared"
+          (click)="toggleShared()"
+          [title]="p.isShared ? 'Stop sharing with the household' : 'Let everyone see and add to this playlist'"
+        >
+          {{ p.isShared ? '✓ Shared' : 'Share' }}
+        </button>
+        <button
+          class="playlist-details__delete"
+          *ngIf="library.canManagePlaylist(p)"
+          (click)="deletePlaylist()"
+        >
+          Delete
+        </button>
       </div>
+      <p class="playlist-details__hint" *ngIf="p.isShared && library.canManagePlaylist(p)">
+        Everyone in the household can see this and add songs to it. Only you can rename, unshare
+        or delete it.
+      </p>
+      <p class="playlist-details__hint" *ngIf="!library.canManagePlaylist(p)">
+        A shared playlist — you can add and remove songs, and everyone sees the change.
+      </p>
     </div>
   </header>
 
