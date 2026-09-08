@@ -37,11 +37,15 @@ the one Puppeteer already downloaded:
 
 ```bash
 export CHROME_BIN=$(ls -d ~/.cache/puppeteer/chrome/*/chrome-linux64/chrome | tail -1)
-npx ng test --watch=false --browsers=ChromeHeadless
+npm test
 ```
 
-The suite is deliberately small — it covers the IndexedDB upgrade, which runs
-against libraries nobody can get back if it goes wrong.
+The suite covers what has no second chance if it goes wrong: the IndexedDB
+upgrade, which runs against libraries nobody can get back; the merge between
+cloud and local state, including edits made offline; the queue; tag and cover
+parsing; and the ownership rules on shared playlists and invites — those last
+two also checked against the live policies, since a spec can only prove what
+the client believes.
 
 The Supabase URL and **anon** key live in `src/environments/`. They are public-safe
 (Row Level Security protects the data) and are committed on purpose. The
