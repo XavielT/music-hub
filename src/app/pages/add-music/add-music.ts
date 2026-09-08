@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { AuthService } from '../../../shared/services/auth.service';
 import { LibraryService } from '../../../shared/services/library.service';
 import { YoutubeService, YoutubeResult } from '../../../shared/services/youtube.service';
+import { CompanionService } from '../../../shared/services/companion.service';
 import { readTags } from '../../../shared/services/tags';
 import {
   HIGH_BITRATE_BPS,
@@ -75,7 +76,9 @@ export class AddMusicComponent implements OnDestroy {
   ytDownloading = signal<string | null>(null);
   ytError = signal('');
   // False in the browser preview, true in the installed app.
-  readonly ytAvailable = Capacitor.isNativePlatform();
+  // Search works natively inside the Android shell, and through the companion
+  // anywhere. Without either there is nothing to search with.
+  ytAvailable = computed(() => Capacitor.isNativePlatform() || this.companion.configured());
 
   remoteUrl = '';
   remoteTitle = '';
@@ -89,13 +92,14 @@ export class AddMusicComponent implements OnDestroy {
   constructor(
     public library: LibraryService,
     public auth: AuthService,
-    private youtube: YoutubeService
+    private youtube: YoutubeService,
+    public companion: CompanionService
   ) {}
 
   async ytSearch(): Promise<void> {
     const query = this.ytQuery.trim();
     if (!query || this.ytSearching()) return;
-    if (!this.ytAvailable) {
+    if (!this.ytAvailable()) {
       this.ytError.set(YT_BROWSER_HINT);
       return;
     }
@@ -103,14 +107,25 @@ export class AddMusicComponent implements OnDestroy {
     this.ytSearching.set(true);
     try {
       const videoId = this.youtube.parseVideoId(query);
-      if (videoId) this.ytResults.set([await this.withTimeout(this.youtube.getResult(videoId))]);
-      else this.ytResults.set(await this.withTimeout(this.youtube.search(query)));
+      // The companion searches from a server, so it works in the browser too.
+      // In the Android shell without one, the in-app client still does.
+      if (videoId && !this.companion.configured()) {
+        this.ytResults.set([await this.withTimeout(this.youtube.getResult(videoId))]);
+      } else {
+        const search = this.companion.configured()
+          ? this.companion.search(videoId ?? query)
+          : this.youtube.search(query);
+        this.ytResults.set(await this.withTimeout(search));
+      }
       if (this.ytResults().length === 0) this.ytError.set('No results found.');
     } catch (err) {
+      const message = (err as Error)?.message ?? '';
       this.ytError.set(
-        (err as Error)?.message === 'yt-timeout'
+        message === 'yt-timeout'
           ? 'YouTube did not answer in time. Try again, or add the song from your device below.'
-          : 'YouTube search failed. It only works in the installed app, not in the browser preview.'
+          : this.companion.configured()
+            ? message
+            : 'YouTube search failed. It only works in the installed app, not in the browser preview.'
       );
     } finally {
       // Always clears the spinner, including on timeout.
@@ -140,7 +155,11 @@ export class AddMusicComponent implements OnDestroy {
     this.ytError.set('');
     this.ytDownloading.set(result.id);
     try {
-      const file = await this.youtube.downloadAudio(result.id);
+      // The companion is the only thing that reliably gets audio out of
+      // YouTube now, so it goes first wherever it is set up.
+      const file = this.companion.configured()
+        ? await this.companion.downloadAudio(result.id)
+        : await this.youtube.downloadAudio(result.id);
       await this.library.addLocalSong(file, {
         title: result.title,
         artist: result.author,
@@ -154,7 +173,7 @@ export class AddMusicComponent implements OnDestroy {
       const msg = String(err?.message ?? err);
       this.ytError.set(
         msg.includes('decipher') || msg.includes('clients failed')
-          ? 'YouTube is currently blocking direct downloads (bot protection). Search still works — for now add songs from your device or a direct audio URL.'
+          ? 'YouTube is blocking direct downloads from the app (bot protection). Set up the companion in Settings, or add songs from your device or a direct audio URL.'
           : `Download failed: ${msg}`
       );
     }

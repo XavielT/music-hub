@@ -1,0 +1,47 @@
+<div class="companion" *ngIf="auth.isAdmin()">
+  <p class="companion-note">
+    YouTube no longer hands playable audio to anything a browser or a WebView can be, so
+    downloads go through a small service you run. See <code>companion/README.md</code> for
+    deploying it — it is a Dockerfile and two environment variables.
+  </p>
+
+  <label class="companion-field">
+    <span>Address</span>
+    <input type="url" placeholder="https://music-hub-companion.onrender.com" [(ngModel)]="url" />
+  </label>
+
+  <label class="companion-field">
+    <span>Token</span>
+    <input
+      [type]="revealed() ? 'text' : 'password'"
+      placeholder="MUSIC_HUB_TOKEN from the server"
+      autocomplete="off"
+      [(ngModel)]="token"
+    />
+  </label>
+
+  <div class="companion-actions">
+    <button class="companion-btn" (click)="save()" [disabled]="companion.checking() || !url.trim()">
+      {{ companion.checking() ? 'Checking…' : 'Save and test' }}
+    </button>
+    <button class="companion-text-btn" (click)="revealed.set(!revealed())">
+      {{ revealed() ? 'Hide token' : 'Show token' }}
+    </button>
+    <button class="companion-text-btn" *ngIf="companion.configured()" (click)="forget()">
+      Forget
+    </button>
+  </div>
+
+  <p class="companion-status" *ngIf="companion.health() as health">
+    <span class="companion-dot" [class.ok]="health.ok && !health.error"></span>
+    <ng-container *ngIf="health.ok && !health.error">
+      Reachable — yt-dlp {{ health.ytdlp }}{{ health.cookies ? ', using cookies' : '' }}.
+    </ng-container>
+    <ng-container *ngIf="!health.ok || health.error">{{ health.error }}</ng-container>
+  </p>
+
+  <p class="companion-note">
+    The address and token are kept on this device only — the token is not synced to the
+    others, and never goes near the shared library.
+  </p>
+</div>

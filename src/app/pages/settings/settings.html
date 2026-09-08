@@ -142,6 +142,12 @@
     <app-invites-panel></app-invites-panel>
   </section>
 
+  <!-- YouTube companion -->
+  <section class="settings-section" *ngIf="auth.isAdmin()">
+    <h2 class="settings-section-title">YouTube companion</h2>
+    <app-companion-panel></app-companion-panel>
+  </section>
+
   <!-- Artwork -->
   <section class="settings-section">
     <h2 class="settings-section-title">Cover art</h2>

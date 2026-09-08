@@ -28,6 +28,7 @@ Supabase, and still fully playable offline.
   **sleep timer**; the full player takes its colour from the cover art.
 - **Storage page**: what is filling the shared 1 GB, and what compressing would
   give back.
+- **YouTube import** through a small self-hosted companion (`companion/`).
 - **In-app updates**: the web app reloads onto a new build, the Android app
   installs the latest GitHub release itself. See *Updating the app* below.
 
@@ -105,7 +106,9 @@ npx vercel --prod
   CSP. The styles bundle is under 1 kB, so loading it normally costs nothing.
 
 `connect-src` is pinned to the x-core Supabase project, so a new backend host has to
-be added there too.
+be added there too — **including the YouTube companion**, which is the one people
+forget: the browser blocks it with nothing in the UI to explain why, and the only
+sign is a CSP violation in the console.
 
 ### Why the cache headers matter
 Angular hashes `chunk-*`, `main-*`, `polyfills-*` and `styles-*`, so those are served
@@ -755,11 +758,23 @@ Adding a file whose title and artist already exist in the library shows a
 **duplicate hint** before saving. Case, accents and punctuation are ignored; the
 audio is not hashed. It is a warning, not a gate — adding it anyway is allowed.
 
+## Importing from YouTube
+
+Search works inside the Android app (native HTTP bypasses CORS) and nowhere else, and
+the audio download works nowhere at all: YouTube stopped serving playable URLs to the
+clients a browser or a WebView can be. Both go through **`companion/`** instead — a
+small yt-dlp service you run, with its own README covering deployment, the bearer
+token, and the bot-protection problem that decides where it is worth hosting.
+
+Point the app at it in **Settings → YouTube companion** (admin only). The address and
+token stay on that device.
+
+Downloading copyrighted music from YouTube is against YouTube's terms — use it for
+your own uploads, Creative Commons and public-domain material.
+
 ## Roadmap / TODOs
 - **Gapless / crossfade**: looked at and declined for now — see *Gapless and
   crossfade* above for what it would cost and the shape it would take.
-- **Import from YouTube**: search works inside the Android app (native HTTP bypasses
-  CORS), but YouTube blocks the audio download itself via bot protection, so this
-  needs a companion server (e.g. yt-dlp behind a small API). Note that downloading
-  copyrighted music from YouTube is against YouTube's terms — use it for your own or
-  royalty-free content.
+- **The companion on a free tier**: works from a residential IP; whether a free
+  container survives YouTube's bot protection is the open question. See
+  `companion/README.md`.

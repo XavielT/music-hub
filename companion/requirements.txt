@@ -1,0 +1,6 @@
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+# yt-dlp is the one dependency worth updating often: YouTube changes what it
+# serves and old versions stop working, usually with a confusing error rather
+# than a clear one. Bump this when downloads start failing.
+yt-dlp==2026.8.19

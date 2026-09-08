@@ -5,9 +5,13 @@
   <!-- From YouTube -->
   <section class="add-music-section">
     <h2 class="add-music-section-title">From YouTube</h2>
-    <p class="add-music-note add-music-note-warn" *ngIf="!ytAvailable">
-      Only available in the installed Android app — the browser blocks YouTube's API.
-      Use "From this device" or a direct audio URL below.
+    <p class="add-music-note add-music-note-warn" *ngIf="!ytAvailable()">
+      Needs either the installed Android app or the download companion — a browser cannot
+      reach YouTube's API directly. Set the companion up in <strong>Settings → YouTube
+      companion</strong>, or use "From this device" below.
+    </p>
+    <p class="add-music-note" *ngIf="companion.configured()">
+      Downloads go through your companion.
     </p>
 
     <div class="add-music-yt-search">
@@ -16,12 +20,12 @@
         placeholder="Search a song or paste a YouTube link"
         [(ngModel)]="ytQuery"
         (keyup.enter)="ytSearch()"
-        [disabled]="!ytAvailable"
+        [disabled]="!ytAvailable()"
       />
       <button
         class="add-music-yt-btn"
         (click)="ytSearch()"
-        [disabled]="ytSearching() || !ytAvailable"
+        [disabled]="ytSearching() || !ytAvailable()"
       >
         {{ ytSearching() ? '...' : '⌕' }}
       </button>
