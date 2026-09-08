@@ -756,6 +756,8 @@ Adding a file whose title and artist already exist in the library shows a
 audio is not hashed. It is a warning, not a gate — adding it anyway is allowed.
 
 ## Roadmap / TODOs
+- **Gapless / crossfade**: looked at and declined for now — see *Gapless and
+  crossfade* above for what it would cost and the shape it would take.
 - **Import from YouTube**: search works inside the Android app (native HTTP bypasses
   CORS), but YouTube blocks the audio download itself via bot protection, so this
   needs a companion server (e.g. yt-dlp behind a small API). Note that downloading
