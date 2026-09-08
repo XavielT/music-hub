@@ -84,6 +84,44 @@ In descending order of how well they work:
 3. **Keep yt-dlp current.** Half of all "it broke" is a version behind YouTube.
    `requirements.txt` pins it on purpose; bump it when downloads start failing.
 
+## Where to actually run it
+
+**Render works for everything except the thing it is for.** Deployed there the
+service is healthy, CORS is right, auth is right — and every download comes
+back "Sign in to confirm you're not a bot", because the request leaves from a
+datacenter address. Tried on 2026-09-08; that is not a bug to fix, it is what
+the address is.
+
+So the download runs at home:
+
+```bash
+./tools/companion-local.sh
+```
+
+It sets up the Python environment on first run, starts the service on
+`127.0.0.1:8099`, opens a **Cloudflare quick tunnel**, and prints the HTTPS
+address and token to paste into *Settings → YouTube companion*. Ctrl-C stops
+both halves.
+
+A tunnel rather than a LAN address because the app is served over HTTPS and a
+browser refuses to call `http://192.168.x.x` from an HTTPS page — mixed content,
+no setting changes it. A *quick* tunnel because a named one needs a domain on
+Cloudflare's nameservers, and xautohubrd.com is on Google's.
+
+Two consequences worth knowing:
+
+- **The address changes every run.** Quick tunnels are anonymous and the price
+  of no account is no stable name. The token does not change — it is kept in
+  `companion/.token` (gitignored) — so it is one field to re-paste, not two.
+  `connect-src` allows `https://*.trycloudflare.com` so the CSP does not need
+  editing each time.
+- **It only works while your machine is on**, which for adding a few songs now
+  and then is the honest shape of the thing.
+
+Verified end to end through the tunnel on 2026-09-08: health, search, and a
+download that came back the same 2.5 MB / 158 s / 129 kbps m4a as a direct run,
+in about 7 seconds.
+
 ## The live one
 
 Deployed to Render's free tier on 2026-09-08 as **music-hub-companion**, from

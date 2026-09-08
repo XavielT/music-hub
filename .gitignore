@@ -52,3 +52,4 @@ __pycache__/
 *.pyc
 companion/.venv/
 companion/cookies.txt
+companion/.token
