@@ -35,9 +35,18 @@
   <p class="companion-status" *ngIf="companion.health() as health">
     <span class="companion-dot" [class.ok]="health.ok && !health.error"></span>
     <ng-container *ngIf="health.ok && !health.error">
-      Reachable — yt-dlp {{ health.ytdlp }}{{ health.cookies ? ', using cookies' : '' }}.
+      Reachable — yt-dlp {{ health.ytdlp }}{{ health.cookies ? ', with cookies' : '' }}.
     </ng-container>
     <ng-container *ngIf="!health.ok || health.error">{{ health.error }}</ng-container>
+  </p>
+
+  <!-- Said before the first download rather than after it fails: a server
+       without cookies gets refused by YouTube, and the error at that point
+       looks like a bug rather than a missing setting. -->
+  <p class="companion-note" *ngIf="companion.health()?.ok && companion.health()?.cookies === false">
+    ⚠ No cookies loaded. A companion on a hosting provider will be refused by YouTube
+    ("confirm you're not a bot") — add a <code>cookies.txt</code> as a secret file and set
+    <code>YTDLP_COOKIES_FILE</code>. One running on your own connection does not need them.
   </p>
 
   <p class="companion-note">

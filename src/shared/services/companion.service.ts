@@ -94,6 +94,14 @@ export class CompanionService {
     }
   }
 
+  // A pasted link resolves to that exact video. Searching for the id instead
+  // finds whatever YouTube makes of an eleven-character string, which is
+  // usually nothing.
+  async info(videoId: string): Promise<YoutubeResult> {
+    const response = await this.call(`/info?id=${encodeURIComponent(videoId)}`);
+    return (await response.json()) as YoutubeResult;
+  }
+
   async search(query: string): Promise<YoutubeResult[]> {
     const response = await this.call(`/search?q=${encodeURIComponent(query)}`);
     return (await response.json()) as YoutubeResult[];

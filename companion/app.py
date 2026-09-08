@@ -147,6 +147,35 @@ def search(q: str = Query(min_length=1, max_length=200), limit: int = 15) -> JSO
     )
 
 
+@app.get("/info", dependencies=[Depends(authorise)])
+def info(id: str = Query(min_length=11, max_length=11)) -> JSONResponse:
+    """One video's details, for when someone pasted a link rather than searched.
+
+    Without this the client had to fall back to *searching* for the id, which
+    finds whatever YouTube thinks an eleven-character string means — usually
+    nothing, occasionally the wrong song. A pasted link should resolve to that
+    exact video.
+    """
+    if not VIDEO_ID.match(id):
+        raise HTTPException(400, "Not a video id.")
+
+    with YoutubeDL(_ydl_options({"skip_download": True})) as ydl:
+        try:
+            found = ydl.extract_info(id, download=False)
+        except Exception as err:  # noqa: BLE001
+            raise HTTPException(*_youtube_error(err)) from err
+
+    return JSONResponse(
+        {
+            "id": found.get("id", id),
+            "title": found.get("title") or id,
+            "author": found.get("uploader") or found.get("channel") or "Unknown artist",
+            "duration": int(found.get("duration") or 0),
+            "thumbnail": (found.get("thumbnails") or [{}])[-1].get("url"),
+        }
+    )
+
+
 @app.get("/download", dependencies=[Depends(authorise)])
 def download(id: str = Query(min_length=11, max_length=11)) -> FileResponse:
     """Fetch one video's audio and hand back an m4a.
@@ -183,16 +212,7 @@ def download(id: str = Query(min_length=11, max_length=11)) -> FileResponse:
         raise
     except Exception as err:  # noqa: BLE001
         _cleanup(workspace)
-        # The one failure worth naming: it is the reason this service exists,
-        # and the reason it can still fail on a datacenter IP.
-        message = str(err)
-        if "Sign in to confirm" in message or "bot" in message.lower():
-            raise HTTPException(
-                429,
-                "YouTube asked this server to prove it is not a bot. "
-                "Datacenter IPs get this a lot — see the README on cookies, or run the service from home.",
-            ) from err
-        raise HTTPException(502, f"Download failed: {message}") from err
+        raise HTTPException(*_youtube_error(err)) from err
 
     produced = sorted(Path(workspace).glob(f"{id}.*"))
     if not produced:
@@ -206,6 +226,26 @@ def download(id: str = Query(min_length=11, max_length=11)) -> FileResponse:
         filename=f"{id}.m4a",
         background=BackgroundTask(_cleanup, workspace),
     )
+
+
+def _youtube_error(err: Exception) -> tuple[int, str]:
+    """One place that decides how a yt-dlp failure reads.
+
+    The bot check is worth naming rather than passing through as a generic
+    502: it is the reason this service exists, the reason it still fails from
+    a datacenter address, and the thing whose fix is documented.
+    """
+    message = str(err)
+    if "Sign in to confirm" in message or "not a bot" in message.lower():
+        return (
+            429,
+            "YouTube asked this server to prove it is not a bot. Datacenter addresses get "
+            "this — the fix is cookies from a signed-in account (see the README) or running "
+            "the service from a home connection.",
+        )
+    if "Video unavailable" in message or "Private video" in message:
+        return (404, "That video is unavailable — private, deleted, or region-locked.")
+    return (502, f"YouTube request failed: {message}")
 
 
 def _cleanup(workspace: str) -> None:

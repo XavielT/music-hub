@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import type { Innertube } from 'youtubei.js';
+import { parseVideoId } from './youtube-link';
 
 export interface YoutubeResult {
   id: string;
@@ -22,9 +23,10 @@ export class YoutubeService {
     return this.yt;
   }
 
+  // Kept as a method so every existing caller still works; the logic lives in
+  // youtube-link.ts, where it can be tested without dragging youtubei.js in.
   parseVideoId(text: string): string | null {
-    const match = text.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/);
-    return match ? match[1] : null;
+    return parseVideoId(text);
   }
 
   async search(query: string): Promise<YoutubeResult[]> {

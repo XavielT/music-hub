@@ -107,13 +107,17 @@ export class AddMusicComponent implements OnDestroy {
     this.ytSearching.set(true);
     try {
       const videoId = this.youtube.parseVideoId(query);
-      // The companion searches from a server, so it works in the browser too.
-      // In the Android shell without one, the in-app client still does.
-      if (videoId && !this.companion.configured()) {
-        this.ytResults.set([await this.withTimeout(this.youtube.getResult(videoId))]);
+      // A link resolves to that one video; anything else is a search. Both go
+      // through the companion where there is one, since it works in a browser
+      // and the in-app client only works inside the Android shell.
+      if (videoId) {
+        const lookup = this.companion.configured()
+          ? this.companion.info(videoId)
+          : this.youtube.getResult(videoId);
+        this.ytResults.set([await this.withTimeout(lookup)]);
       } else {
         const search = this.companion.configured()
-          ? this.companion.search(videoId ?? query)
+          ? this.companion.search(query)
           : this.youtube.search(query);
         this.ytResults.set(await this.withTimeout(search));
       }
