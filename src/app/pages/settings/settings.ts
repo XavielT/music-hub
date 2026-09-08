@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { AuthService } from '../../../shared/services/auth.service';
 import { LibraryService } from '../../../shared/services/library.service';
 import { SyncService } from '../../../shared/services/sync.service';
+import { RealtimeService } from '../../../shared/services/realtime.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { UpdateService } from '../../../shared/services/update.service';
 import { ThemeService } from '../../../shared/services/theme.service';
@@ -36,6 +37,21 @@ export class SettingsComponent implements OnInit {
 
   pendingUploads = computed(() => this.library.localOnlySongs().filter(s => s.downloaded).length);
 
+  // What the live channel is doing, in the terms someone reading a settings
+  // screen cares about: is this device being kept up to date or not.
+  liveLabel = computed(() => {
+    switch (this.realtime.status()) {
+      case 'live':
+        return 'Live — changes made on another device show up here on their own.';
+      case 'connecting':
+        return 'Connecting to live updates…';
+      case 'error':
+        return 'Live updates are offline — pull with ⟳ until the connection is back.';
+      default:
+        return '';
+    }
+  });
+
   downloadedCount = computed(() => this.library.songs().filter(s => s.downloaded).length);
 
   clearableBytes = computed(() =>
@@ -52,6 +68,7 @@ export class SettingsComponent implements OnInit {
     public auth: AuthService,
     public library: LibraryService,
     public sync: SyncService,
+    public realtime: RealtimeService,
     public cloud: CloudLibraryService,
     public update: UpdateService,
     public theme: ThemeService,

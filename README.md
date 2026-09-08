@@ -183,6 +183,46 @@ on conflict (email) do nothing;
 list cannot be enumerated through the API. A blocked sign-up shows
 "Sign-ups are invite-only. Ask Xaviel to add your email, then register."
 
+## Live sync
+
+Devices used to find out about each other's changes at the next sign-in or on
+the ⟳ button. Now Postgres tells them: `songs`, `playlists` and `playlist_songs`
+are in the `supabase_realtime` publication, and every signed-in device holds one
+channel subscribed to all three.
+
+**An event is treated as a signal, not as data.** `RealtimeService` never
+applies a payload — it debounces changes for 750 ms and then asks `SyncService`
+to reconcile, which is the merge that already knows to keep an offline edit, to
+keep a download, and to leave a song that only exists on this device alone. A
+second merge path written against single-row events would be a second place for
+all of that to go wrong, and the pull it replaces is three small selects against
+a library capped at 1 GB.
+
+That choice also settles the awkward part of Realtime's security model. RLS
+decides who sees an INSERT or an UPDATE, but a DELETE carries only the primary
+key, so Realtime cannot evaluate a policy against it and sends it to everyone.
+As data that would be a leak; as a signal it is a sync that returns the same
+rows as before.
+
+The debounce earns its keep on a bulk upload: adding an album is two writes per
+song, and they collapse into one reconciliation instead of forty. A change that
+lands *during* a sync is not lost either — that sync may have read its rows
+before the change existed, so another pass is queued behind it.
+
+Reconnects are handled in three places, because a phone gives you all three:
+the channel retries with a backoff when the join fails, `visibilitychange`
+re-checks it when the app comes back to the foreground, and a re-join always
+pulls once, since anything that changed while the socket was down was never
+announced. Settings shows what the channel is doing under the storage bar.
+
+**Rewriting a playlist is one call now** (audit B5). Pushing a playlist that was
+edited offline used to be a delete followed by an insert from the client, so a
+connection dropped between them left the playlist empty in the cloud — and the
+next sync handed that empty list to every device. It goes through the
+`replace_playlist_songs` function instead, whose body is a single transaction.
+It is `security invoker`, so RLS still decides: the caller has to own the
+playlist for either half to be allowed.
+
 ## The player
 
 The queue is held in the order it will actually play, so what the queue screen
@@ -386,6 +426,7 @@ MUSICHUB_KEY_PASSWORD=<the same password, unless you set a separate key password
 
 **Build a signed release:**
 ```bash
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64   # same JDK 21 rule as above
 npm run build && npx cap sync android
 cd android && ./gradlew assembleRelease
 # APK at android/app/build/outputs/apk/release/app-release.apk

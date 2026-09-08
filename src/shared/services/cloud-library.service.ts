@@ -387,20 +387,17 @@ export class CloudLibraryService {
 
   // Rewrites the membership of one playlist, used when pushing a playlist
   // that was created or edited offline.
+  //
+  // This is one RPC rather than a delete and an insert from here, because the
+  // two used to be separate round trips: a dropped connection between them
+  // left the playlist empty in the cloud, and the next sync then handed that
+  // empty list back to every device. The function body is a transaction, so
+  // the rewrite either lands whole or not at all (audit B5).
   async replacePlaylistSongs(playlistId: string, songIds: string[]): Promise<void> {
-    const { error: clearError } = await this.client
-      .from('playlist_songs')
-      .delete()
-      .eq('playlist_id', playlistId);
-    if (clearError) throw new Error(clearError.message);
-    if (!songIds.length) return;
-
-    const rows = songIds.map((songId, position) => ({
-      playlist_id: playlistId,
-      song_id: songId,
-      position,
-    }));
-    const { error } = await this.client.from('playlist_songs').insert(rows);
+    const { error } = await this.client.rpc('replace_playlist_songs', {
+      p_playlist_id: playlistId,
+      p_song_ids: songIds,
+    });
     if (error) throw new Error(error.message);
   }
 

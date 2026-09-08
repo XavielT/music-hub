@@ -237,6 +237,30 @@
   }
 }
 
+// Live-sync state. The dot carries the status at a glance; the sentence next
+// to it says what that means for the person reading it.
+.settings-live {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.settings-live-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--main-ultra-light);
+
+  &--live {
+    background: #6bcf7f;
+  }
+
+  &--error {
+    background: #ffb020;
+  }
+}
+
 // --- accent picker ---
 
 .settings-swatches {

@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { CloudLibraryService, isNetworkError } from './cloud-library.service';
 import { LibraryService } from './library.service';
 import { PlayerService } from './player.service';
+import { RealtimeService } from './realtime.service';
 import { ToastService } from './toast.service';
 import { SongModel } from '../models/song.model';
 
@@ -29,11 +30,16 @@ export class SyncService {
 
   private lastSyncedUserId: string | null = null;
 
+  // A change landed upstream while a sync was already running. That sync may
+  // have read its rows before the change existed, so another pass is owed.
+  private resyncQueued = false;
+
   constructor(
     private auth: AuthService,
     private cloud: CloudLibraryService,
     private library: LibraryService,
     private player: PlayerService,
+    private realtime: RealtimeService,
     private toast: ToastService
   ) {
     // The account is the unit of state here: the local database, the library
@@ -67,13 +73,19 @@ export class SyncService {
     // the moment the library is on screen rather than after a sync round trip.
     await this.player.restoreSession();
     await this.sync();
+    // After the first reconciliation, not before: the channel only has to
+    // report what changes from here on, and starting it earlier would make it
+    // race the pull it would be asking for anyway.
+    this.realtime.start(() => void this.sync({ silent: true }));
   }
 
   // Everything that belongs to the account that is going away.
   private closeAccount(): void {
+    this.realtime.stop();
     this.player.stop();
     this.cloud.resetSession();
     this.library.deactivate();
+    this.resyncQueued = false;
     this._lastSyncAt.set(null);
   }
 
@@ -82,8 +94,17 @@ export class SyncService {
   }
 
   // Pull cloud state and merge it into the local library.
+  //
+  // `silent` marks a sync the user did not ask for — the live channel firing,
+  // or a reconnect. Those report nothing: a background pull that cannot reach
+  // the network is not news, and a toast for it would arrive out of nowhere
+  // while the user is doing something else.
   async sync(options: { silent?: boolean } = {}): Promise<void> {
-    if (this._syncing() || !this.auth.user()) return;
+    if (!this.auth.user()) return;
+    if (this._syncing()) {
+      this.resyncQueued = true;
+      return;
+    }
     if (!this.online()) {
       if (!options.silent) this.toast.error('You are offline — showing the library stored on this device.');
       return;
@@ -114,14 +135,23 @@ export class SyncService {
       this._lastSyncAt.set(Date.now());
     } catch (err) {
       // Local data is left exactly as it was.
-      this.toast.error(
-        isNetworkError(err)
-          ? 'No connection — showing the library stored on this device.'
-          : `Sync failed: ${(err as Error).message}`
-      );
+      if (!options.silent) {
+        this.toast.error(
+          isNetworkError(err)
+            ? 'No connection — showing the library stored on this device.'
+            : `Sync failed: ${(err as Error).message}`
+        );
+      }
       console.warn('sync failed', err);
     } finally {
       this._syncing.set(false);
+      if (this.resyncQueued) {
+        this.resyncQueued = false;
+        // Silent whatever the caller was: the user already saw the result of
+        // the sync they asked for, and this pass is for the change that
+        // arrived behind it.
+        void this.sync({ silent: true });
+      }
     }
   }
 

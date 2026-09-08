@@ -79,6 +79,10 @@
       <p class="settings-note" *ngIf="nearQuota() && auth.isAdmin()">
         Close to the 1 GB limit — delete a few cloud songs before adding more.
       </p>
+      <p class="settings-note settings-live" *ngIf="liveLabel()">
+        <span class="settings-live-dot" [class]="'settings-live-dot--' + realtime.status()"></span>
+        {{ liveLabel() }}
+      </p>
     </div>
 
     <div class="settings-row" *ngIf="pendingUploads() > 0 && auth.isAdmin()">
