@@ -84,6 +84,12 @@ def _ydl_options(extra: dict) -> dict:
         "quiet": True,
         "no_warnings": True,
         "noplaylist": True,
+        # YouTube extraction needs a JavaScript runtime now, and yt-dlp enables
+        # only Deno by default. This image already has Node for the POT
+        # provider, so point it there — without this the extractor degrades
+        # ("No title found in player responses") and the request comes back as
+        # a bot check, which sends you looking for the wrong problem entirely.
+        "js_runtimes": {"node": {}},
         # Deliberately no player_client pin. The clients that used to be the
         # good ones (android, ios) are the ones that cannot carry a
         # proof-of-origin token, so pinning them here defeated the provider
