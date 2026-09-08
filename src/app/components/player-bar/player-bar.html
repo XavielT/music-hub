@@ -26,6 +26,7 @@
 <div
   class="player-full"
   *ngIf="expanded() && player.current() as song"
+  [style.background]="tintBackground()"
   (touchstart)="onTouchStart($event)"
   (touchend)="onTouchEnd($event, 'full')"
 >

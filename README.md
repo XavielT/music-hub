@@ -312,6 +312,20 @@ new source, because the element resets `playbackRate` when `src` changes — the
 kind of thing that works in a demo and quietly stops working on the second
 song.
 
+**The full player takes its colour from the cover.** Not the average of it —
+averaging a sleeve gives mud, since the mean of a red and a green is grey.
+Pixels go into coarse buckets (5 bits a channel), the fullest bucket wins, and
+the pixels *in* that bucket are averaged, so the answer is a colour actually in
+the artwork. Near-black and near-white are dropped first: borders, letterboxing
+and plain backgrounds are usually one of the two and are never what anyone
+means by the colour of a cover.
+
+Whatever comes back is then darkened until white text on it clears WCAG AA,
+keeping the hue rather than falling back to grey — a lemon sleeve still tints
+the player, just deeper. Sampling only happens while the full player is open,
+is cached per song, and falls back to the song's placeholder colour for
+artwork that cannot be read (a cross-origin image taints the canvas).
+
 **The sleep timer** takes 15/30/45/60 minutes or "end of song", and *pauses*
 rather than stopping, so the morning is one tap from carrying on. It counts
 from a wall-clock deadline instead of decrementing a counter: a backgrounded
