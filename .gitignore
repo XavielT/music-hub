@@ -46,3 +46,9 @@ Thumbs.db
 *.jks
 *.keystore
 keystore.properties
+
+# Companion service (Python)
+__pycache__/
+*.pyc
+companion/.venv/
+companion/cookies.txt
