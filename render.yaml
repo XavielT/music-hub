@@ -1,0 +1,24 @@
+# Render Blueprint. It has to live at the repo root — Render only looks here —
+# even though everything it describes is in companion/.
+#
+# Any host that builds a Dockerfile works the same way; everything that differs
+# between them is an environment variable, not code.
+services:
+  - type: web
+    name: music-hub-companion
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./companion/Dockerfile
+    dockerContext: ./companion
+    healthCheckPath: /health
+    envVars:
+      # Render generates this and shows it in the dashboard. It never needs to
+      # be invented by hand, and it is the only thing standing between this
+      # service and the open internet.
+      - key: MUSIC_HUB_TOKEN
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        value: https://music-hub-xaviel.vercel.app,http://localhost:4200,https://localhost
+      - key: MAX_DURATION_SECONDS
+        value: "1800"

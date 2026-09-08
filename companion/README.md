@@ -37,13 +37,19 @@ Needs `ffmpeg` on the path (the Docker image installs it).
 
 ## Deploy it
 
-Any host that builds a Dockerfile. `render.yaml` is there for Render's free
-tier; Fly, Koyeb and Railway take the same image and differ only in where you
-type the environment variables.
+Any host that builds a Dockerfile. **`render.yaml` at the repo root** describes
+this service for Render's free tier — it has to live at the root because that is
+the only place Render looks for a Blueprint, even though everything it points at
+is in here. Fly, Koyeb and Railway take the same image and differ only in where
+you type the environment variables.
+
+On Render: *New → Blueprint*, pick the `music-hub` repo, apply. It builds
+`companion/Dockerfile`, generates `MUSIC_HUB_TOKEN` for you (reveal it in the
+service's Environment tab), and health-checks `/health`.
 
 | Variable | |
 |---|---|
-| `MUSIC_HUB_TOKEN` | **required.** `openssl rand -hex 32` |
+| `MUSIC_HUB_TOKEN` | **required.** The blueprint has Render generate one; by hand, `openssl rand -hex 32` |
 | `ALLOWED_ORIGINS` | comma-separated. Include the deployed app, `http://localhost:4200`, and `https://localhost` for the Android shell |
 | `MAX_DURATION_SECONDS` | default 1800 |
 | `YTDLP_COOKIES_FILE` | optional, see below |
