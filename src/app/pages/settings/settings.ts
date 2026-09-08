@@ -143,6 +143,10 @@ export class SettingsComponent implements OnInit {
     );
   }
 
+  openStorage(): void {
+    void this.router.navigateByUrl('/storage');
+  }
+
   back(): void {
     history.back();
   }

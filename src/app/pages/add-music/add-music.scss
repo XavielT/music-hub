@@ -302,3 +302,19 @@
     font-weight: 600;
   }
 }
+
+// A nudge about bitrate before these go into a budget everyone shares.
+.add-music-heavy {
+  margin: 10px 0 0;
+  font-size: 0.73rem;
+  line-height: 1.5;
+  color: var(--main-ultra-light);
+
+  code {
+    background: #1b1b1b;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    overflow-wrap: anywhere;
+  }
+}

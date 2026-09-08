@@ -1,0 +1,143 @@
+.storage {
+  padding: 16px 16px 140px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.storage-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.storage-back {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.7rem;
+  line-height: 1;
+  padding: 0 6px;
+  cursor: pointer;
+}
+
+.storage-title {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.storage-section {
+  background: var(--secondary);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.storage-section-title {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--main-ultra-light);
+}
+
+.storage-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.storage-figure-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+
+  &.warn {
+    color: #ffb020;
+  }
+}
+
+.storage-figure-unit {
+  font-size: 0.78rem;
+  color: var(--main-ultra-light);
+}
+
+.storage-bar {
+  height: 7px;
+  border-radius: 4px;
+  background: #2a2a2a;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+.storage-bar-fill {
+  height: 100%;
+  background: var(--Hub);
+  transition: width 0.3s ease;
+
+  &.warn {
+    background: #ffb020;
+  }
+}
+
+.storage-note {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--main-ultra-light);
+
+  code {
+    display: inline-block;
+    background: #1b1b1b;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.72rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+.storage-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid #222;
+
+  &:first-of-type {
+    margin-top: 10px;
+  }
+}
+
+.storage-row-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+
+  strong {
+    font-size: 0.82rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  em {
+    font-style: normal;
+    font-size: 0.7rem;
+    color: var(--main-ultra-light);
+  }
+}
+
+.storage-row-size {
+  flex: none;
+  text-align: right;
+  font-size: 0.78rem;
+
+  em {
+    display: block;
+    font-style: normal;
+    font-size: 0.7rem;
+    color: #6bcf7f;
+  }
+}

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, signal } from '@angular/core';
+import { Component, OnDestroy, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Capacitor } from '@capacitor/core';
@@ -6,6 +6,13 @@ import { AuthService } from '../../../shared/services/auth.service';
 import { LibraryService } from '../../../shared/services/library.service';
 import { YoutubeService, YoutubeResult } from '../../../shared/services/youtube.service';
 import { readTags } from '../../../shared/services/tags';
+import {
+  HIGH_BITRATE_BPS,
+  bitrateOf,
+  formatBitrate,
+  formatBytes,
+  savingFrom,
+} from '../../../shared/services/storage-report';
 
 interface PendingSong {
   file: File;
@@ -40,6 +47,23 @@ const YT_TIMEOUT_MS = 15000;
 })
 export class AddMusicComponent implements OnDestroy {
   pending = signal<PendingSong[]>([]);
+
+  // What these files would cost the shared 1 GB if uploaded as they are, and
+  // what compressing first would save. Shown before the upload rather than in
+  // a storage report afterwards, which is when it can still be acted on.
+  heavyPending = computed(() =>
+    this.pending()
+      .map(item => {
+        const song = { duration: item.duration ?? 0, sizeBytes: item.file.size } as never;
+        return { item, bitrate: bitrateOf(song), saving: savingFrom(song) };
+      })
+      .filter(entry => entry.bitrate > HIGH_BITRATE_BPS && entry.saving > 0)
+  );
+
+  pendingSaving = computed(() => this.heavyPending().reduce((total, e) => total + e.saving, 0));
+
+  bytes = formatBytes;
+  bitrate = formatBitrate;
   saving = signal(false);
   reading = signal(false);
   savedMessage = signal('');

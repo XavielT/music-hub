@@ -22,6 +22,12 @@ Supabase, and still fully playable offline.
 - **Shuffle** buttons on the songs list, each artist/album and every playlist.
 - Lock-screen / notification controls via MediaSession.
 - Add songs from a direct audio URL (streamed).
+- **Live sync**: a change on one device shows up on the others as it happens.
+- **Shared playlists** the whole household can add to, and in-app invites.
+- **Swipe** the mini player, set a **playback speed**, or fall asleep to a
+  **sleep timer**; the full player takes its colour from the cover art.
+- **Storage page**: what is filling the shared 1 GB, and what compressing would
+  give back.
 - **In-app updates**: the web app reloads onto a new build, the Android app
   installs the latest GitHub release itself. See *Updating the app* below.
 
@@ -106,6 +112,66 @@ Angular hashes `chunk-*`, `main-*`, `polyfills-*` and `styles-*`, so those are s
 `immutable` for a year. `index.html`, `ngsw.json` and `ngsw-worker.js` are explicitly
 `no-cache` — if those were cached, the service worker could never see a new version
 and the app would be frozen on an old build.
+
+## Outgrowing 1 GB
+
+The free tier gives 1 GB of storage and 5 GB of transfer a month. At AAC 160k
+that is roughly 280 songs, and *Settings → Storage* says how close you are.
+There are three moves, in the order they cost anything:
+
+1. **Compress what is already up there.** The storage page lists every song
+   stored above 200 kbps with what re-encoding would give back — often a third
+   of the library, for the price of an evening with `ffmpeg`.
+2. **Pay Supabase.** The Pro tier raises both limits and changes nothing in the
+   code. If the library is the only reason to upgrade, compare it against 3.
+3. **Move the audio to Cloudflare R2**, which is the escape hatch this section
+   is about. Check current pricing before committing to it — the reason R2 is
+   the usual answer for media is that it does not charge for egress, which is
+   the limit a music app hits first.
+
+### What a move to R2 actually touches
+
+Less than it sounds, because every call to object storage in this app lives in
+one file. `src/shared/services/cloud-library.service.ts` — six methods:
+
+| Method | What it does | R2 equivalent |
+|---|---|---|
+| `uploadSong` | `upload` to `songs` | `PutObject` |
+| `uploadCover` | `upload` to `covers` | `PutObject` |
+| `getStreamUrl` | `createSignedUrl`, cached for an hour | presigned `GetObject` |
+| `downloadAudio` | `download` | plain `GET` on a presigned URL |
+| `downloadCover` | `download` | plain `GET` on a presigned URL |
+| `deleteSong` | `remove` from both buckets | `DeleteObject` |
+
+Postgres does not move. `songs.storage_path` is already
+`{owner_id}/{song_id}.{ext}`, which is a valid R2 key, so copying the bucket
+across with the same layout means no data migration and no schema change:
+
+```bash
+rclone copy supabase:songs r2:music-hub-songs --progress
+rclone copy supabase:covers r2:music-hub-covers --progress
+```
+
+**The one real design change is who signs the URLs.** Supabase Storage enforces
+the same RLS-shaped policies as the tables — the client asks for a signed URL
+and the database decides. R2 has no idea who your users are, so presigning has
+to happen somewhere trusted: a Supabase Edge Function holding the R2 access
+key, checking the caller's JWT, and returning a presigned URL. That function
+becomes the thing to keep honest, and it is the reason not to do this a day
+before it is needed.
+
+Two smaller things go with it:
+
+- **Bucket limits are a Supabase feature.** The 60 MB / `audio/*` and 5 MB /
+  `image/*` caps (audit S4) are enforced by Storage itself. On R2 they have to
+  move into the presigning function, which is the only place that can still
+  refuse.
+- **`connect-src` in `vercel.json`** is pinned to the Supabase project, so the
+  R2 (or worker) host has to be added or every request is blocked by the CSP
+  with nothing in the UI to explain it.
+
+Nothing above is built. It is written down so that the day the quota bar goes
+red, the question is an afternoon of work rather than a research project.
 
 ## Password reset
 
@@ -370,8 +436,18 @@ out iOS by construction.
 The gear in the top right of every signed-in page opens `/settings`, which holds
 everything about the app and the account so the library can be about music: the
 account and its admin badge, a password change (an emailed link — there is no
-new-password form to get wrong here), sign out, cloud storage and sync, the
-cover-art lookup, and updates.
+new-password form to get wrong here), sign out, cloud storage and sync, who can
+join (admins), the cover-art lookup, and updates.
+
+**Storage** (`/storage`, linked from the shared-library section) answers the
+question the quota bar cannot: what is filling the 1 GB. Songs in the cloud,
+the average size, roughly how many more fit at that size, and every song stored
+above 200 kbps with what re-encoding it would give back. The same arithmetic
+runs on the add page *before* an upload, where it can still be acted on.
+
+Transfer is deliberately not guessed at. Only Supabase counts egress, so the
+page says so and points at the project's usage page rather than inventing a
+number from download counts.
 
 **Appearance** recolours the app from a single accent. Everything visual keys
 off `--Hub`, so a theme is that value plus three derived ones: a translucent

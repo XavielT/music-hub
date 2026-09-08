@@ -126,6 +126,14 @@
       {{ library.unclearableDownloads().length }} song(s) are only on this device, so their audio
       is kept — clearing those would delete them.
     </p>
+
+    <button class="settings-row-btn" (click)="openStorage()">
+      <span>
+        <strong>Where the space is going</strong>
+        <em>What is filling the 1 GB, and what compressing would give back.</em>
+      </span>
+      <span class="settings-row-action">Storage</span>
+    </button>
   </section>
 
   <!-- Invites -->

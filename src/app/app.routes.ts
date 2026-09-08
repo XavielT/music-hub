@@ -40,6 +40,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/settings/settings').then(m => m.SettingsComponent),
   },
   {
+    path: 'storage',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/storage/storage').then(m => m.StorageComponent),
+  },
+  {
     path: 'add',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/add-music/add-music').then(m => m.AddMusicComponent),

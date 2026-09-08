@@ -79,6 +79,14 @@
       </p>
     </ng-container>
 
+    <!-- Worth knowing before it goes into a 1 GB budget everyone shares. -->
+    <p class="add-music-heavy" *ngIf="pendingSaving() > 0 && auth.isAdmin()">
+      {{ heavyPending().length }} of these are above 200 kbps and would take
+      {{ bytes(pendingSaving()) }} more of the shared 1 GB than they need to. Compressing them
+      first with <code>./tools/compress-for-cloud.sh</code> is transparent on a phone — or upload
+      them as they are, it is a nudge rather than a gate.
+    </p>
+
     <label class="add-music-cloud" *ngIf="pending().length > 0 && auth.isAdmin()">
       <input type="checkbox" [checked]="uploadToCloud()" (change)="uploadToCloud.set($any($event.target).checked)" />
       <span>Upload to the shared library so they play on every device</span>

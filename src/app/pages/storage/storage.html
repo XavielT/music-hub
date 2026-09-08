@@ -1,0 +1,94 @@
+<div class="storage">
+  <header class="storage-header">
+    <button class="storage-back" (click)="back()" title="Back">‹</button>
+    <h1 class="storage-title">Storage</h1>
+  </header>
+
+  <!-- The shared 1 GB -->
+  <section class="storage-section">
+    <div class="storage-figure">
+      <span class="storage-figure-value" [class.warn]="nearQuota()">
+        {{ bytes(report().cloudBytes) }}
+      </span>
+      <span class="storage-figure-unit">of {{ quotaLabel }} shared</span>
+    </div>
+    <div class="storage-bar">
+      <div class="storage-bar-fill" [class.warn]="nearQuota()" [style.width.%]="usedPercent()"></div>
+    </div>
+
+    <p class="storage-note" *ngIf="report().cloudSongs > 0">
+      {{ report().cloudSongs }} songs in the cloud, averaging
+      {{ bytes(report().averageBytes) }} each — room for about
+      <strong>{{ report().roomForSongs }}</strong> more at that size.
+    </p>
+    <p class="storage-note" *ngIf="report().cloudSongs === 0">
+      Nothing in the cloud yet.
+    </p>
+  </section>
+
+  <!-- What compressing would give back -->
+  <section class="storage-section" *ngIf="report().reclaimableBytes > 0">
+    <h2 class="storage-section-title">Room you could get back</h2>
+    <p class="storage-note">
+      {{ report().heavy.length }} song(s) are stored above 200 kbps. Re-encoding them to AAC 160k
+      would free about <strong>{{ bytes(report().reclaimableBytes) }}</strong> — roughly
+      {{ report().averageBytes ? (report().reclaimableBytes / report().averageBytes | number: '1.0-0') : 0 }}
+      more songs' worth.
+    </p>
+    <p class="storage-note">
+      That is a re-encode, so it happens on a computer with the originals, not here:
+      <code>./tools/compress-for-cloud.sh ~/Music/originals ~/Music/for-cloud</code>, then replace
+      them through the ＋ tab. AAC 160k is transparent on phones and earbuds.
+    </p>
+
+    <div class="storage-row" *ngFor="let entry of worstOffenders()">
+      <span class="storage-row-text">
+        <strong>{{ entry.song.title }}</strong>
+        <em>{{ entry.song.artist }} · {{ bitrate(entry.bitrate) }}</em>
+      </span>
+      <span class="storage-row-size">
+        {{ bytes(entry.song.sizeBytes) }}
+        <em>−{{ bytes(entry.wouldSaveBytes) }}</em>
+      </span>
+    </div>
+    <p class="storage-note" *ngIf="report().heavy.length > worstOffenders().length">
+      …and {{ report().heavy.length - worstOffenders().length }} more.
+    </p>
+  </section>
+
+  <section class="storage-section" *ngIf="report().cloudSongs > 0 && report().reclaimableBytes === 0">
+    <h2 class="storage-section-title">Room you could get back</h2>
+    <p class="storage-note">
+      None worth chasing — every song in the cloud is already at a sensible bitrate.
+    </p>
+  </section>
+
+  <!-- This device -->
+  <section class="storage-section">
+    <h2 class="storage-section-title">On this device</h2>
+    <p class="storage-note">
+      {{ report().onDeviceSongs }} song(s) downloaded, using about
+      {{ bytes(report().onDeviceBytes) }}. Downloaded songs stream once instead of on every play,
+      which is the cheapest thing you can do about the {{ egressLabel }}/month transfer limit.
+    </p>
+    <p class="storage-note">
+      Clearing downloads is in <strong>Settings → Shared library</strong>. It frees space here and
+      changes nothing in the cloud.
+    </p>
+  </section>
+
+  <!-- The limits themselves -->
+  <section class="storage-section">
+    <h2 class="storage-section-title">The limits</h2>
+    <p class="storage-note">
+      The free tier gives {{ quotaLabel }} of storage and {{ egressLabel }} of transfer a month.
+      Storage is the number above. <strong>Transfer is not measurable from in here</strong> — only
+      Supabase counts it — so if playback starts failing at the end of a month, check the project's
+      usage page before looking for a bug.
+    </p>
+    <p class="storage-note">
+      Running out of storage for good is not the end: the README's <em>Outgrowing 1 GB</em> section
+      has the migration path to Cloudflare R2, which is the same app with a different bucket.
+    </p>
+  </section>
+</div>
