@@ -162,13 +162,27 @@ which on a phone is a bad evening; this installs anywhere Python does. ffmpeg
 is optional — YouTube serves m4a directly for almost everything, and it is only
 used for the rare video with no AAC audio.
 
-**To have it start itself**, install the Termux:Boot app and:
+**To have it start itself:**
 
-```bash
-mkdir -p ~/.termux/boot
-printf '#!/data/data/com.termux/files/usr/bin/sh\nmusichub\n' > ~/.termux/boot/musichub
-chmod +x ~/.termux/boot/musichub
-```
+1. Install **Termux:Boot** from F-Droid —
+   <https://f-droid.org/packages/com.termux.boot/>. It must come from the same
+   repo as Termux: add-ons only work when they share a signing key.
+2. In Termux:
+
+   ```bash
+   curl -sLo b.sh https://raw.githubusercontent.com/XavielT/music-hub/main/companion/termux/enable-boot.sh
+   bash b.sh
+   ```
+
+3. **Open the Termux:Boot app once.** It shows a blank screen; that is all it
+   does, and Android will not let it run at boot until it has been opened.
+4. On Xiaomi/MIUI, also allow it to autostart: *Settings → Apps → Manage apps →
+   Termux:Boot → Autostart*. MIUI blocks boot receivers otherwise, and the
+   symptom is simply that nothing happens.
+
+The boot script takes a wake lock before starting the companion — without one
+Android suspends it within minutes of the screen going off, and the app then
+reports that it cannot be reached.
 
 Verified end to end on 2026-09-09 (running the same file off-device): health,
 search, info, and a download that came back a 2.5 MB m4a — 158 s at 129 kbps,
