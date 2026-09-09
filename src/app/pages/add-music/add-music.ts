@@ -7,6 +7,8 @@ import { LibraryService } from '../../../shared/services/library.service';
 import { YoutubeService, YoutubeResult } from '../../../shared/services/youtube.service';
 import { CompanionService } from '../../../shared/services/companion.service';
 import { YoutubeCaptureService } from '../../../shared/services/youtube-capture.service';
+import { DownloadQueueService } from '../../../shared/services/download-queue.service';
+import { DownloadRequestRow } from '../../../shared/models/download-request.model';
 import { readTags } from '../../../shared/services/tags';
 import {
   HIGH_BITRATE_BPS,
@@ -34,7 +36,7 @@ interface PendingSong {
 // CapacitorHttp makes those requests natively (no CORS); a browser blocks
 // them, so the section is offered read-only there instead of hanging.
 const YT_BROWSER_HINT =
-  'YouTube search only works in the installed Android app. Here in the browser, add songs from your device or a direct audio URL below.';
+  'YouTube search only works in the installed Android app or through a companion. Paste a YouTube link instead and it can still be requested.';
 
 // Opens the in-app browser straight on a search rather than YouTube's home
 // page, so a typed query is not thrown away.
@@ -97,13 +99,54 @@ export class AddMusicComponent implements OnDestroy {
   // whenever there is a connection.
   uploadToCloud = signal(navigator.onLine);
 
+  // Only a companion downloads reliably: YouTube's bot check blocks the in-app
+  // client, which is the whole reason the companion exists. Anyone without one
+  // asks an admin device to fetch the song instead of failing at the download.
+  canFetchHere = computed(() => this.companion.configured());
+
   constructor(
     public library: LibraryService,
     public auth: AuthService,
     private youtube: YoutubeService,
     public companion: CompanionService,
-    public capture: YoutubeCaptureService
+    public capture: YoutubeCaptureService,
+    public queue: DownloadQueueService
   ) {}
+
+  // A YouTube link in the search box, when there is no way to look it up.
+  // Enough on its own to queue a request: the worker resolves the rest.
+  pastedLink(): string | null {
+    return this.youtube.parseVideoId(this.ytQuery);
+  }
+
+  async requestSong(result: YoutubeResult): Promise<void> {
+    await this.queue.request({
+      id: result.id,
+      title: result.title,
+      author: result.author,
+      duration: result.duration,
+      thumbnail: result.thumbnail,
+    });
+  }
+
+  async requestPastedLink(): Promise<void> {
+    const id = this.pastedLink();
+    if (!id) return;
+    if (await this.queue.request({ id })) this.ytQuery = '';
+  }
+
+  requestStatus(request: DownloadRequestRow): string {
+    switch (request.status) {
+      case 'pending':
+        return 'waiting for a device that can fetch it';
+      case 'working':
+        return 'downloading now…';
+      case 'done':
+        return 'in the library ✔';
+      default:
+        return request.error || 'failed';
+    }
+  }
 
   async ytSearch(): Promise<void> {
     const query = this.ytQuery.trim();

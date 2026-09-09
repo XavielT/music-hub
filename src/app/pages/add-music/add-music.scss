@@ -340,3 +340,43 @@
     cursor: default;
   }
 }
+
+// "Request" is a word, not a glyph, so it cannot be a 38px circle like the
+// download button it stands in for.
+.add-music-yt-request {
+  width: auto;
+  border-radius: 19px;
+  padding: 0 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.add-music-link-request {
+  margin-top: 8px;
+}
+
+.add-music-queue {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #2d2d2d;
+}
+
+.add-music-queue-title {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  margin: 0 0 6px;
+  color: var(--main-ultra-light);
+}
+
+.add-music-queue-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 2px;
+}
+
+// A failed request is the one row worth reading twice.
+.add-music-queue-failed {
+  color: #ff6b6b;
+  white-space: normal;
+}

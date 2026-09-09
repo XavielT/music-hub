@@ -4,6 +4,7 @@ import { CloudLibraryService, isNetworkError } from './cloud-library.service';
 import { LibraryService } from './library.service';
 import { PlayerService } from './player.service';
 import { RealtimeService } from './realtime.service';
+import { DownloadQueueService } from './download-queue.service';
 import { ToastService } from './toast.service';
 import { SongModel } from '../models/song.model';
 
@@ -40,6 +41,7 @@ export class SyncService {
     private library: LibraryService,
     private player: PlayerService,
     private realtime: RealtimeService,
+    private queue: DownloadQueueService,
     private toast: ToastService
   ) {
     // The account is the unit of state here: the local database, the library
@@ -77,11 +79,16 @@ export class SyncService {
     // report what changes from here on, and starting it earlier would make it
     // race the pull it would be asking for anyway.
     this.realtime.start(() => void this.sync({ silent: true }));
+    // Requests other members left while this device was closed are waiting;
+    // start() loads them and, on an admin device with a companion, begins
+    // working through them.
+    this.queue.start();
   }
 
   // Everything that belongs to the account that is going away.
   private closeAccount(): void {
     this.realtime.stop();
+    this.queue.stop();
     this.player.stop();
     this.cloud.resetSession();
     this.library.deactivate();

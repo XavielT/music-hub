@@ -6,12 +6,17 @@
   <section class="add-music-section">
     <h2 class="add-music-section-title">From YouTube</h2>
     <p class="add-music-note add-music-note-warn" *ngIf="!ytAvailable()">
-      Needs either the installed Android app or the download companion — a browser cannot
-      reach YouTube's API directly. Set the companion up in <strong>Settings → YouTube
-      companion</strong>, or use "From this device" below.
+      Searching YouTube needs the installed Android app or a companion — a browser cannot
+      reach YouTube's API directly. You can still <strong>paste a YouTube link</strong> below
+      and ask for the song; it will be fetched and added to the shared library.
     </p>
-    <p class="add-music-note" *ngIf="companion.configured()">
+    <p class="add-music-note" *ngIf="canFetchHere()">
       Downloads go through your companion.
+    </p>
+    <p class="add-music-note" *ngIf="!canFetchHere()">
+      No companion on this device, so songs are <strong>requested</strong> rather than
+      downloaded here. A device that has one fetches them, and they appear in the shared
+      library for everyone.
     </p>
 
     <!-- The one that works on a phone: browse YouTube for real and take what
@@ -47,6 +52,18 @@
     </div>
     <p class="add-music-error" *ngIf="ytError()">{{ ytError() }}</p>
 
+    <!-- No way to search, but a link is all a request needs: the device that
+         fetches it looks the title and artist up on the way past. -->
+    <div class="add-music-link-request" *ngIf="!ytAvailable() && pastedLink()">
+      <button
+        class="add-music-browse-btn"
+        (click)="requestPastedLink()"
+        [disabled]="queue.busy()"
+      >
+        Request this song
+      </button>
+    </div>
+
     <div class="add-music-yt-result" *ngFor="let r of ytResults()">
       <img class="add-music-yt-thumb" *ngIf="r.thumbnail" [src]="r.thumbnail" alt="" loading="lazy" />
       <div class="add-music-yt-info">
@@ -54,12 +71,48 @@
         <span class="add-music-yt-author">{{ r.author }} · {{ formatDuration(r.duration) }}</span>
       </div>
       <button
+        *ngIf="canFetchHere()"
         class="add-music-yt-download"
         (click)="ytDownload(r)"
         [disabled]="ytDownloading() !== null"
+        title="Download to this device"
       >
         {{ ytDownloading() === r.id ? '⏳' : '⇩' }}
       </button>
+      <button
+        *ngIf="!canFetchHere()"
+        class="add-music-yt-download add-music-yt-request"
+        (click)="requestSong(r)"
+        [disabled]="queue.busy()"
+        title="Ask a device with a companion to fetch this"
+      >
+        Request
+      </button>
+    </div>
+
+    <!-- What has been asked for. Everyone sees the whole queue: it is one
+         shared library, and "someone is already fetching that" is the useful
+         thing to know. -->
+    <div class="add-music-queue" *ngIf="queue.requests().length > 0">
+      <h3 class="add-music-queue-title">Requested songs</h3>
+      <div class="add-music-queue-row" *ngFor="let q of queue.requests()">
+        <img class="add-music-yt-thumb" *ngIf="q.thumbnail" [src]="q.thumbnail" alt="" loading="lazy" />
+        <div class="add-music-yt-info">
+          <span class="add-music-yt-title">{{ queue.label(q) }}</span>
+          <span class="add-music-yt-author" [class.add-music-queue-failed]="q.status === 'failed'">
+            {{ requestStatus(q) }}
+          </span>
+        </div>
+        <button
+          class="add-music-yt-download"
+          *ngIf="q.requested_by === auth.user()?.id || auth.isAdmin()"
+          (click)="queue.cancel(q.id)"
+          [disabled]="queue.busy()"
+          title="Remove this request"
+        >
+          ✕
+        </button>
+      </div>
     </div>
   </section>
 
