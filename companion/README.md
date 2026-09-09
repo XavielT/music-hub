@@ -176,9 +176,11 @@ used for the rare video with no AAC audio.
 
 3. **Open the Termux:Boot app once.** It shows a blank screen; that is all it
    does, and Android will not let it run at boot until it has been opened.
-4. On Xiaomi/MIUI, also allow it to autostart: *Settings → Apps → Manage apps →
-   Termux:Boot → Autostart*. MIUI blocks boot receivers otherwise, and the
-   symptom is simply that nothing happens.
+4. On Xiaomi/MIUI, allow autostart for **both Termux:Boot and Termux**:
+   *Security → Permissions → Autostart*, then search for "Termux". Termux:Boot
+   is the one that receives the boot broadcast, but all it does is start a
+   Termux session, so both have to be allowed. MIUI blocks these silently —
+   the symptom is simply that nothing happens.
 
 The boot script takes a wake lock before starting the companion — without one
 Android suspends it within minutes of the screen going off, and the app then

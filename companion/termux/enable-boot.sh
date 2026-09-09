@@ -40,8 +40,9 @@ cat <<BANNER
    1. Open the Termux:Boot app once, so it is allowed to run at
       boot. It shows a blank screen — that is all it does.
 
-   2. On Xiaomi/MIUI, allow autostart for Termux:Boot:
-      Settings -> Apps -> Manage apps -> Termux:Boot -> Autostart
+   2. On Xiaomi/MIUI, allow autostart for BOTH Termux:Boot and Termux:
+      Security -> Permissions -> Autostart, then search "Termux".
+      Termux:Boot only starts a Termux session, so both need it.
 
    Then reboot and the companion will already be running.
   ────────────────────────────────────────────────────────────

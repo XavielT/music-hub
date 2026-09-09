@@ -71,10 +71,10 @@ cat <<BANNER
    The address and token never change, so this is a one-off.
   ────────────────────────────────────────────────────────────
 
-  Optional: install the Termux:Boot app and run
-      mkdir -p ~/.termux/boot
-      printf '#!/data/data/com.termux/files/usr/bin/sh\\nmusichub\\n' > ~/.termux/boot/musichub
-      chmod +x ~/.termux/boot/musichub
-  and it will start itself when the phone boots.
+  To have it start itself when the phone boots, install the Termux:Boot app
+  from the same F-Droid repo as Termux, then run:
+
+      curl -sLo b.sh https://raw.githubusercontent.com/XavielT/music-hub/main/companion/termux/enable-boot.sh
+      bash b.sh
 
 BANNER
