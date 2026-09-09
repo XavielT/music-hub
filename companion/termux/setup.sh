@@ -15,15 +15,18 @@ SERVER="$APP_DIR/companion.py"
 RAW="https://raw.githubusercontent.com/XavielT/music-hub/main/companion/termux/companion.py"
 
 echo "==> Installing what the companion needs"
-# ffmpeg is optional: YouTube serves m4a directly for almost everything, and
-# it is only used for the rare video with no AAC audio. It is also the slowest
-# thing to install, so it is offered rather than assumed.
-pkg update -y >/dev/null 2>&1 || true
-pkg install -y python >/dev/null
+# Output is deliberately not hidden. Hiding it once turned a dead mirror into
+# a script that appeared to hang for ten minutes with nothing to look at.
+# ffmpeg is not installed: YouTube serves m4a directly for almost everything,
+# and it is by far the slowest package here.
+pkg update -y || true
+pkg install -y python
 
 echo "==> Installing yt-dlp"
-pip install --quiet --upgrade pip
-pip install --quiet --upgrade yt-dlp
+# Not `pip install --upgrade pip` — Termux refuses it outright ("Installing pip
+# is forbidden, this will break the python-pip package") because pip is a
+# system package there.
+pip install --upgrade yt-dlp
 
 mkdir -p "$APP_DIR"
 
