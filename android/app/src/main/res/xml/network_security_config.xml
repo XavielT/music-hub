@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The companion runs on this phone, so the app talks to it over plain HTTP on
+  the loopback address. Android blocks cleartext by default from API 28, which
+  is why "Could not reach the companion" was the first thing a correctly
+  running companion produced.
+
+  Loopback only, and deliberately so: `android:usesCleartextTraffic="true"`
+  would have been one attribute instead of this file, and would also have
+  allowed plain HTTP to anywhere. Nothing but 127.0.0.1 needs it — Supabase,
+  the artwork lookup and the update check are all HTTPS and stay that way.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>
