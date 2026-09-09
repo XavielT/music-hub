@@ -215,6 +215,38 @@ To make someone an admin:
 update public.profiles set is_admin = true where id = '<their auth user id>';
 ```
 
+### Requesting a song
+
+A member cannot add to the shared library, and on an iPhone or in a browser
+there is no companion to download with either — so instead of a download they
+**request** one. Add music → search or paste a YouTube link → *Request*. An
+admin device with a working companion picks it up, downloads it, uploads it,
+and the song appears in the shared library for everyone. Nothing to install on
+the requester's side, which is the only thing that works on iOS.
+
+Requests carry metadata when the requester could search YouTube and nothing but
+the video id when they could not, so a pasted link is enough on its own: the
+device that fetches it looks the title and artist up on the way past.
+
+The worker runs **in the app**, so requests are fulfilled while Music Hub is
+open on an admin's phone rather than merely while that phone is on. In practice
+that is the next time it is opened; the queue survives in the database until
+then.
+
+`claim_download_request()` is a `security definer` function rather than an
+update, so two admin devices open at once take different rows instead of both
+downloading the same song, and a claim abandoned mid-download — app closed,
+phone asleep — is up for grabs again after fifteen minutes instead of stranding
+the request in `working` forever. A partial unique index on `video_id` collapses
+two people asking for the same song into one download, and the insert policy
+caps each member at ten requests in flight.
+
+Verified against the live policies by impersonating both roles: a member may
+queue their own requests and read the queue, but cannot insert as someone else,
+cannot mark their own request done, and cannot claim work. Verified end to end
+on the phone on 2026-09-09 — a queued request became a 3.4 MB song in the
+shared library, with its storage object, in 31 seconds.
+
 ### Shared playlists
 
 Playlists start private. **Share** on a playlist's page opens it to everyone
