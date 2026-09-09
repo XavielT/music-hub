@@ -190,6 +190,13 @@ Verified end to end on 2026-09-09 (running the same file off-device): health,
 search, info, and a download that came back a 2.5 MB m4a — 158 s at 129 kbps,
 matching the source — in three seconds.
 
+Boot start verified the same day on a Redmi Note 10 Pro (MIUI 14, Android 13):
+after a reboot the companion was serving with nobody having touched the phone,
+the python process parented to `com.termux.boot`, `termux:service-wakelock`
+held, and a download through it returned a 3.4 MB m4a in 7.6 s. Note that
+`BOOT_COMPLETED` is not sent until the device is first unlocked — the companion
+appears roughly two minutes after a reboot, not immediately.
+
 **The iPhone does not need its own copy.** Add songs on Android, upload them,
 and they arrive through the shared library like any other song.
 
