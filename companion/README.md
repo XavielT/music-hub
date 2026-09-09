@@ -1,5 +1,10 @@
 # Music Hub companion
 
+> **On Android, run it on the phone.** `companion/termux/` is the same service
+> with no Docker, no server and no hosting: it runs inside Termux on the phone
+> itself, which is a residential connection, so none of the bot-check trouble
+> below applies. See *On the phone (Termux)*.
+
 > **Read this first.** On Android there is now a better route that needs none
 > of this: *Add → Browse YouTube and add a song* opens YouTube in the app and
 > takes the audio the page itself plays. No server, no cookies, no account.
@@ -126,6 +131,51 @@ In descending order of how well they work:
    a throwaway one, treat it as a secret, and expect it to need replacing.
 3. **Keep yt-dlp current.** Half of all "it broke" is a version behind YouTube.
    `requirements.txt` pins it on purpose; bump it when downloads start failing.
+
+## On the phone (Termux)
+
+The best answer on Android, because the phone is the one connection YouTube
+does not object to and it is already in your pocket.
+
+1. Install **Termux from F-Droid** — <https://f-droid.org/packages/com.termux/>.
+   Not the Play Store build; that one is abandoned and its packages no longer
+   install.
+2. In Termux, paste:
+
+   ```bash
+   curl -sL https://raw.githubusercontent.com/XavielT/music-hub/main/companion/termux/setup.sh | bash
+   ```
+
+   It installs Python and yt-dlp, generates a token, and prints the address and
+   token to paste into the app.
+3. Start it with `musichub`. Leave that Termux session running.
+4. In Music Hub: **Settings → YouTube companion → Use the companion running on
+   this phone**, paste the token, **Save and test**.
+
+The app reaches `http://127.0.0.1:8099` through Capacitor's native HTTP, so the
+plain-HTTP address is not a mixed-content problem — the request never goes
+through the WebView.
+
+`companion.py` is the standard library plus yt-dlp on purpose. The hosted
+version's FastAPI and `uvicorn[standard]` want to compile uvloop and httptools,
+which on a phone is a bad evening; this installs anywhere Python does. ffmpeg
+is optional — YouTube serves m4a directly for almost everything, and it is only
+used for the rare video with no AAC audio.
+
+**To have it start itself**, install the Termux:Boot app and:
+
+```bash
+mkdir -p ~/.termux/boot
+printf '#!/data/data/com.termux/files/usr/bin/sh\nmusichub\n' > ~/.termux/boot/musichub
+chmod +x ~/.termux/boot/musichub
+```
+
+Verified end to end on 2026-09-09 (running the same file off-device): health,
+search, info, and a download that came back a 2.5 MB m4a — 158 s at 129 kbps,
+matching the source — in three seconds.
+
+**The iPhone does not need its own copy.** Add songs on Android, upload them,
+and they arrive through the shared library like any other song.
 
 ## Where to actually run it
 

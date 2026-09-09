@@ -37,6 +37,12 @@ export class CompanionPanel {
     else this.toast.error(health.error ?? 'The companion did not answer.');
   }
 
+  // The Termux companion always listens here, so this saves typing an address
+  // into a phone keyboard.
+  useThisPhone(): void {
+    this.url = 'http://127.0.0.1:8099';
+  }
+
   forget(): void {
     this.companion.forget();
     this.url = '';

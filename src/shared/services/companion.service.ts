@@ -8,6 +8,8 @@ export interface CompanionHealth {
   ok: boolean;
   ytdlp?: string;
   cookies?: boolean;
+  // 'termux' when the companion is the one running on this phone.
+  where?: string;
   // Filled in when the check failed, for the settings panel to show.
   error?: string;
 }
@@ -35,6 +37,11 @@ export class CompanionService {
   token = this._token.asReadonly();
 
   configured = computed(() => !!this._url() && !!this._token());
+
+  // A companion on this phone needs no cookies: the bot check is about
+  // datacenter addresses, and a phone is not one. Worth knowing, because the
+  // settings panel otherwise warns about something that does not apply.
+  isLocal = computed(() => /^https?:\/\/(127\.0\.0\.1|localhost)\b/i.test(this._url()));
 
   private _health = signal<CompanionHealth | null>(null);
   health = this._health.asReadonly();

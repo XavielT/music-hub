@@ -5,6 +5,10 @@
     deploying it — it is a Dockerfile and two environment variables.
   </p>
 
+  <button class="companion-text-btn" (click)="useThisPhone()">
+    Use the companion running on this phone
+  </button>
+
   <label class="companion-field">
     <span>Address</span>
     <input type="url" placeholder="https://music-hub-companion.onrender.com" [(ngModel)]="url" />
@@ -43,7 +47,10 @@
   <!-- Said before the first download rather than after it fails: a server
        without cookies gets refused by YouTube, and the error at that point
        looks like a bug rather than a missing setting. -->
-  <p class="companion-note" *ngIf="companion.health()?.ok && companion.health()?.cookies === false">
+  <p
+    class="companion-note"
+    *ngIf="companion.health()?.ok && companion.health()?.cookies === false && !companion.isLocal()"
+  >
     ⚠ No cookies loaded. A companion on a hosting provider will be refused by YouTube
     ("confirm you're not a bot") — add a <code>cookies.txt</code> as a secret file and set
     <code>YTDLP_COOKIES_FILE</code>. One running on your own connection does not need them.
