@@ -310,6 +310,17 @@ gives the only copy to the phone, and can be redone at any time to rotate it.
 See `companion/README.md` for what that costs: the account is an admin, because
 adding to the shared library is.
 
+`provision_worker()` sets that account's **`role`**, not `is_admin`. It used to set
+the column, which stopped meaning anything once roles arrived: the trigger derives
+`is_admin` from `role`, so a `role` left on its `'member'` default drove the column
+straight back to false. The live worker survived on the roles migration's backfill,
+but a fresh provision — new project, or the row ever deleted — would have produced a
+companion that signs in perfectly and then cannot upload, which reads like a broken
+login rather than a lost privilege. Its `anon` EXECUTE grant is revoked too; that was
+never exploitable, since the `security definer` body reaches the `is_admin()` gate
+with the owner's rights and refuses, but an admin-only provisioning routine does not
+belong on the public API.
+
 `claim_download_request()` is a `security definer` function rather than an
 update, so two admin devices open at once take different rows instead of both
 downloading the same song, and a claim abandoned mid-download — app closed,
