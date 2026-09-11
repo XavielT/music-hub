@@ -574,6 +574,77 @@ the media session driven from a single wrapper that always reports whichever
 element is live — and crossfade only where `volume` is honoured, which rules
 out iOS by construction.
 
+## Filling in a song from a link
+
+Paste a Spotify or YouTube link and the title, artist, album and cover art are
+filled in for you. It is in three places: the edit-info dialog, the 🔗 beside
+each pending file on the ＋ tab, and the Wanted list.
+
+**Metadata only, and this is a hard line.** The `link-metadata` Edge Function
+returns titles, artists, album names, years, durations and a cover *image* URL.
+It never returns, resolves, proxies or looks for audio, and the app has no code
+path that would use one if it did. Spotify does not expose track audio at all
+(it is DRM'd) and YouTube extraction is off the table for this project by
+decision — see the round's triage notes. The UI says so where somebody would
+otherwise hope for a download button. If a change here ever starts reaching for
+a media URL, that is the bug, not a feature.
+
+It is a function rather than a `fetch` from the app for two reasons, both hard:
+the Spotify client secret cannot ship in a bundle anyone can read, and neither
+Spotify's API nor the thumbnail hosts send CORS headers this origin satisfies.
+The cover comes back through the same function as *bytes* (`action: 'cover'`),
+which is what lets it be shrunk, stored and uploaded exactly like artwork lifted
+out of a file's own tags — no parallel cover path. The proxy only passes through
+image responses, and only from the three hosts our own answers can name, because
+an open image proxy is a gift to somebody else.
+
+Spotify track, album and playlist links all work, including `spotify:` URIs and
+`spotify.link` short links (followed to their destination). An album or playlist
+fills the whole Wanted list in one action. YouTube goes through oEmbed, needs no
+key, and is a best-effort guess: the title is whatever the uploader typed, so it
+is split on "Artist - Title", stripped of "(Official Video)" and friends, with
+the channel name as the artist fallback. **Nothing is written into the fields
+until you have seen the preview and accepted it** — a Spotify answer is a
+database row, a YouTube one is a guess, and the preview is where you tell them
+apart.
+
+Any signed-in account may use it, listeners included: it reads public metadata
+and writes nothing. Rate-limited per user, in memory, as a brake rather than a
+guarantee — instances are short-lived and there may be several.
+
+### The Wanted list
+
+**Library → deseos / wanted.** A wish list, not a download queue. Paste a link,
+the row arrives with its cover; tick it off when you have found the file, or
+delete it. Adding a local file whose title and artist match a pending entry
+offers to tick it off — offers, never does it silently, because the match is a
+normalised string comparison and quietly marking the wrong row found is the kind
+of thing nobody notices until the song they wanted never turns up. The
+normalisation is the library's own, so "Tú Me Dejaste De Querer" off a file
+matches "tu me dejaste de querer" off a Spotify link.
+
+`wanted_songs` is owner-only in RLS, listeners included — it costs no storage and
+grows no library. Cloud-only, unlike the library: there is no offline story worth
+the complexity here, and a list that is wrong on one device is worse than one
+that is briefly unavailable.
+
+### Spotify credentials
+
+YouTube links need nothing. Spotify links need a free developer app
+(https://developer.spotify.com/dashboard) and its two secrets set on the
+function:
+
+```bash
+npx supabase secrets set \
+  SPOTIFY_CLIENT_ID=<client id> \
+  SPOTIFY_CLIENT_SECRET=<client secret> \
+  --project-ref nakgrkcqyuycadeuenuw
+```
+
+Until they are set, a Spotify link answers with exactly that: *"Spotify links
+need SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET to be set."* Nothing else is
+affected.
+
 ## Languages (español / english)
 
 The whole UI speaks both, and switches at runtime — **Settings → Account →

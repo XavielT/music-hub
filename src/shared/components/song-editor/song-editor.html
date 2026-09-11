@@ -12,6 +12,11 @@
     </label>
   </div>
 
+  <!-- Fill the fields from a Spotify or YouTube link. Metadata only — the
+       component says so on screen, because this is exactly where somebody
+       would hope for a download button. -->
+  <app-link-fill (filled)="onFilled($event)"></app-link-fill>
+
   <label class="song-editor-field">
     <span>{{ 'editor.fieldTitle' | t }}</span>
     <input type="text" [(ngModel)]="title" [placeholder]="'editor.fieldTitle' | t" />

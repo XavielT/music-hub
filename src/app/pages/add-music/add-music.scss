@@ -380,3 +380,58 @@
   color: #ff6b6b;
   white-space: normal;
 }
+
+// Opens the "fill from a link" box for one pending row.
+.add-music-pending-link {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--main-ultra-light);
+  font-size: 1rem;
+  padding: 4px 6px;
+  cursor: pointer;
+
+  &.is-open {
+    color: var(--Hub);
+  }
+}
+
+// "That file is on your wanted list — tick it off?"
+.add-music-wanted-match {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.86rem;
+
+  span {
+    flex: 1;
+    min-width: 160px;
+  }
+}
+
+.add-music-wanted-yes,
+.add-music-wanted-no {
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.add-music-wanted-yes {
+  border: none;
+  background: var(--Hub);
+  color: var(--on-Hub);
+  font-weight: 600;
+}
+
+.add-music-wanted-no {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: var(--main-ultra-light);
+}

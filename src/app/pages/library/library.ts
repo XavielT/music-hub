@@ -10,15 +10,16 @@ import { SongItem } from '../../../shared/components/song-item/song-item';
 import { SongEditor } from '../../../shared/components/song-editor/song-editor';
 import { PlaylistPicker } from '../../../shared/components/playlist-picker/playlist-picker';
 import { Cover } from '../../../shared/ui/cover/cover';
+import { WantedPanel } from '../../../shared/components/wanted-panel/wanted-panel';
 import { SongModel } from '../../../shared/models/song.model';
 import { TPipe } from '../../../shared/i18n/t.pipe';
 
-type LibraryTab = 'songs' | 'artists' | 'albums' | 'playlists';
+type LibraryTab = 'songs' | 'artists' | 'albums' | 'playlists' | 'wanted';
 
 @Component({
   selector: 'app-library',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, SongItem, SongEditor, PlaylistPicker, Cover, TPipe],
+  imports: [CommonModule, RouterLink, FormsModule, SongItem, SongEditor, PlaylistPicker, Cover, WantedPanel, TPipe],
   templateUrl: './library.html',
   styleUrl: './library.scss',
 })
@@ -29,7 +30,7 @@ export class LibraryComponent {
   pickerFor = signal<SongModel | null>(null);
   newPlaylistName = '';
 
-  tabs: LibraryTab[] = ['songs', 'artists', 'albums', 'playlists'];
+  tabs: LibraryTab[] = ['songs', 'artists', 'albums', 'playlists', 'wanted'];
 
   groups = computed(() => (this.tab() === 'artists' ? this.library.artists() : this.library.albums()));
 

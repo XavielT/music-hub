@@ -126,6 +126,11 @@
     </ng-template>
   </div>
 
+  <!-- Wanted: a wish list, which downloads nothing. -->
+  <div *ngIf="tab() === 'wanted'">
+    <app-wanted-panel></app-wanted-panel>
+  </div>
+
   <!-- Playlist picker overlay -->
   <app-playlist-picker
     *ngIf="pickerFor()"

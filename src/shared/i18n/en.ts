@@ -104,6 +104,7 @@ export const EN = {
   'library.tab.artists': 'artists',
   'library.tab.albums': 'albums',
   'library.tab.playlists': 'playlists',
+  'library.tab.wanted': 'wanted',
   'library.empty': 'No songs yet. Add some from the ＋ tab.',
   'library.nothingHere': 'Nothing here yet.',
   'library.newPlaylistName': 'New playlist name',
@@ -501,6 +502,33 @@ export const EN = {
   'companion.workerSignedInFailed': 'Signed in, but the last attempt failed: {error}',
   'companion.workerNotSignedIn': 'Linked as {account}, not signed in yet — {done}.',
   'companion.workerWorking': 'Working as {account} — {done}.',
+
+  // --- fill from a link / wanted list -------------------------------------
+  'link.fillFromLink': 'Fill from a link',
+  'link.placeholder': 'Paste a Spotify or YouTube link',
+  'link.fetch': 'Look up',
+  'link.looking': 'Looking…',
+  'link.apply': 'Use this',
+  'link.failed': 'That link could not be read.',
+  'link.nothingFound': 'Nothing came back for that link.',
+  'link.metadataOnly': 'Titles and cover art only — Music Hub never downloads audio from these.',
+  'link.trackCount': '{count} tracks on that link',
+  'link.addAllToWanted': 'Add all {count} to the wanted list',
+
+  'wanted.title': 'Wanted',
+  'wanted.tab': 'wanted',
+  'wanted.add': 'Add to the list',
+  'wanted.added': 'Added {count} to your wanted list.',
+  'wanted.empty': 'Nothing on the list yet.',
+  'wanted.emptyBody':
+    'A wish list, not a download queue. Paste a Spotify or YouTube link and the title, artist and cover are filled in — then add the audio from your own files. Music Hub does not download from Spotify or YouTube.',
+  'wanted.markAcquired': 'Mark as found',
+  'wanted.markPending': 'Still wanted',
+  'wanted.acquiredHeading': 'Already found',
+  'wanted.remove': 'Remove from the list',
+  'wanted.foundOne': '"{title}" is on your wanted list — mark it as found?',
+  'wanted.markIt': 'Mark it',
+  'wanted.notNow': 'Not now',
 
   // --- welcome box --------------------------------------------------------
   'welcome.languageTitle': 'Choose your language',

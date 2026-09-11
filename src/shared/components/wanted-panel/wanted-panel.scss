@@ -1,0 +1,105 @@
+.wanted {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.wanted-error {
+  font-size: 0.84rem;
+  color: #ff6b6b;
+}
+
+.wanted-empty {
+  padding: 18px 4px;
+}
+
+.wanted-empty-title {
+  font-size: 0.98rem;
+  margin-bottom: 6px;
+}
+
+.wanted-empty-body {
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--main-ultra-light);
+}
+
+.wanted-subhead {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--main-ultra-light);
+  margin-top: 6px;
+}
+
+.wanted-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  // Found, but kept as a record rather than deleted.
+  &.is-done {
+    opacity: 0.5;
+
+    .wanted-title {
+      text-decoration: line-through;
+    }
+  }
+}
+
+.wanted-art {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.wanted-art--blank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--main-ultra-light);
+}
+
+.wanted-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.wanted-title,
+.wanted-artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wanted-title {
+  font-size: 0.94rem;
+}
+
+.wanted-artist {
+  font-size: 0.8rem;
+  color: var(--main-ultra-light);
+}
+
+.wanted-btn {
+  flex-shrink: 0;
+  min-width: 34px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+
+  &.confirming {
+    border-color: #ff6b6b;
+    color: #ff6b6b;
+  }
+}

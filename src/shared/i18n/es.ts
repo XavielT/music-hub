@@ -105,6 +105,7 @@ export const ES: Record<TranslationKey, string> = {
   'library.tab.artists': 'artistas',
   'library.tab.albums': 'álbumes',
   'library.tab.playlists': 'playlists',
+  'library.tab.wanted': 'deseos',
   'library.empty': 'Todavía no hay canciones. Añade algunas desde la pestaña ＋.',
   'library.nothingHere': 'Aquí todavía no hay nada.',
   'library.newPlaylistName': 'Nombre de la playlist',
@@ -512,6 +513,34 @@ export const ES: Record<TranslationKey, string> = {
   'companion.workerSignedInFailed': 'Con sesión iniciada, pero el último intento falló: {error}',
   'companion.workerNotSignedIn': 'Enlazado como {account}, todavía sin iniciar sesión — {done}.',
   'companion.workerWorking': 'Funcionando como {account} — {done}.',
+
+  // --- fill from a link / wanted list -------------------------------------
+  'link.fillFromLink': 'Rellenar desde un enlace',
+  'link.placeholder': 'Pega un enlace de Spotify o YouTube',
+  'link.fetch': 'Buscar',
+  'link.looking': 'Buscando…',
+  'link.apply': 'Usar esto',
+  'link.failed': 'No se pudo leer ese enlace.',
+  'link.nothingFound': 'Ese enlace no devolvió nada.',
+  'link.metadataOnly':
+    'Solo títulos y portadas — Music Hub nunca descarga audio de estos sitios.',
+  'link.trackCount': '{count} canciones en ese enlace',
+  'link.addAllToWanted': 'Añadir las {count} a la lista de deseos',
+
+  'wanted.title': 'Lista de deseos',
+  'wanted.tab': 'deseos',
+  'wanted.add': 'Añadir a la lista',
+  'wanted.added': 'Se añadieron {count} a tu lista de deseos.',
+  'wanted.empty': 'Todavía no hay nada en la lista.',
+  'wanted.emptyBody':
+    'Una lista de deseos, no una cola de descargas. Pega un enlace de Spotify o YouTube y se rellenan el título, el artista y la portada — después añade el audio desde tus propios archivos. Music Hub no descarga de Spotify ni de YouTube.',
+  'wanted.markAcquired': 'Marcar como conseguida',
+  'wanted.markPending': 'Todavía la quiero',
+  'wanted.acquiredHeading': 'Ya conseguidas',
+  'wanted.remove': 'Quitar de la lista',
+  'wanted.foundOne': '"{title}" está en tu lista de deseos — ¿la marco como conseguida?',
+  'wanted.markIt': 'Márcala',
+  'wanted.notNow': 'Ahora no',
 
   // --- welcome box --------------------------------------------------------
   'welcome.languageTitle': 'Elige tu idioma',

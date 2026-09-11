@@ -19,6 +19,8 @@ import {
   savingFrom,
 } from '../../../shared/services/storage-report';
 import { TPipe } from '../../../shared/i18n/t.pipe';
+import { LinkFill, LinkFilled } from '../../../shared/components/link-fill/link-fill';
+import { WantedService, WantedSong } from '../../../shared/services/wanted.service';
 
 interface PendingSong {
   file: File;
@@ -32,6 +34,9 @@ interface PendingSong {
   // Title of a song already in the library that this looks like a second copy
   // of. A warning only — adding it anyway is allowed.
   duplicateOf?: string;
+  // Index of the row whose "fill from a link" box is open. One at a time:
+  // five link boxes stacked on a phone is a wall, and these are filled one by
+  // one anyway.
 }
 
 // YouTube search talks to YouTube's internal API directly. On the phone
@@ -50,7 +55,7 @@ const YT_TIMEOUT_MS = 15000;
 @Component({
   selector: 'app-add-music',
   standalone: true,
-  imports: [CommonModule, FormsModule, TPipe],
+  imports: [CommonModule, FormsModule, TPipe, LinkFill],
   templateUrl: './add-music.html',
   styleUrl: './add-music.scss',
 })
@@ -110,6 +115,7 @@ export class AddMusicComponent implements OnDestroy {
     public companion: CompanionService,
     public capture: YoutubeCaptureService,
     public queue: DownloadQueueService,
+    public wanted: WantedService,
     private i18n: I18nService
   ) {}
 
@@ -133,6 +139,45 @@ export class AddMusicComponent implements OnDestroy {
     const id = this.pastedLink();
     if (!id) return;
     if (await this.queue.request({ id })) this.ytQuery = '';
+  }
+
+  // Wanted-list entries that the files just saved appear to satisfy. Shown as
+  // an offer under the save button until answered or dismissed.
+  wantedMatches = signal<WantedSong[]>([]);
+
+  async markFound(item: WantedSong): Promise<void> {
+    await this.wanted.setAcquired(item.id, true);
+    this.wantedMatches.set(this.wantedMatches().filter(m => m.id !== item.id));
+  }
+
+  dismissMatch(item: WantedSong): void {
+    this.wantedMatches.set(this.wantedMatches().filter(m => m.id !== item.id));
+  }
+
+  // Which pending row has its link box open, by index. One at a time: five of
+  // them stacked on a phone is a wall, and they get filled one by one anyway.
+  linkFor = signal<number | null>(null);
+
+  toggleLink(index: number): void {
+    this.linkFor.set(this.linkFor() === index ? null : index);
+  }
+
+  /**
+   * Applies a link's metadata to one pending file.
+   *
+   * Only what the link actually returned is written: a YouTube result has no
+   * album, and blanking one the user typed would be worse than leaving it.
+   */
+  onFilled(index: number, { track, cover }: LinkFilled): void {
+    const item = this.pending()[index];
+    if (!item) return;
+    if (track.title) item.title = track.title;
+    if (track.artist) item.artist = track.artist;
+    if (track.album) item.album = track.album;
+    // Replaces whatever the file's own tags carried, which is the point: the
+    // link was pasted because the file got it wrong.
+    if (cover) item.picture = cover;
+    this.linkFor.set(null);
   }
 
   requestStatus(request: DownloadRequestRow): string {
@@ -387,6 +432,20 @@ export class AddMusicComponent implements OnDestroy {
       added.push(song.id);
     }
     for (const item of items) this.releasePreview(item.file);
+
+    // A file that matches something on the wanted list is almost certainly the
+    // reason it was on the list. Offered rather than ticked automatically: the
+    // match is a normalised string comparison, not a certainty, and quietly
+    // marking the wrong row found is the kind of thing nobody notices until the
+    // song they wanted never turns up.
+    this.wantedMatches.set(
+      items
+        .map(item => this.wanted.matchFor(item.title, item.artist))
+        .filter((match): match is WantedSong => !!match)
+        // The same list entry cannot be matched twice in one save.
+        .filter((match, index, all) => all.findIndex(m => m.id === match.id) === index)
+    );
+
     this.pending.set([]);
     this.saving.set(false);
 

@@ -5,6 +5,7 @@ import { LibraryService } from '../../services/library.service';
 import { shrinkCover } from '../../services/tags';
 import { SongModel } from '../../models/song.model';
 import { TPipe } from '../../i18n/t.pipe';
+import { LinkFill, LinkFilled } from '../link-fill/link-fill';
 
 // Corrects what a file got wrong about itself. Same sheet-from-the-bottom
 // shape as the playlist picker, so it reads as part of the app rather than a
@@ -12,7 +13,7 @@ import { TPipe } from '../../i18n/t.pipe';
 @Component({
   selector: 'app-song-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, TPipe],
+  imports: [CommonModule, FormsModule, TPipe, LinkFill],
   templateUrl: './song-editor.html',
   styleUrl: './song-editor.scss',
 })
@@ -43,6 +44,22 @@ export class SongEditor implements OnInit, OnDestroy {
 
   currentCover(): string | null {
     return this.coverPreview() ?? this.library.coverSrc(this.song());
+  }
+
+  /**
+   * Takes what a pasted link came back with. Only fields the link actually
+   * filled are overwritten: a YouTube result has no album, and blanking one the
+   * user already typed would be a worse answer than leaving it alone.
+   */
+  onFilled({ track, cover }: LinkFilled): void {
+    if (track.title) this.title = track.title;
+    if (track.artist) this.artist = track.artist;
+    if (track.album) this.album = track.album;
+    if (cover) {
+      this.cover = cover;
+      this.releasePreview();
+      this.coverPreview.set(URL.createObjectURL(cover));
+    }
   }
 
   async onCover(event: Event): Promise<void> {

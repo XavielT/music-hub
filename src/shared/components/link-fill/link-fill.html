@@ -1,0 +1,46 @@
+<div class="link-fill">
+  <div class="link-fill-row">
+    <input
+      type="url"
+      class="link-fill-input"
+      [placeholder]="'link.placeholder' | t"
+      [(ngModel)]="url"
+      (keyup.enter)="look()"
+    />
+    <button
+      class="link-fill-btn"
+      (click)="look()"
+      [disabled]="links.busy() || !url.trim()"
+    >
+      {{ links.busy() ? ('link.looking' | t) : ('link.fetch' | t) }}
+    </button>
+  </div>
+
+  <!-- Said once, where somebody might otherwise expect a download button. -->
+  <p class="link-fill-note">{{ 'link.metadataOnly' | t }}</p>
+
+  <p class="link-fill-error" *ngIf="links.error()">{{ links.error() }}</p>
+
+  <!-- The preview: nothing is written into the fields until this is accepted. -->
+  <div class="link-fill-preview" *ngIf="first() as track">
+    <img class="link-fill-art" *ngIf="track.coverUrl" [src]="track.coverUrl" alt="" loading="lazy" />
+    <div class="link-fill-meta">
+      <strong class="link-fill-title">{{ track.title }}</strong>
+      <span class="link-fill-artist">{{ track.artist }}</span>
+      <span class="link-fill-album" *ngIf="track.album">
+        {{ track.album }}<ng-container *ngIf="track.year"> · {{ track.year }}</ng-container>
+      </span>
+    </div>
+    <button class="link-fill-apply" (click)="apply()" [disabled]="applying()">
+      {{ applying() ? ('link.looking' | t) : ('link.apply' | t) }}
+    </button>
+  </div>
+
+  <!-- An album or playlist link: one action puts the lot on the wanted list. -->
+  <div class="link-fill-all" *ngIf="offerWholeList && (result()?.tracks?.length ?? 0) > 1">
+    <span>{{ 'link.trackCount' | t: { count: result()!.tracks.length } }}</span>
+    <button class="link-fill-btn" (click)="addAll()">
+      {{ 'link.addAllToWanted' | t: { count: result()!.tracks.length } }}
+    </button>
+  </div>
+</div>

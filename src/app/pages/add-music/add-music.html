@@ -139,8 +139,16 @@
           <input type="text" [placeholder]="'editor.fieldArtist' | t" [(ngModel)]="item.artist" />
           <input type="text" [placeholder]="'add.albumOptional' | t" [(ngModel)]="item.album" />
         </div>
+        <button
+          class="add-music-pending-link"
+          (click)="toggleLink(i)"
+          [class.is-open]="linkFor() === i"
+          [title]="'link.fillFromLink' | t"
+        >🔗</button>
         <button class="add-music-pending-remove" (click)="removePending(i)">✕</button>
       </div>
+      <!-- One row's link box at a time, opened from the 🔗 beside it. -->
+      <app-link-fill *ngIf="linkFor() === i" (filled)="onFilled(i, $event)"></app-link-fill>
       <p class="add-music-duplicate" *ngIf="item.duplicateOf as existing">
         <span [innerHTML]="'add.duplicate' | t: { title: existing }"></span>
       </p>
@@ -171,6 +179,18 @@
     <button class="add-music-save" *ngIf="pending().length > 0" [disabled]="saving()" (click)="saveAll()">
       {{ saving() ? ('common.saving' | t) : ('add.saveCount' | t: { count: pending().length }) }}
     </button>
+
+    <!-- What was just added looks like something on the wanted list. Offered,
+         never applied on its own: the match is a string comparison. -->
+    <div class="add-music-wanted-match" *ngFor="let match of wantedMatches()">
+      <span>{{ 'wanted.foundOne' | t: { title: match.title } }}</span>
+      <button class="add-music-wanted-yes" (click)="markFound(match)">
+        {{ 'wanted.markIt' | t }}
+      </button>
+      <button class="add-music-wanted-no" (click)="dismissMatch(match)">
+        {{ 'wanted.notNow' | t }}
+      </button>
+    </div>
   </section>
 
   <!-- From a URL -->

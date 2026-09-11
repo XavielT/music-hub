@@ -1,0 +1,56 @@
+<div class="wanted">
+  <!-- A single track link adds one row; an album link offers the whole lot. -->
+  <app-link-fill
+    [offerWholeList]="true"
+    (filled)="onFilled($event)"
+    (wantedAll)="onAll($event)"
+  ></app-link-fill>
+
+  <p class="wanted-error" *ngIf="wanted.error()">{{ wanted.error() }}</p>
+
+  <!-- The empty state carries the explanation: this is the screen where
+       pasting a Spotify link might look like it should produce a song. -->
+  <div class="wanted-empty" *ngIf="wanted.items().length === 0 && !wanted.loading()">
+    <p class="wanted-empty-title">{{ 'wanted.empty' | t }}</p>
+    <p class="wanted-empty-body">{{ 'wanted.emptyBody' | t }}</p>
+  </div>
+
+  <ng-container *ngTemplateOutlet="rows; context: { $implicit: wanted.pending(), done: false }">
+  </ng-container>
+
+  <ng-container *ngIf="wanted.acquired().length">
+    <h3 class="wanted-subhead">{{ 'wanted.acquiredHeading' | t }}</h3>
+    <ng-container *ngTemplateOutlet="rows; context: { $implicit: wanted.acquired(), done: true }">
+    </ng-container>
+  </ng-container>
+
+  <ng-template #rows let-list let-done="done">
+    <div class="wanted-row" *ngFor="let item of list" [class.is-done]="done">
+      <img class="wanted-art" *ngIf="item.cover_url" [src]="item.cover_url" alt="" loading="lazy" />
+      <div class="wanted-art wanted-art--blank" *ngIf="!item.cover_url">♪</div>
+
+      <div class="wanted-meta">
+        <span class="wanted-title">{{ item.title }}</span>
+        <span class="wanted-artist">
+          {{ item.artist }}<ng-container *ngIf="item.album"> · {{ item.album }}</ng-container>
+        </span>
+      </div>
+
+      <button
+        class="wanted-btn"
+        (click)="wanted.setAcquired(item.id, !done)"
+        [title]="(done ? 'wanted.markPending' : 'wanted.markAcquired') | t"
+      >
+        {{ done ? '↩' : '✓' }}
+      </button>
+      <button
+        class="wanted-btn"
+        [class.confirming]="confirming() === item.id"
+        (click)="remove(item.id)"
+        [title]="'wanted.remove' | t"
+      >
+        {{ confirming() === item.id ? ('common.confirm' | t) : '✕' }}
+      </button>
+    </div>
+  </ng-template>
+</div>
