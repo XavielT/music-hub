@@ -2,6 +2,8 @@ import { Component, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LibraryService } from '../../services/library.service';
 import { ToastService } from '../../services/toast.service';
+import { I18nService } from '../../services/i18n.service';
+import { TPipe } from '../../i18n/t.pipe';
 
 // Offers to look up cover art for the songs whose files carried none. Opt-in
 // rather than automatic for a whole library: it is a request per song to an
@@ -9,7 +11,7 @@ import { ToastService } from '../../services/toast.service';
 @Component({
   selector: 'app-artwork-backfill',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TPipe],
   templateUrl: './artwork-backfill.html',
   styleUrl: './artwork-backfill.scss',
 })
@@ -20,20 +22,24 @@ export class ArtworkBackfill {
 
   label = computed(() => {
     const progress = this.library.artworkProgress();
-    if (progress) return `Looking up artwork — ${progress.done + 1} of ${progress.total}`;
-    const count = this.missing();
-    return `${count} song${count === 1 ? '' : 's'} without artwork`;
+    if (progress)
+      return this.i18n.t('artwork.lookingUp', { done: progress.done + 1, total: progress.total });
+    return this.i18n.t('artwork.withoutArtwork', { count: this.missing() });
   });
 
-  constructor(public library: LibraryService, private toast: ToastService) {}
+  constructor(
+    public library: LibraryService,
+    private toast: ToastService,
+    private i18n: I18nService
+  ) {}
 
   async run(): Promise<void> {
     const total = this.missing();
     const found = await this.library.findMissingArtwork();
     this.toast.show(
       found === 0
-        ? `No artwork found for ${total === 1 ? 'that song' : 'those songs'}.`
-        : `Found artwork for ${found} of ${total} song${total === 1 ? '' : 's'}.`
+        ? this.i18n.t(total === 1 ? 'artwork.noneFound' : 'artwork.noneFoundMany')
+        : this.i18n.t('artwork.foundFor', { found, total })
     );
   }
 }

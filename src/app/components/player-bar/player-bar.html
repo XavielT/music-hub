@@ -61,18 +61,18 @@
       [class.on]="player.shuffle()"
       (click)="player.toggleShuffle()"
       [attr.aria-pressed]="player.shuffle()"
-      [title]="player.shuffle() ? 'Shuffle on' : 'Shuffle off'"
+      [title]="player.shuffle() ? ('player.shuffleOn' | t) : ('player.shuffleOff' | t)"
     >
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
       </svg>
     </button>
 
-    <button class="player-full-btn" (click)="player.previous()" title="Previous">⏮</button>
+    <button class="player-full-btn" (click)="player.previous()" [title]="'player.previous' | t">⏮</button>
     <button class="player-full-btn player-full-btn--play" (click)="player.toggle()">
       {{ player.isPlaying() ? '❚❚' : '▶' }}
     </button>
-    <button class="player-full-btn" (click)="player.next()" title="Next">⏭</button>
+    <button class="player-full-btn" (click)="player.next()" [title]="'player.next' | t">⏭</button>
 
     <button
       class="player-full-btn player-full-btn--mode"
@@ -101,7 +101,7 @@
       step="0.01"
       [value]="player.volume()"
       (input)="onVolume($event)"
-      aria-label="Volume"
+      [attr.aria-label]="'player.volume' | t"
     />
   </div>
 
@@ -111,7 +111,7 @@
       class="player-extra-btn"
       [class.on]="player.speed() !== 1"
       (click)="player.cycleSpeed()"
-      title="Playback speed"
+      [title]="'player.speed' | t"
     >
       {{ speedLabel() }}
     </button>
@@ -119,7 +119,7 @@
       class="player-extra-btn"
       [class.on]="player.sleepArmed()"
       (click)="showSleep.set(!showSleep())"
-      title="Sleep timer"
+      [title]="'player.sleepTimer' | t"
     >
       ☾ {{ sleepLabel() }}
     </button>
@@ -128,7 +128,7 @@
   <div class="player-sleep" *ngIf="showSleep()">
     <button
       class="player-sleep-choice"
-      *ngFor="let choice of sleepChoices"
+      *ngFor="let choice of sleepChoices()"
       (click)="pickSleep(choice.value)"
     >
       {{ choice.label }}
@@ -138,9 +138,9 @@
       *ngIf="player.sleepArmed()"
       (click)="cancelSleep()"
     >
-      Off
+      {{ 'common.off' | t }}
     </button>
-    <p class="player-sleep-note">Playback pauses — the queue and the position stay put.</p>
+    <p class="player-sleep-note">{{ 'player.sleepNote' | t }}</p>
   </div>
 
   <!-- Queue -->
@@ -148,12 +148,12 @@
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z" />
     </svg>
-    <span>{{ showQueue() ? 'Hide queue' : 'Queue' }}</span>
+    <span>{{ showQueue() ? ('player.hideQueue' | t) : ('player.queue' | t) }}</span>
     <span class="player-full-queue-count" *ngIf="player.upNext().length">{{ player.upNext().length }}</span>
   </button>
 
   <div class="player-queue" *ngIf="showQueue()">
-    <p class="player-queue-heading">Playing now</p>
+    <p class="player-queue-heading">{{ 'player.playingNow' | t }}</p>
     <div class="player-queue-row is-current">
       <span class="player-queue-item-text">
         <span class="player-queue-item-title">{{ song.title }}</span>
@@ -161,9 +161,9 @@
       </span>
     </div>
 
-    <p class="player-queue-heading">Next up</p>
+    <p class="player-queue-heading">{{ 'player.nextUp' | t }}</p>
     <div class="player-queue-row" *ngFor="let entry of player.upNext(); let i = index; let last = last">
-      <button class="player-queue-item-text" (click)="player.jumpTo(entry.index)" title="Play this next">
+      <button class="player-queue-item-text" (click)="player.jumpTo(entry.index)" [title]="'player.playThisNext' | t">
         <span class="player-queue-item-title">{{ entry.song.title }}</span>
         <span class="player-queue-item-artist">{{ entry.song.artist }}</span>
       </button>
@@ -171,19 +171,19 @@
         class="player-queue-btn"
         (click)="player.moveInQueue(entry.index, entry.index - 1)"
         [disabled]="i === 0"
-        title="Move up"
+        [title]="'player.moveUp' | t"
       >▲</button>
       <button
         class="player-queue-btn"
         (click)="player.moveInQueue(entry.index, entry.index + 1)"
         [disabled]="last"
-        title="Move down"
+        [title]="'player.moveDown' | t"
       >▼</button>
-      <button class="player-queue-btn" (click)="player.removeFromQueue(entry.index)" title="Remove">✕</button>
+      <button class="player-queue-btn" (click)="player.removeFromQueue(entry.index)" [title]="'common.remove' | t">✕</button>
     </div>
 
     <p class="player-queue-empty" *ngIf="player.upNext().length === 0">
-      {{ player.repeat() === 'off' ? 'Last song in the queue.' : 'Last song — the queue starts over next.' }}
+      {{ player.repeat() === 'off' ? ('player.lastSong' | t) : ('player.lastSongRepeat' | t) }}
     </p>
   </div>
 </div>

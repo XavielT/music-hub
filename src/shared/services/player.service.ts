@@ -5,6 +5,7 @@ import { DbService } from './db.service';
 import { LibraryService } from './library.service';
 import { CloudLibraryService } from './cloud-library.service';
 import { ToastService } from './toast.service';
+import { I18nService } from './i18n.service';
 import { SongModel } from '../models/song.model';
 
 //  off : stop when the queue runs out
@@ -125,7 +126,8 @@ export class PlayerService {
     private db: DbService,
     private library: LibraryService,
     private cloud: CloudLibraryService,
-    private toast: ToastService
+    private toast: ToastService,
+    private i18n: I18nService
   ) {
     this.loadPrefs();
 
@@ -355,7 +357,7 @@ export class PlayerService {
   // were, so the morning is one tap from carrying on.
   private fallAsleep(): void {
     if (!this.audio.paused) this.audio.pause();
-    this.toast.show('Sleep timer — playback paused.');
+    this.toast.show(this.i18n.t('player.sleepPaused'));
   }
 
   // --- queue editing ---

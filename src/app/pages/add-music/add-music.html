@@ -1,43 +1,38 @@
 <div class="add-music">
-  <h1 class="add-music-title">Add music</h1>
+  <h1 class="add-music-title">{{ 'add.title' | t }}</h1>
   <p class="add-music-saved" *ngIf="savedMessage()">{{ savedMessage() }}</p>
 
   <!-- From YouTube -->
   <section class="add-music-section">
-    <h2 class="add-music-section-title">From YouTube</h2>
+    <h2 class="add-music-section-title">{{ 'add.fromYoutube' | t }}</h2>
     <p class="add-music-note add-music-note-warn" *ngIf="!ytAvailable()">
-      Searching YouTube needs the installed Android app or a companion — a browser cannot
-      reach YouTube's API directly. You can still <strong>paste a YouTube link</strong> below
-      and ask for the song; it will be fetched and added to the shared library.
+      <span [innerHTML]="'add.ytUnavailable' | t"></span>
     </p>
     <p class="add-music-note" *ngIf="canFetchHere()">
-      Downloads go through your companion.
+      {{ 'add.downloadsViaCompanion' | t }}
     </p>
     <p class="add-music-note" *ngIf="!canFetchHere()">
-      No companion on this device, so songs are <strong>requested</strong> rather than
-      downloaded here. A device that has one fetches them, and they appear in the shared
-      library for everyone.
+      <span [innerHTML]="'add.noCompanionHere' | t"></span>
     </p>
 
     <!-- The one that works on a phone: browse YouTube for real and take what
          plays. Offered first because it needs no server and no setup. -->
     <div class="add-music-browse" *ngIf="capture.available">
       <button class="add-music-browse-btn" (click)="browseYoutube()" [disabled]="ytBrowsing()">
-        {{ ytBrowsing() ? 'Opening YouTube…' : '▶ Browse YouTube and add a song' }}
+        {{ ytBrowsing() ? ('add.openingYoutube' | t) : '▶ ' + ('add.browseYoutube' | t) }}
       </button>
       <p class="add-music-note">
-        Opens YouTube here in the app. Find a song, press play, then tap
-        <strong>Add this song to Music Hub</strong>. Nothing to set up.
+        <span [innerHTML]="'add.browseNote' | t"></span>
       </p>
       <p class="add-music-note" *ngIf="capture.progress() !== null">
-        Downloading — {{ capture.progress() }}%
+        {{ 'add.downloadingPercent' | t: { percent: capture.progress() ?? 0 } }}
       </p>
     </div>
 
     <div class="add-music-yt-search">
       <input
         type="text"
-        placeholder="Search a song or paste a YouTube link"
+        [placeholder]="'add.ytSearchPlaceholder' | t"
         [(ngModel)]="ytQuery"
         (keyup.enter)="ytSearch()"
         [disabled]="!ytAvailable()"
@@ -60,7 +55,7 @@
         (click)="requestPastedLink()"
         [disabled]="queue.busy()"
       >
-        Request this song
+        {{ 'add.requestThisSong' | t }}
       </button>
     </div>
 
@@ -75,7 +70,7 @@
         class="add-music-yt-download"
         (click)="ytDownload(r)"
         [disabled]="ytDownloading() !== null"
-        title="Download to this device"
+        [title]="'add.downloadHere' | t"
       >
         {{ ytDownloading() === r.id ? '⏳' : '⇩' }}
       </button>
@@ -84,9 +79,9 @@
         class="add-music-yt-download add-music-yt-request"
         (click)="requestSong(r)"
         [disabled]="queue.busy()"
-        title="Ask a device with a companion to fetch this"
+        [title]="'add.requestTitle' | t"
       >
-        Request
+        {{ 'add.request' | t }}
       </button>
     </div>
 
@@ -94,7 +89,7 @@
          shared library, and "someone is already fetching that" is the useful
          thing to know. -->
     <div class="add-music-queue" *ngIf="queue.requests().length > 0">
-      <h3 class="add-music-queue-title">Requested songs</h3>
+      <h3 class="add-music-queue-title">{{ 'add.requestedSongs' | t }}</h3>
       <div class="add-music-queue-row" *ngFor="let q of queue.requests()">
         <img class="add-music-yt-thumb" *ngIf="q.thumbnail" [src]="q.thumbnail" alt="" loading="lazy" />
         <div class="add-music-yt-info">
@@ -108,7 +103,7 @@
           *ngIf="q.requested_by === auth.user()?.id || auth.isAdmin()"
           (click)="queue.cancel(q.id)"
           [disabled]="queue.busy()"
-          title="Remove this request"
+          [title]="'add.removeRequest' | t"
         >
           ✕
         </button>
@@ -118,7 +113,7 @@
 
   <!-- From this device -->
   <section class="add-music-section">
-    <h2 class="add-music-section-title">From this device</h2>
+    <h2 class="add-music-section-title">{{ 'add.fromThisDevice' | t }}</h2>
     <label class="add-music-drop">
       <input
         type="file"
@@ -128,70 +123,68 @@
         hidden
       />
       <span class="add-music-drop-icon">🎵</span>
-      <span>Tap to pick audio files</span>
-      <span class="add-music-drop-hint">mp3, m4a, mp4, wav, ogg, flac — name them "Artist - Title.mp3" to auto-fill the info</span>
+      <span>{{ 'add.pickFiles' | t }}</span>
+      <span class="add-music-drop-hint">{{ 'add.pickFilesHint' | t }}</span>
     </label>
 
     <!-- Pending files -->
-    <p class="add-music-reading" *ngIf="reading()">Reading tags from the files…</p>
+    <p class="add-music-reading" *ngIf="reading()">{{ 'add.readingTags' | t }}</p>
 
     <ng-container *ngFor="let item of pending(); let i = index">
       <div class="add-music-pending">
         <!-- Artwork the file carried with it, so you can see it was picked up. -->
         <img class="add-music-pending-art" *ngIf="previewFor(item) as art" [src]="art" alt="" />
         <div class="add-music-pending-fields">
-          <input type="text" placeholder="Title" [(ngModel)]="item.title" />
-          <input type="text" placeholder="Artist" [(ngModel)]="item.artist" />
-          <input type="text" placeholder="Album (optional)" [(ngModel)]="item.album" />
+          <input type="text" [placeholder]="'editor.fieldTitle' | t" [(ngModel)]="item.title" />
+          <input type="text" [placeholder]="'editor.fieldArtist' | t" [(ngModel)]="item.artist" />
+          <input type="text" [placeholder]="'add.albumOptional' | t" [(ngModel)]="item.album" />
         </div>
         <button class="add-music-pending-remove" (click)="removePending(i)">✕</button>
       </div>
       <p class="add-music-duplicate" *ngIf="item.duplicateOf as existing">
-        Looks like a duplicate of <strong>{{ existing }}</strong> — you can still add it.
+        <span [innerHTML]="'add.duplicate' | t: { title: existing }"></span>
       </p>
     </ng-container>
 
     <!-- Worth knowing before it goes into a 1 GB budget everyone shares. -->
     <p class="add-music-heavy" *ngIf="pendingSaving() > 0 && auth.isAdmin()">
-      {{ heavyPending().length }} of these are above 200 kbps and would take
-      {{ bytes(pendingSaving()) }} more of the shared 1 GB than they need to. Compressing them
-      first with <code>./tools/compress-for-cloud.sh</code> is transparent on a phone — or upload
-      them as they are, it is a nudge rather than a gate.
+      <span
+        [innerHTML]="'add.heavyWarning' | t: { count: heavyPending().length, size: bytes(pendingSaving()) }"
+      ></span>
     </p>
 
     <label class="add-music-cloud" *ngIf="pending().length > 0 && auth.isAdmin()">
       <input type="checkbox" [checked]="uploadToCloud()" (change)="uploadToCloud.set($any($event.target).checked)" />
-      <span>Upload to the shared library so they play on every device</span>
+      <span>{{ 'add.uploadToShared' | t }}</span>
     </label>
     <p class="add-music-cloud-note" *ngIf="pending().length > 0 && !auth.isAdmin()">
-      These songs stay on this device. The shared cloud library is added to by Xaviel — everything
-      in it is already available to you to play and download.
+      {{ 'add.staysOnDevice' | t }}
     </p>
 
     <!-- Said once, here, where someone would otherwise go looking for the
          button: a listener account cannot add to the shared library at all,
          and the database is what enforces that. -->
     <p class="add-music-cloud-note" *ngIf="auth.role() === 'listener'">
-      {{ listenerNote }}
+      {{ 'library.listenerNote' | t }}
     </p>
 
     <button class="add-music-save" *ngIf="pending().length > 0" [disabled]="saving()" (click)="saveAll()">
-      {{ saving() ? 'Saving...' : 'Save ' + pending().length + ' song(s)' }}
+      {{ saving() ? ('common.saving' | t) : ('add.saveCount' | t: { count: pending().length }) }}
     </button>
   </section>
 
   <!-- From a URL -->
   <section class="add-music-section">
-    <h2 class="add-music-section-title">From a direct audio URL</h2>
+    <h2 class="add-music-section-title">{{ 'add.fromUrl' | t }}</h2>
     <div class="add-music-remote">
-      <input type="url" placeholder="https:// direct audio link (.mp3, .m4a...)" [(ngModel)]="remoteUrl" />
-      <input type="text" placeholder="Title" [(ngModel)]="remoteTitle" />
-      <input type="text" placeholder="Artist" [(ngModel)]="remoteArtist" />
-      <button class="add-music-save" (click)="addRemote()">Add song</button>
+      <input type="url" [placeholder]="'add.urlPlaceholder' | t" [(ngModel)]="remoteUrl" />
+      <input type="text" [placeholder]="'editor.fieldTitle' | t" [(ngModel)]="remoteTitle" />
+      <input type="text" [placeholder]="'editor.fieldArtist' | t" [(ngModel)]="remoteArtist" />
+      <button class="add-music-save" (click)="addRemote()">{{ 'add.addSong' | t }}</button>
     </div>
     <p class="add-music-error" *ngIf="remoteError()">{{ remoteError() }}</p>
     <p class="add-music-note">
-      Paste a direct link to an audio file and it will stream in the app (needs internet).
+      {{ 'add.urlNote' | t }}
     </p>
   </section>
 </div>

@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UpdateService } from '../../services/update.service';
+import { TPipe } from '../../i18n/t.pipe';
 
 // The version this app is running, a manual "check for updates", and the
 // release notes + install button once there is something newer. The banner is
@@ -8,7 +9,7 @@ import { UpdateService } from '../../services/update.service';
 @Component({
   selector: 'app-update-panel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TPipe],
   templateUrl: './update-panel.html',
   styleUrl: './update-panel.scss',
 })

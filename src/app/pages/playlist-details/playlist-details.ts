@@ -9,11 +9,12 @@ import { SongItem } from '../../../shared/components/song-item/song-item';
 import { SongEditor } from '../../../shared/components/song-editor/song-editor';
 import { Cover } from '../../../shared/ui/cover/cover';
 import { SongModel } from '../../../shared/models/song.model';
+import { TPipe } from '../../../shared/i18n/t.pipe';
 
 @Component({
   selector: 'app-playlist-details',
   standalone: true,
-  imports: [CommonModule, SongItem, SongEditor, Cover],
+  imports: [CommonModule, SongItem, SongEditor, Cover, TPipe],
   templateUrl: './playlist-details.html',
   styleUrl: './playlist-details.scss',
 })

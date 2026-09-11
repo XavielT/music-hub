@@ -7,6 +7,7 @@ import { RealtimeService } from './realtime.service';
 import { AppSettingsService } from './app-settings.service';
 import { DownloadQueueService } from './download-queue.service';
 import { ToastService } from './toast.service';
+import { I18nService } from './i18n.service';
 import { SongModel } from '../models/song.model';
 
 export interface UploadProgress {
@@ -44,7 +45,8 @@ export class SyncService {
     private realtime: RealtimeService,
     private queue: DownloadQueueService,
     private toast: ToastService,
-    private settings: AppSettingsService
+    private settings: AppSettingsService,
+    private i18n: I18nService
   ) {
     // The account is the unit of state here: the local database, the library
     // signals, the signed URLs and the player all belong to one user and all
@@ -118,7 +120,7 @@ export class SyncService {
       return;
     }
     if (!this.online()) {
-      if (!options.silent) this.toast.error('You are offline — showing the library stored on this device.');
+      if (!options.silent) this.toast.error(this.i18n.t('sync.offlineLibrary'));
       return;
     }
 
@@ -206,7 +208,7 @@ export class SyncService {
     const pending = this.library.localOnlySongs().filter(s => s.downloaded);
     if (!pending.length || this.uploading()) return;
     if (!this.online()) {
-      this.toast.error('You are offline — uploads need a connection.');
+      this.toast.error(this.i18n.t('sync.offlineUploads'));
       return;
     }
 
@@ -222,17 +224,17 @@ export class SyncService {
 
     const uploaded = done - failed;
     if (uploaded > 0) {
-      this.toast.show(`${uploaded} song${uploaded === 1 ? '' : 's'} uploaded to the cloud.`);
+      this.toast.show(this.i18n.t('sync.uploaded', { count: uploaded }));
       // Playlists waiting on those songs can now be completed.
       await this.library.pushDirtySongs();
       await this.pushPendingPlaylists();
     }
-    if (failed > 0) this.toast.error(`${failed} upload${failed === 1 ? '' : 's'} failed.`);
+    if (failed > 0) this.toast.error(this.i18n.t('sync.uploadsFailed', { count: failed }));
   }
 
   async uploadOne(song: SongModel): Promise<void> {
     if (!this.online()) {
-      this.toast.error('You are offline — uploads need a connection.');
+      this.toast.error(this.i18n.t('sync.offlineUploads'));
       return;
     }
     this._uploadProgress.set({ done: 0, total: 1, title: song.title });
@@ -250,7 +252,7 @@ export class SyncService {
     const pending = songs.filter(s => !s.downloaded && s.storagePath);
     if (!pending.length) return;
     if (!this.online()) {
-      this.toast.error('You are offline — downloads need a connection.');
+      this.toast.error(this.i18n.t('sync.offlineDownloads'));
       return;
     }
 
@@ -261,6 +263,6 @@ export class SyncService {
       done++;
     }
     this._uploadProgress.set(null);
-    this.toast.show(`${done} song${done === 1 ? '' : 's'} available offline.`);
+    this.toast.show(this.i18n.t('sync.availableOffline', { count: done }));
   }
 }

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Capacitor } from '@capacitor/core';
 import { AuthService } from '../../../shared/services/auth.service';
-import { LISTENER_NOTE } from '../../../shared/models/listener-note';
+import { I18nService } from '../../../shared/services/i18n.service';
 import { LibraryService } from '../../../shared/services/library.service';
 import { YoutubeService, YoutubeResult } from '../../../shared/services/youtube.service';
 import { CompanionService } from '../../../shared/services/companion.service';
@@ -18,6 +18,7 @@ import {
   formatBytes,
   savingFrom,
 } from '../../../shared/services/storage-report';
+import { TPipe } from '../../../shared/i18n/t.pipe';
 
 interface PendingSong {
   file: File;
@@ -36,9 +37,6 @@ interface PendingSong {
 // YouTube search talks to YouTube's internal API directly. On the phone
 // CapacitorHttp makes those requests natively (no CORS); a browser blocks
 // them, so the section is offered read-only there instead of hanging.
-const YT_BROWSER_HINT =
-  'YouTube search only works in the installed Android app or through a companion. Paste a YouTube link instead and it can still be requested.';
-
 // Opens the in-app browser straight on a search rather than YouTube's home
 // page, so a typed query is not thrown away.
 function searchUrl(query: string): string {
@@ -52,13 +50,11 @@ const YT_TIMEOUT_MS = 15000;
 @Component({
   selector: 'app-add-music',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TPipe],
   templateUrl: './add-music.html',
   styleUrl: './add-music.scss',
 })
 export class AddMusicComponent implements OnDestroy {
-  readonly listenerNote = LISTENER_NOTE;
-
   pending = signal<PendingSong[]>([]);
 
   // What these files would cost the shared 1 GB if uploaded as they are, and
@@ -113,7 +109,8 @@ export class AddMusicComponent implements OnDestroy {
     private youtube: YoutubeService,
     public companion: CompanionService,
     public capture: YoutubeCaptureService,
-    public queue: DownloadQueueService
+    public queue: DownloadQueueService,
+    private i18n: I18nService
   ) {}
 
   // A YouTube link in the search box, when there is no way to look it up.
@@ -141,13 +138,15 @@ export class AddMusicComponent implements OnDestroy {
   requestStatus(request: DownloadRequestRow): string {
     switch (request.status) {
       case 'pending':
-        return 'waiting for a device that can fetch it';
+        return this.i18n.t('add.status.pending');
       case 'working':
-        return 'downloading now…';
+        return this.i18n.t('add.status.working');
       case 'done':
-        return 'in the library ✔';
+        return this.i18n.t('add.status.done');
       default:
-        return request.error || 'failed';
+        // The worker's own error, when there is one — it is more specific than
+        // anything we could say here.
+        return request.error || this.i18n.t('add.status.failed');
     }
   }
 
@@ -155,7 +154,7 @@ export class AddMusicComponent implements OnDestroy {
     const query = this.ytQuery.trim();
     if (!query || this.ytSearching()) return;
     if (!this.ytAvailable()) {
-      this.ytError.set(YT_BROWSER_HINT);
+      this.ytError.set(this.i18n.t('add.err.searchUnavailable'));
       return;
     }
     this.ytError.set('');
@@ -176,15 +175,15 @@ export class AddMusicComponent implements OnDestroy {
           : this.youtube.search(query);
         this.ytResults.set(await this.withTimeout(search));
       }
-      if (this.ytResults().length === 0) this.ytError.set('No results found.');
+      if (this.ytResults().length === 0) this.ytError.set(this.i18n.t('add.err.noResults'));
     } catch (err) {
       const message = (err as Error)?.message ?? '';
       this.ytError.set(
         message === 'yt-timeout'
-          ? 'YouTube did not answer in time. Try again, or add the song from your device below.'
+          ? this.i18n.t('add.err.timeout')
           : this.companion.configured()
             ? message
-            : 'YouTube search failed. It only works in the installed app, not in the browser preview.'
+            : this.i18n.t('add.err.searchFailed')
       );
     } finally {
       // Always clears the spinner, including on timeout.
@@ -226,13 +225,13 @@ export class AddMusicComponent implements OnDestroy {
         coverUrl: result.thumbnail,
         duration: result.duration,
       });
-      this.savedMessage.set(`"${result.title}" added to your library ✔`);
+      this.savedMessage.set(this.i18n.t('add.addedOne', { title: result.title }));
     } catch (err: any) {
       console.error('ytDownload error', err);
       const msg = String(err?.message ?? err);
       this.ytError.set(
         msg.includes('decipher') || msg.includes('clients failed')
-          ? 'YouTube is blocking direct downloads from the app (bot protection). Set up the companion in Settings, or add songs from your device or a direct audio URL.'
+          ? this.i18n.t('add.err.botProtection')
           : `Download failed: ${msg}`
       );
     }
@@ -256,9 +255,9 @@ export class AddMusicComponent implements OnDestroy {
         coverUrl: song.coverUrl,
         duration: song.duration,
       });
-      this.savedMessage.set(`"${song.title}" added to your library ✔`);
+      this.savedMessage.set(this.i18n.t('add.addedOne', { title: song.title }));
     } catch (err) {
-      this.ytError.set((err as Error)?.message ?? 'Could not add that song.');
+      this.ytError.set((err as Error)?.message ?? this.i18n.t('add.err.couldNotAdd'));
     } finally {
       this.ytBrowsing.set(false);
     }
@@ -398,9 +397,8 @@ export class AddMusicComponent implements OnDestroy {
 
     // Report what actually happened, not what was intended: an upload can
     // fail and leave the song on this device only.
-    const plural = items.length === 1 ? '' : 's';
     if (!toCloud) {
-      this.savedMessage.set(`${items.length} song${plural} added to this device ✔`);
+      this.savedMessage.set(this.i18n.t('add.addedToDevice', { count: items.length }));
       return;
     }
     const uploaded = this.library
@@ -408,8 +406,11 @@ export class AddMusicComponent implements OnDestroy {
       .filter(s => added.includes(s.id) && s.syncState === 'synced').length;
     this.savedMessage.set(
       uploaded === items.length
-        ? `${items.length} song${plural} added and uploaded to the cloud ✔`
-        : `${items.length} song${plural} added to this device — ${items.length - uploaded} could not be uploaded, tap ↑ in your library to retry.`
+        ? this.i18n.t('add.addedAndUploaded', { count: items.length })
+        : this.i18n.t('add.addedPartly', {
+            count: items.length,
+            failed: items.length - uploaded,
+          })
     );
   }
 
@@ -422,7 +423,7 @@ export class AddMusicComponent implements OnDestroy {
     // that can never play. Say so instead of failing later at playback.
     if (this.youtube.parseVideoId(url)) {
       this.remoteError.set(
-        'That is a YouTube page link, not an audio file. YouTube downloads are blocked, so add the song as a file from your device instead.'
+        this.i18n.t('add.err.youtubePageLink')
       );
       return;
     }
@@ -431,14 +432,14 @@ export class AddMusicComponent implements OnDestroy {
     try {
       parsed = new URL(url);
     } catch {
-      this.remoteError.set('That does not look like a valid link.');
+      this.remoteError.set(this.i18n.t('add.err.badLink'));
       return;
     }
     if (parsed.protocol !== 'https:') {
       // A plain http:// stream is blocked as mixed content on the deployed
       // HTTPS site and in the installed app, so it could never play.
       this.remoteError.set(
-        'The link must be https:// — plain http links are blocked on the installed app.'
+        this.i18n.t('add.err.httpsOnly')
       );
       return;
     }
@@ -449,6 +450,6 @@ export class AddMusicComponent implements OnDestroy {
       album: '',
     });
     this.remoteUrl = this.remoteTitle = this.remoteArtist = '';
-    this.savedMessage.set('Song added from URL ✔');
+    this.savedMessage.set(this.i18n.t('add.addedFromUrl'));
   }
 }

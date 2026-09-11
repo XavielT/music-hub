@@ -1,8 +1,8 @@
 <div class="library">
-  <h1 class="library-title">Your library</h1>
+  <h1 class="library-title">{{ 'library.title' | t }}</h1>
 
   <p class="library-listener-note" *ngIf="auth.role() === 'listener'">
-    {{ listenerNote }}
+    {{ 'library.listenerNote' | t }}
   </p>
 
   <!-- Tabs -->
@@ -13,19 +13,19 @@
       [class.active]="tab() === t"
       (click)="setTab(t)"
     >
-      {{ t }}
+      {{ 'library.tab.' + t | t }}
     </button>
   </div>
 
   <!-- Songs tab -->
   <div *ngIf="tab() === 'songs'">
     <div class="library-playall" *ngIf="library.songs().length > 0">
-      <button class="library-playall-btn" (click)="player.play(library.songs()[0], library.songs())">▶ Play all</button>
+      <button class="library-playall-btn" (click)="player.play(library.songs()[0], library.songs())">▶ {{ 'common.playAll' | t }}</button>
       <button class="library-playall-btn library-playall-btn--shuffle" (click)="player.shufflePlay(library.songs())">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
         </svg>
-        Shuffle
+        {{ 'common.shuffle' | t }}
       </button>
     </div>
     <app-song-item
@@ -43,7 +43,7 @@
       (download)="library.downloadSong(song)"
       (removeDownload)="library.removeDownload(song)"
     ></app-song-item>
-    <p class="library-empty" *ngIf="library.songs().length === 0">No songs yet. Add some from the ＋ tab.</p>
+    <p class="library-empty" *ngIf="library.songs().length === 0">{{ 'library.empty' | t }}</p>
   </div>
 
   <!-- Artists / Albums tabs -->
@@ -55,22 +55,22 @@
           <app-cover [name]="g.name" [color]="g.songs[0].coverColor"></app-cover>
         </div>
         <span class="library-group-name">{{ g.name }}</span>
-        <span class="library-group-count">{{ g.songs.length }} songs</span>
+        <span class="library-group-count">{{ 'common.songs' | t: { count: g.songs.length } }}</span>
       </button>
-      <p class="library-empty" *ngIf="groups().length === 0">Nothing here yet.</p>
+      <p class="library-empty" *ngIf="groups().length === 0">{{ 'library.nothingHere' | t }}</p>
     </ng-container>
 
     <!-- Group detail -->
     <ng-container *ngIf="selectedGroup() as group">
-      <button class="library-back" (click)="selectedGroup.set(null)">‹ Back</button>
+      <button class="library-back" (click)="selectedGroup.set(null)">‹ {{ 'common.back' | t }}</button>
       <h2 class="library-group-title">{{ group.name }}</h2>
       <div class="library-playall">
-        <button class="library-playall-btn" (click)="player.play(group.songs[0], group.songs)">▶ Play all</button>
+        <button class="library-playall-btn" (click)="player.play(group.songs[0], group.songs)">▶ {{ 'common.playAll' | t }}</button>
         <button class="library-playall-btn library-playall-btn--shuffle" (click)="player.shufflePlay(group.songs)">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
           </svg>
-          Shuffle
+          {{ 'common.shuffle' | t }}
         </button>
       </div>
       <app-song-item
@@ -94,15 +94,15 @@
   <!-- Playlists tab -->
   <div *ngIf="tab() === 'playlists'">
     <div class="library-new-playlist">
-      <input type="text" placeholder="New playlist name" [(ngModel)]="newPlaylistName" (keyup.enter)="createPlaylist()" />
-      <button (click)="createPlaylist()">Create</button>
+      <input type="text" [placeholder]="'library.newPlaylistName' | t" [(ngModel)]="newPlaylistName" (keyup.enter)="createPlaylist()" />
+      <button (click)="createPlaylist()">{{ 'common.create' | t }}</button>
     </div>
     <ng-container *ngTemplateOutlet="playlistRows; context: { $implicit: library.myPlaylists() }">
     </ng-container>
 
     <!-- Playlists other people opened to the household. -->
     <ng-container *ngIf="library.sharedWithMe().length">
-      <h3 class="library-subhead">Shared with you</h3>
+      <h3 class="library-subhead">{{ 'library.sharedWithYou' | t }}</h3>
       <ng-container *ngTemplateOutlet="playlistRows; context: { $implicit: library.sharedWithMe() }">
       </ng-container>
     </ng-container>
@@ -115,13 +115,13 @@
         <span class="library-playlist-text">
           <span class="library-playlist-name">{{ p.name }}</span>
           <span class="library-playlist-by" *ngIf="library.playlistOwnerLabel(p) as who">
-            by {{ who }}
+            {{ 'library.by' | t: { name: who } }}
           </span>
           <span class="library-playlist-by" *ngIf="p.isShared && library.isMine(p)">
-            Shared with everyone
+            {{ 'library.sharedWithEveryone' | t }}
           </span>
         </span>
-        <span class="library-playlist-count">{{ p.songIds.length }} songs</span>
+        <span class="library-playlist-count">{{ 'common.songs' | t: { count: p.songIds.length } }}</span>
       </a>
     </ng-template>
   </div>

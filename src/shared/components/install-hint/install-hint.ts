@@ -2,13 +2,14 @@ import { Component, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Capacitor } from '@capacitor/core';
 import { PwaService } from '../../services/pwa.service';
+import { TPipe } from '../../i18n/t.pipe';
 
 // Explains how to get Music Hub onto the home screen. Hidden once the app is
 // already installed, and inside the native Android app where it makes no sense.
 @Component({
   selector: 'app-install-hint',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TPipe],
   templateUrl: './install-hint.html',
   styleUrl: './install-hint.scss',
 })

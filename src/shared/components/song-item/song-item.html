@@ -6,7 +6,7 @@
     <span class="song-item-title">{{ song().title }}</span>
     <span class="song-item-artist">
       {{ song().artist }}
-      <em class="song-item-offline-hint" *ngIf="needsConnection()">· needs connection</em>
+      <em class="song-item-offline-hint" *ngIf="needsConnection()">· {{ 'song.needsConnection' | t }}</em>
     </span>
   </div>
   <span class="song-item-duration">{{ formatDuration(song().duration) }}</span>
@@ -22,17 +22,17 @@
     class="song-item-btn"
     (click)="$event.stopPropagation(); menuOpen.set(!menuOpen())"
     [class.is-open]="menuOpen()"
-    title="More"
+    [title]="'common.more' | t"
   >⋮</button>
-  <button class="song-item-btn" *ngIf="removable" (click)="$event.stopPropagation(); remove.emit()" title="Remove">✕</button>
+  <button class="song-item-btn" *ngIf="removable" (click)="$event.stopPropagation(); remove.emit()" [title]="'common.remove' | t">✕</button>
 </div>
 
 <!-- Queue and playlist actions, one row down so the song row stays readable. -->
 <div class="song-item-menu" *ngIf="menuOpen()">
-  <button (click)="menuOpen.set(false); playNext.emit()">Play next</button>
-  <button (click)="menuOpen.set(false); addToQueue.emit()">Add to queue</button>
-  <button *ngIf="library.canEdit(song())" (click)="menuOpen.set(false); edit.emit()">Edit info</button>
+  <button (click)="menuOpen.set(false); playNext.emit()">{{ 'song.playNext' | t }}</button>
+  <button (click)="menuOpen.set(false); addToQueue.emit()">{{ 'song.addToQueue' | t }}</button>
+  <button *ngIf="library.canEdit(song())" (click)="menuOpen.set(false); edit.emit()">{{ 'song.editInfo' | t }}</button>
   <button *ngIf="canAddToPlaylist()" (click)="menuOpen.set(false); addToPlaylist.emit()">
-    Add to playlist
+    {{ 'song.addToPlaylist' | t }}
   </button>
 </div>

@@ -7,7 +7,7 @@
   >
     {{ update.actionLabel() }}
   </button>
-  <button class="update-banner-dismiss" *ngIf="canDismiss()" (click)="dismiss()" title="Not now">✕</button>
+  <button class="update-banner-dismiss" *ngIf="canDismiss()" (click)="dismiss()" [title]="'update.notNow' | t">✕</button>
   <div class="update-banner-progress" *ngIf="update.status() === 'downloading' && update.progress() >= 0">
     <div class="update-banner-progress-fill" [style.width.%]="update.progress()"></div>
   </div>

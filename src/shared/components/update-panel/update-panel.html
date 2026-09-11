@@ -6,18 +6,20 @@
       (click)="update.check()"
       [disabled]="update.status() === 'checking' || update.status() === 'downloading'"
     >
-      {{ update.status() === 'checking' ? 'Checking…' : 'Check for updates' }}
+      {{ update.status() === 'checking' ? ('update.checking' | t) : ('update.checkForUpdates' | t) }}
     </button>
   </div>
 
   <ng-container *ngIf="update.available() as found">
     <p class="update-panel-found" *ngIf="update.status() !== 'idle' && update.status() !== 'checking'">
       <ng-container *ngIf="found.version">
-        Version {{ found.version }} is available<ng-container *ngIf="found.sizeBytes">
+        {{ 'update.versionAvailable' | t: { version: found.version } }}<ng-container
+          *ngIf="found.sizeBytes"
+        >
           — {{ update.formatSize(found.sizeBytes) }}</ng-container
         >.
       </ng-container>
-      <ng-container *ngIf="!found.version">A newer build is ready to load.</ng-container>
+      <ng-container *ngIf="!found.version">{{ 'update.newerBuild' | t }}</ng-container>
     </p>
 
     <pre class="update-panel-notes" *ngIf="found.notes">{{ found.notes }}</pre>

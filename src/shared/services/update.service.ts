@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { filter } from 'rxjs/operators';
 import { AppUpdate } from '../native/app-update.plugin';
 import { ToastService } from './toast.service';
+import { I18nService } from './i18n.service';
 import { environment } from '../../environments/environment';
 import { APP_VERSION } from '../../version';
 
@@ -76,7 +77,11 @@ export class UpdateService {
 
   private downloadedPath: string | null = null;
 
-  constructor(private updates: SwUpdate, private toast: ToastService) {
+  constructor(
+    private updates: SwUpdate,
+    private toast: ToastService,
+    private i18n: I18nService
+  ) {
     if (this.isNative) {
       // The installed APK is the truth about what is running — a bundled
       // constant would be whatever the last web build said.
@@ -134,7 +139,7 @@ export class UpdateService {
     if (this._status() === 'checking' || this._status() === 'downloading') return;
     // Already found and downloaded — nothing to look for.
     if (this._status() === 'ready') {
-      if (announce) this.toast.show('The update is ready to install.');
+      if (announce) this.toast.show(this.i18n.t('update.readyToInstall'));
       return;
     }
 
@@ -234,7 +239,7 @@ export class UpdateService {
     const { granted } = await AppUpdate.canInstall();
     this._canInstall.set(granted);
     if (granted) return true;
-    this.toast.show('Allow Music Hub to install apps, then press Update again.');
+    this.toast.show(this.i18n.t('update.allowInstalls'));
     const result = await AppUpdate.openInstallSettings();
     this._canInstall.set(result.granted);
     return result.granted;
@@ -253,11 +258,11 @@ export class UpdateService {
   actionLabel(): string {
     switch (this._status()) {
       case 'downloading':
-        return this._progress() >= 0 ? `${this._progress()}%` : 'Downloading…';
+        return this._progress() >= 0 ? `${this._progress()}%` : this.i18n.t('update.downloading');
       case 'ready':
-        return this.isNative ? 'Install' : 'Reload';
+        return this.i18n.t(this.isNative ? 'update.install' : 'update.reload');
       default:
-        return 'Update';
+        return this.i18n.t('update.update');
     }
   }
 

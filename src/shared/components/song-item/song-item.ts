@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { Cover } from '../../ui/cover/cover';
 import { LibraryService } from '../../services/library.service';
 import { SongModel } from '../../models/song.model';
+import { I18nService } from '../../services/i18n.service';
+import { TPipe } from '../../i18n/t.pipe';
 
 @Component({
   selector: 'app-song-item',
   standalone: true,
-  imports: [CommonModule, Cover],
+  imports: [CommonModule, Cover, TPipe],
   templateUrl: './song-item.html',
   styleUrl: './song-item.scss',
 })
@@ -36,7 +38,10 @@ export class SongItem {
   @Output() download = new EventEmitter<void>();
   @Output() removeDownload = new EventEmitter<void>();
 
-  constructor(public library: LibraryService) {}
+  constructor(
+    public library: LibraryService,
+    private i18n: I18nService
+  ) {}
 
   // One glyph summarising where the audio lives.
   //   ↑  only on this device, can be uploaded
@@ -44,16 +49,22 @@ export class SongItem {
   //   ●  in the cloud and available offline
   badge = computed(() => {
     const song = this.song();
-    if (song.syncState === 'uploading') return { icon: '⋯', title: 'Uploading…', kind: 'busy' };
-    if (song.syncState === 'downloading') return { icon: '⋯', title: 'Downloading…', kind: 'busy' };
+    const t = (key: string) => this.i18n.t(key);
+    if (song.syncState === 'uploading')
+      return { icon: '⋯', title: t('song.badge.uploading'), kind: 'busy' };
+    if (song.syncState === 'downloading')
+      return { icon: '⋯', title: t('song.badge.downloading'), kind: 'busy' };
     if (song.syncState === 'local-only')
-      return this.canUpload()
-        ? { icon: '↑', title: 'On this device only — tap to upload', kind: 'local' }
-        : { icon: '↑', title: 'On this device only', kind: 'local' };
-    if (song.downloaded) return { icon: '●', title: 'In the cloud, available offline', kind: 'offline' };
+      return {
+        icon: '↑',
+        title: t(this.canUpload() ? 'song.badge.localOnlyTapUpload' : 'song.badge.localOnly'),
+        kind: 'local',
+      };
+    if (song.downloaded) return { icon: '●', title: t('song.badge.offline'), kind: 'offline' };
     // A song added from a URL has no stored audio, so it can only stream.
-    if (!song.storagePath) return { icon: '☁', title: 'Streams from a link — needs a connection', kind: 'cloud' };
-    return { icon: '⬇', title: 'In the cloud — tap to download for offline', kind: 'cloud' };
+    if (!song.storagePath)
+      return { icon: '☁', title: t('song.badge.streamsFromLink'), kind: 'cloud' };
+    return { icon: '⬇', title: t('song.badge.cloudTapDownload'), kind: 'cloud' };
   });
 
   // Cloud song with no local copy: unplayable without a connection.

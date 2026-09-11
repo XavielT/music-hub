@@ -1,5 +1,5 @@
 <div class="playlist-details" *ngIf="playlist() as p">
-  <button class="playlist-details__back" (click)="back()">‹ Back</button>
+  <button class="playlist-details__back" (click)="back()">‹ {{ 'common.back' | t }}</button>
 
   <!-- Header -->
   <header class="playlist-details__header">
@@ -9,55 +9,54 @@
     <div class="playlist-details__meta">
       <h1 class="playlist-details__name">{{ p.name }}</h1>
       <p class="playlist-details__count">
-        {{ p.songIds.length }} songs
+        {{ 'common.songs' | t: { count: p.songIds.length } }}
         <span class="playlist-details__by" *ngIf="library.playlistOwnerLabel(p) as who">
-          · shared by {{ who }}
+          · {{ 'playlist.sharedBy' | t: { name: who } }}
         </span>
       </p>
       <div class="playlist-details__actions">
-        <button class="playlist-details__play" (click)="playAll()" [disabled]="songs().length === 0">▶ Play</button>
+        <button class="playlist-details__play" (click)="playAll()" [disabled]="songs().length === 0">▶ {{ 'common.play' | t }}</button>
         <button
           class="playlist-details__shuffle"
           (click)="shuffleAll()"
           [disabled]="songs().length === 0"
-          title="Play this playlist in random order"
+          [title]="'playlist.shuffleTitle' | t"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
           </svg>
-          Shuffle
+          {{ 'common.shuffle' | t }}
         </button>
         <button
           class="playlist-details__download"
           (click)="downloadAll()"
           [disabled]="sync.uploading() || offlineCount() === songs().length"
-          title="Download every song for offline listening"
+          [title]="'playlist.downloadAllTitle' | t"
         >
-          {{ offlineCount() === songs().length && songs().length > 0 ? '✓ Offline' : '⬇ Download' }}
+          {{ offlineCount() === songs().length && songs().length > 0 ? '✓ ' + ('playlist.offline' | t) : '⬇ ' + ('playlist.download' | t) }}
         </button>
         <button
           class="playlist-details__share"
           *ngIf="library.canManagePlaylist(p)"
           [class.on]="p.isShared"
           (click)="toggleShared()"
-          [title]="p.isShared ? 'Stop sharing with the household' : 'Let everyone see and add to this playlist'"
+          [title]="p.isShared ? ('playlist.stopSharing' | t) : ('playlist.startSharing' | t)"
         >
-          {{ p.isShared ? '✓ Shared' : 'Share' }}
+          {{ p.isShared ? '✓ ' + ('playlist.shared' | t) : ('playlist.share' | t) }}
         </button>
         <button
           class="playlist-details__delete"
           *ngIf="library.canManagePlaylist(p)"
           (click)="deletePlaylist()"
         >
-          Delete
+          {{ 'common.delete' | t }}
         </button>
       </div>
       <p class="playlist-details__hint" *ngIf="p.isShared && library.canManagePlaylist(p)">
-        Everyone in the household can see this and add songs to it. Only you can rename, unshare
-        or delete it.
+        {{ 'playlist.ownerHint' | t }}
       </p>
       <p class="playlist-details__hint" *ngIf="!library.canManagePlaylist(p)">
-        A shared playlist — you can add and remove songs, and everyone sees the change.
+        {{ 'playlist.guestHint' | t }}
       </p>
     </div>
   </header>
@@ -80,7 +79,7 @@
       (removeDownload)="library.removeDownload(song)"
     ></app-song-item>
     <p class="playlist-details__empty" *ngIf="songs().length === 0">
-      This playlist is empty. Add songs from Search or Library with the ＋ button.
+      {{ 'playlist.empty' | t }}
     </p>
   </div>
 

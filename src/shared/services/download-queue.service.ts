@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { CompanionService } from './companion.service';
 import { LibraryService } from './library.service';
 import { ToastService } from './toast.service';
+import { I18nService } from './i18n.service';
 import { YoutubeResult } from './youtube.service';
 import { DownloadRequestRow, isActive, requestLabel } from '../models/download-request.model';
 
@@ -72,7 +73,8 @@ export class DownloadQueueService {
     private auth: AuthService,
     private companion: CompanionService,
     private library: LibraryService,
-    private toast: ToastService
+    private toast: ToastService,
+    private i18n: I18nService
   ) {}
 
   start(): void {
@@ -141,7 +143,7 @@ export class DownloadQueueService {
       });
       if (error) throw error;
       await this.load();
-      this.toast.show('Asked for that song — it will appear in the library once it is fetched.');
+      this.toast.show(this.i18n.t('add.requestSent'));
       this.kick();
       return true;
     } catch (err) {
@@ -275,7 +277,7 @@ export class DownloadQueueService {
     const code = (err as { code?: string })?.code;
     const message = err instanceof Error ? err.message : String(err);
     if (code === '23505' || /duplicate key/i.test(message)) {
-      return 'That song is already in the queue.';
+      return this.i18n.t('add.queuedAlready');
     }
     if (code === '42501' || /row-level security/i.test(message)) {
       return `You already have ${MAX_ACTIVE_PER_MEMBER} songs waiting — let those finish first.`;

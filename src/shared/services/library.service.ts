@@ -11,6 +11,7 @@ import {
 } from './cloud-library.service';
 import { ArtworkService } from './artwork.service';
 import { ToastService } from './toast.service';
+import { I18nService } from './i18n.service';
 import { AppSettingsService } from './app-settings.service';
 import { SongModel, normalizeSong } from '../models/song.model';
 import { PlaylistModel, normalizePlaylist } from '../models/playlist.model';
@@ -55,7 +56,8 @@ export class LibraryService {
     private auth: AuthService,
     private toast: ToastService,
     private settings: AppSettingsService,
-    private artwork: ArtworkService
+    private artwork: ArtworkService,
+    private i18n: I18nService
   ) {}
 
   whenReady(): Promise<void> {
@@ -238,7 +240,11 @@ export class LibraryService {
     const perSong = this.settings.maxUploadBytes();
     if (file.size > perSong) {
       this.toast.error(
-        `"${song.title}" is ${formatMb(file.size)} MB — bigger than the ${this.settings.maxUploadMb()} MB limit for one song, so it stays on this device.`
+        this.i18n.t('library.tooBig', {
+          title: song.title,
+          size: formatMb(file.size),
+          limit: this.settings.maxUploadMb(),
+        })
       );
       return false;
     }
@@ -326,7 +332,7 @@ export class LibraryService {
 
   async removeDownload(song: SongModel): Promise<void> {
     if (song.syncState !== 'synced') {
-      this.toast.error('This song is only on this device — uploading it first would delete it for good.');
+      this.toast.error(this.i18n.t('library.wouldDeleteForGood'));
       return;
     }
     await this.db.delete('files', song.id);
@@ -363,7 +369,7 @@ export class LibraryService {
         return; // keep it locally rather than drift out of sync
       }
     } else if (shared) {
-      this.toast.error('You are offline — delete this song again when you have a connection.');
+      this.toast.error(this.i18n.t('library.offlineDelete'));
       return;
     }
 
@@ -719,7 +725,7 @@ export class LibraryService {
       try {
         await this.cloud.deletePlaylist(id);
       } catch (err) {
-        this.toast.error('The playlist was removed here but not in the cloud.');
+        this.toast.error(this.i18n.t('library.playlistLocalOnly'));
         console.warn('deletePlaylist failed', err);
       }
     }

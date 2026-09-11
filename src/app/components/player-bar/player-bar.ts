@@ -1,9 +1,11 @@
 import { Component, computed, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LibraryService } from '../../../shared/services/library.service';
+import { I18nService } from '../../../shared/services/i18n.service';
 import { PlayerService, SleepChoice } from '../../../shared/services/player.service';
 import { coverTint } from '../../../shared/services/cover-color';
 import { Cover } from '../../../shared/ui/cover/cover';
+import { TPipe } from '../../../shared/i18n/t.pipe';
 
 // A swipe has to be long enough not to be a tap that wandered, and clearly
 // more horizontal than vertical (or the reverse) not to be the other gesture.
@@ -15,7 +17,7 @@ const SWIPE_MAX_MS = 700;
 @Component({
   selector: 'app-player-bar',
   standalone: true,
-  imports: [CommonModule, Cover],
+  imports: [CommonModule, Cover, TPipe],
   templateUrl: './player-bar.html',
   styleUrl: './player-bar.scss',
 })
@@ -24,22 +26,24 @@ export class PlayerBar {
   showQueue = signal(false);
   showSleep = signal(false);
 
-  readonly sleepChoices: { label: string; value: SleepChoice }[] = [
-    { label: '15 min', value: 15 },
-    { label: '30 min', value: 30 },
-    { label: '45 min', value: 45 },
-    { label: '1 hour', value: 60 },
-    { label: 'End of song', value: 'end' },
-  ];
+  // Computed rather than a constant list: the labels have to follow a
+  // language switch like everything else on the screen.
+  sleepChoices = computed<{ label: string; value: SleepChoice }[]>(() => [
+    { label: this.i18n.t('player.sleepMinutes', { count: 15 }), value: 15 },
+    { label: this.i18n.t('player.sleepMinutes', { count: 30 }), value: 30 },
+    { label: this.i18n.t('player.sleepMinutes', { count: 45 }), value: 45 },
+    { label: this.i18n.t('player.sleepHour'), value: 60 },
+    { label: this.i18n.t('player.sleepEndOfSong'), value: 'end' },
+  ]);
 
   repeatLabel = computed(() => {
     switch (this.player.repeat()) {
       case 'all':
-        return 'Repeat queue';
+        return this.i18n.t('player.repeatQueue');
       case 'one':
-        return 'Repeat this song';
+        return this.i18n.t('player.repeatThisSong');
       default:
-        return 'Repeat off';
+        return this.i18n.t('player.repeatOff');
     }
   });
 
@@ -47,11 +51,13 @@ export class PlayerBar {
 
   // "42 min" while it is counting, "End of song" when that is what was picked.
   sleepLabel = computed(() => {
-    if (this.player.sleepAtEnd()) return 'End of song';
+    if (this.player.sleepAtEnd()) return this.i18n.t('player.sleepEndOfSong');
     const left = this.player.sleepRemainingMs();
-    if (left == null) return 'Sleep';
+    if (left == null) return this.i18n.t('player.sleep');
     const minutes = Math.ceil(left / 60_000);
-    return minutes > 1 ? `${minutes} min` : `${Math.ceil(left / 1000)} s`;
+    return minutes > 1
+      ? this.i18n.t('player.sleepMinutes', { count: minutes })
+      : this.i18n.t('player.sleepSeconds', { count: Math.ceil(left / 1000) });
   });
 
   // The colour pulled out of the current cover, for the full player's ground.
@@ -75,7 +81,11 @@ export class PlayerBar {
   // A swipe ends in a click the browser sends anyway; this eats that one.
   private swallowClick = false;
 
-  constructor(public player: PlayerService, public library: LibraryService) {
+  constructor(
+    public player: PlayerService,
+    public library: LibraryService,
+    private i18n: I18nService
+  ) {
     // Only while the full player is open: sampling a canvas for a bar four
     // rows tall that shows none of it would be work for nothing.
     effect(() => {

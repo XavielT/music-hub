@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../shared/services/auth.service';
-import { LISTENER_NOTE } from '../../../shared/models/listener-note';
 import { LibraryService, SongGroup } from '../../../shared/services/library.service';
 import { PlayerService } from '../../../shared/services/player.service';
 import { SyncService } from '../../../shared/services/sync.service';
@@ -12,19 +11,18 @@ import { SongEditor } from '../../../shared/components/song-editor/song-editor';
 import { PlaylistPicker } from '../../../shared/components/playlist-picker/playlist-picker';
 import { Cover } from '../../../shared/ui/cover/cover';
 import { SongModel } from '../../../shared/models/song.model';
+import { TPipe } from '../../../shared/i18n/t.pipe';
 
 type LibraryTab = 'songs' | 'artists' | 'albums' | 'playlists';
 
 @Component({
   selector: 'app-library',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, SongItem, SongEditor, PlaylistPicker, Cover],
+  imports: [CommonModule, RouterLink, FormsModule, SongItem, SongEditor, PlaylistPicker, Cover, TPipe],
   templateUrl: './library.html',
   styleUrl: './library.scss',
 })
 export class LibraryComponent {
-  readonly listenerNote = LISTENER_NOTE;
-
   editing = signal<SongModel | null>(null);
   tab = signal<LibraryTab>('songs');
   selectedGroup = signal<SongGroup | null>(null);
