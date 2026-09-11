@@ -435,3 +435,14 @@
   background: transparent;
   color: var(--main-ultra-light);
 }
+
+// How much of the shared budget this account has left.
+.add-music-share {
+  font-size: 0.82rem;
+  color: var(--main-ultra-light);
+  margin-top: 6px;
+
+  strong {
+    color: inherit;
+  }
+}

@@ -131,3 +131,14 @@
     }
   }
 }
+
+// Uploaded, but waiting on an admin — only its uploader sees this at all.
+.song-item-pending {
+  color: var(--Hub);
+  font-style: normal;
+  font-size: 0.72rem;
+}
+
+.song-item-badge.is-pending {
+  color: var(--Hub);
+}

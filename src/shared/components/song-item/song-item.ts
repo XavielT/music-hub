@@ -50,6 +50,11 @@ export class SongItem {
   badge = computed(() => {
     const song = this.song();
     const t = (key: string) => this.i18n.t(key);
+    // Uploaded, but an admin has not let it in yet. Checked before the sync
+    // states because it is the more surprising fact about the song: it is in
+    // the cloud and still nobody else can see it.
+    if (song.pendingApproval)
+      return { icon: '◷', title: t('share.pendingNote'), kind: 'pending' };
     if (song.syncState === 'uploading')
       return { icon: '⋯', title: t('song.badge.uploading'), kind: 'busy' };
     if (song.syncState === 'downloading')

@@ -21,6 +21,7 @@ import {
 import { TPipe } from '../../../shared/i18n/t.pipe';
 import { LinkFill, LinkFilled } from '../../../shared/components/link-fill/link-fill';
 import { WantedService, WantedSong } from '../../../shared/services/wanted.service';
+import { AllowanceService } from '../../../shared/services/allowance.service';
 
 interface PendingSong {
   file: File;
@@ -116,6 +117,7 @@ export class AddMusicComponent implements OnDestroy {
     public capture: YoutubeCaptureService,
     public queue: DownloadQueueService,
     public wanted: WantedService,
+    public allowance: AllowanceService,
     private i18n: I18nService
   ) {}
 

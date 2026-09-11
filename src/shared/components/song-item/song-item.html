@@ -7,6 +7,7 @@
     <span class="song-item-artist">
       {{ song().artist }}
       <em class="song-item-offline-hint" *ngIf="needsConnection()">· {{ 'song.needsConnection' | t }}</em>
+      <em class="song-item-pending" *ngIf="song().pendingApproval">· {{ 'share.pendingBadge' | t }}</em>
     </span>
   </div>
   <span class="song-item-duration">{{ formatDuration(song().duration) }}</span>

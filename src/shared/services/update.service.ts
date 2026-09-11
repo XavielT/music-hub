@@ -227,7 +227,7 @@ export class UpdateService {
     } catch (e) {
       // Back to a state the button can retry from.
       this._status.set(this.downloadedPath ? 'ready' : 'available');
-      const message = e instanceof Error ? e.message : 'The update could not be installed.';
+      const message = e instanceof Error ? e.message : this.i18n.t('update.installFailed');
       this._error.set(message);
       this.toast.error(message);
     }

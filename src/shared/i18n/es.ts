@@ -454,6 +454,10 @@ export const ES: Record<TranslationKey, string> = {
   'update.reload': 'Recargar',
   'update.banner': 'Hay una versión nueva de Music Hub lista.',
 
+  'update.installFailed': 'No se pudo instalar la actualización.',
+  'companion.badToken': 'El companion rechazó el token.',
+  'companion.unreachable': 'No se pudo conectar con el companion — puede estar dormido, la dirección puede estar mal, o la CSP del sitio lo está bloqueando.',
+
   // --- artwork ------------------------------------------------------------
   'artwork.missing': '{count} canción(es) no tienen portada.',
   'artwork.searching': 'Buscando…',
@@ -485,6 +489,7 @@ export const ES: Record<TranslationKey, string> = {
     'Esta canción está solo en este dispositivo — subirla primero la eliminaría para siempre.',
   'library.offlineDelete':
     'Estás sin conexión — vuelve a eliminar esta canción cuando tengas internet.',
+  'library.sharedNotYours': 'Esta canción es de la biblioteca compartida — solo Xaviel puede quitarla. Toca ● para liberar espacio en este dispositivo.',
   'library.playlistLocalOnly': 'La playlist se quitó aquí pero no en la nube.',
   'library.tooBig':
     '"{title}" ocupa {size} MB — más que el límite de {limit} MB por canción, así que se queda en este dispositivo.',
@@ -541,6 +546,37 @@ export const ES: Record<TranslationKey, string> = {
   'wanted.foundOne': '"{title}" está en tu lista de deseos — ¿la marco como conseguida?',
   'wanted.markIt': 'Márcala',
   'wanted.notNow': 'Ahora no',
+
+  // --- contributing to the shared library ---------------------------------
+  'share.yourShare': 'Tu parte',
+  'share.usedOf': '{used} de {quota} usados',
+  'share.unlimited': 'Sin límite — la biblioteca es tuya.',
+  'share.nearlyFull': 'Casi has gastado toda tu parte. Pídele más sitio a Xaviel, o quita algo que hayas subido.',
+  'share.uploadToShared': 'Añadir a la biblioteca compartida',
+  'share.waitsForApproval':
+    'Las canciones que añadas esperan a que Xaviel las deje entrar. En cuanto lo haga, las ve todo el mundo.',
+  'share.pending': 'Esperando aprobación',
+  'share.pendingBadge': 'pendiente',
+  'share.pendingNote': 'Hasta que se apruebe, solo la ves tú.',
+  'share.withdraw': 'Retirar',
+  'share.overQuota': 'Eso es más de lo que cabe en tu parte.',
+
+  'admin.tab.pending': 'Pendientes',
+  'admin.pendingHeading': 'Esperando entrar en la biblioteca',
+  'admin.pendingNote':
+    'Canciones que han subido los miembros. Nadie más que quien la subió puede verla hasta que la apruebes; rechazarla elimina la canción y su audio.',
+  'admin.pendingEmpty': 'No hay nada esperando.',
+  'admin.approve': 'Aprobar',
+  'admin.reject': 'Rechazar',
+  'admin.approved': 'Aprobada — ya la ve todo el mundo.',
+  'admin.rejected': 'Rechazada y eliminada.',
+  'admin.uploadedBy': 'la añadió {name}',
+  'admin.memberQuota': 'Cuánto puede añadir cada miembro',
+  'admin.memberQuotaHint':
+    'Se aplica a quien no tenga una cifra propia. Los administradores no tienen límite. Lo que tengan pendiente también cuenta.',
+  'admin.quotaFor': 'Parte de {name}',
+  'admin.quotaDefault': 'lo que diga la biblioteca',
+  'admin.quotaSaved': 'Guardado — esa es su nueva parte.',
 
   // --- welcome box --------------------------------------------------------
   'welcome.languageTitle': 'Elige tu idioma',

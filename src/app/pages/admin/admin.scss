@@ -387,3 +387,46 @@ input[type='text'] {
   gap: 8px;
   margin-top: 12px;
 }
+
+// --- pending uploads ---
+
+.admin-tab-count {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--Hub);
+  color: var(--on-Hub);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.admin-pending {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.admin-pending-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-pending-title {
+  font-size: 0.94rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-pending-meta {
+  font-size: 0.78rem;
+  color: var(--main-ultra-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -352,10 +352,12 @@ export class LibraryService {
 
     // A shared song belongs to the library, not to the member looking at it.
     // Freeing space on their own device is what they actually want.
-    if (shared && !this.auth.isAdmin()) {
-      this.toast.error(
-        'This song is part of the shared library — only Xaviel can remove it. Tap ● to free up space on this device.'
-      );
+    //
+    // The exception is your own upload that nobody has approved yet: withdrawing
+    // that is not removing something from the household's library, because it
+    // was never in it. The policy allows exactly this pair, and so does this.
+    if (shared && !this.auth.isAdmin() && !this.isMyPending(song!)) {
+      this.toast.error(this.i18n.t('library.sharedNotYours'));
       return;
     }
 
@@ -544,15 +546,27 @@ export class LibraryService {
     }
   }
 
-  // A song in the shared library is only writable by an admin — a member's
-  // edit stays on their own device rather than failing against RLS.
+  /**
+   * Whether an edit can reach the cloud row, or has to stay on this device.
+   *
+   * An admin may write any song. Anyone else may write exactly one kind: their
+   * own upload, while it is still waiting for approval — which is the window
+   * where fixing a wrong title actually matters, since nobody else has seen it
+   * yet. Once it is approved it belongs to the household and only an admin
+   * touches it. Both halves match the policy; the UI only mirrors it.
+   */
   canPushEdits(song: SongModel): boolean {
-    return song.syncState === 'synced' && this.auth.isAdmin() && this.online();
+    return song.syncState === 'synced' && this.online() && (this.auth.isAdmin() || this.isMyPending(song));
   }
 
   // Whether the edit dialog should be offered at all.
   canEdit(song: SongModel): boolean {
-    return song.syncState !== 'synced' || this.auth.isAdmin();
+    return song.syncState !== 'synced' || this.auth.isAdmin() || this.isMyPending(song);
+  }
+
+  /** My own upload, not yet let into the shared library. */
+  isMyPending(song: SongModel): boolean {
+    return song.pendingApproval === true && !!song.ownerId && song.ownerId === this.auth.user()?.id;
   }
 
   // Songs with no artwork from any source yet, and not already looked up.
@@ -820,6 +834,9 @@ export class LibraryService {
       hasCover: existing?.hasCover ?? false,
       artworkChecked: existing?.artworkChecked,
       dirty: existing?.dirty,
+      // The row is only visible to its uploader and to admins while this is
+      // true, so it is safe to keep on the device and show as pending.
+      pendingApproval: row.approved === false,
     };
     await this.db.put('songs', song);
     this._songs.update(list => {

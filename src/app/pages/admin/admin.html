@@ -28,6 +28,10 @@
 
   <div class="admin-tabs">
     <button class="admin-tab" [class.active]="tab() === 'users'" (click)="tab.set('users')">{{ 'admin.tab.users' | t }}</button>
+    <button class="admin-tab" [class.active]="tab() === 'pending'" (click)="tab.set('pending')">
+      {{ 'admin.tab.pending' | t }}
+      <span class="admin-tab-count" *ngIf="pendingSongs.items().length">{{ pendingSongs.items().length }}</span>
+    </button>
     <button class="admin-tab" [class.active]="tab() === 'invites'" (click)="tab.set('invites')">{{ 'admin.tab.invites' | t }}</button>
     <button class="admin-tab" [class.active]="tab() === 'settings'" (click)="tab.set('settings')">{{ 'admin.tab.settings' | t }}</button>
   </div>
@@ -88,6 +92,43 @@
     </article>
   </section>
 
+  <!-- Pending uploads -->
+  <section class="admin-section" *ngIf="tab() === 'pending'">
+    <p class="admin-note">{{ 'admin.pendingNote' | t }}</p>
+    <p class="admin-error" *ngIf="pendingSongs.error()">{{ pendingSongs.error() }}</p>
+    <p class="admin-note" *ngIf="pendingSongs.loading() && pendingSongs.items().length === 0">
+      {{ 'common.loading' | t }}
+    </p>
+    <p class="admin-note" *ngIf="!pendingSongs.loading() && pendingSongs.items().length === 0">
+      {{ 'admin.pendingEmpty' | t }}
+    </p>
+
+    <article class="admin-pending" *ngFor="let item of pendingSongs.items()">
+      <div class="admin-pending-who">
+        <span class="admin-pending-title">{{ item.title }}</span>
+        <span class="admin-pending-meta">
+          {{ item.artist }}<ng-container *ngIf="item.album"> · {{ item.album }}</ng-container>
+          · {{ formatBytes(item.size_bytes) }}
+        </span>
+        <span class="admin-pending-meta">{{ 'admin.uploadedBy' | t: { name: item.uploader || '—' } }}</span>
+      </div>
+      <button
+        class="admin-btn"
+        (click)="approve(item)"
+        [disabled]="pendingSongs.busyWith() === item.id"
+      >
+        {{ 'admin.approve' | t }}
+      </button>
+      <button
+        class="admin-btn admin-btn--danger"
+        (click)="reject(item)"
+        [disabled]="pendingSongs.busyWith() === item.id"
+      >
+        {{ confirmingReject() === item.id ? ('common.confirm' | t) : ('admin.reject' | t) }}
+      </button>
+    </article>
+  </section>
+
   <!-- Invites -->
   <section class="admin-section" *ngIf="tab() === 'invites'">
     <p class="admin-note">
@@ -132,6 +173,24 @@
       <em>
         {{ 'admin.maxUploadHint' | t: { quota: quotaLabel } }}
       </em>
+    </label>
+
+    <label class="admin-field">
+      <span>{{ 'admin.memberQuota' | t }}</span>
+      <div class="admin-field-row">
+        <input
+          type="number"
+          min="1"
+          max="1024"
+          [ngModel]="memberQuotaMb()"
+          (ngModelChange)="memberQuotaMb.set($event)"
+        />
+        <span class="admin-unit">MB</span>
+        <button class="admin-btn" (click)="saveMemberQuota()" [disabled]="settings.saving()">
+          {{ 'common.save' | t }}
+        </button>
+      </div>
+      <em>{{ 'admin.memberQuotaHint' | t }}</em>
     </label>
 
     <label class="admin-field">

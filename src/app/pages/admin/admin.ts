@@ -10,6 +10,7 @@ import { ToastService } from '../../../shared/services/toast.service';
 import { STORAGE_QUOTA_BYTES } from '../../../shared/services/cloud-library.service';
 import { UserRole } from '../../../shared/models/profile.model';
 import { I18nService } from '../../../shared/services/i18n.service';
+import { PendingSongsService, PendingSongRow } from '../../../shared/services/pending-songs.service';
 import { TPipe } from '../../../shared/i18n/t.pipe';
 
 /**
@@ -30,7 +31,7 @@ export class AdminComponent implements OnInit {
   readonly roles: UserRole[] = ['admin', 'member', 'listener'];
   readonly quotaLabel = formatBytes(STORAGE_QUOTA_BYTES);
 
-  tab = signal<'users' | 'invites' | 'settings'>('users');
+  tab = signal<'users' | 'pending' | 'invites' | 'settings'>('users');
 
   // Deleting takes a person's account and their songs with it, so it asks for
   // the name to be typed rather than for a second tap.
@@ -54,17 +55,62 @@ export class AdminComponent implements OnInit {
     public auth: AuthService,
     public invites: InvitesService,
     public settings: AppSettingsService,
+    public pendingSongs: PendingSongsService,
     private toast: ToastService,
     private router: Router,
     private i18n: I18nService
   ) {}
 
+  // The member quota, in whole MB, as the settings tab edits it.
+  memberQuotaMb = signal(0);
+
+  // Rejecting takes somebody's upload and its audio, so it asks twice.
+  confirmingReject = signal<string | null>(null);
+
+  async approve(item: PendingSongRow): Promise<void> {
+    if (await this.pendingSongs.approve(item.id)) {
+      this.toast.show(this.i18n.t('admin.approved'));
+      // The library gains a song the moment it is approved, and the panel's
+      // own totals are computed from the user overview.
+      void this.admin.load();
+    } else {
+      this.toast.error(this.pendingSongs.error() || this.i18n.t('admin.actionFailed'));
+    }
+  }
+
+  async reject(item: PendingSongRow): Promise<void> {
+    if (this.confirmingReject() !== item.id) {
+      this.confirmingReject.set(item.id);
+      return;
+    }
+    this.confirmingReject.set(null);
+    if (await this.pendingSongs.reject(item)) {
+      this.toast.show(this.i18n.t('admin.rejected'));
+      void this.admin.load();
+    } else {
+      this.toast.error(this.pendingSongs.error() || this.i18n.t('admin.actionFailed'));
+    }
+  }
+
+  async saveMemberQuota(): Promise<void> {
+    const mb = Math.round(this.memberQuotaMb());
+    if (!Number.isFinite(mb) || mb <= 0) {
+      this.toast.error(this.i18n.t('admin.badMegabytes'));
+      return;
+    }
+    const failed = await this.settings.save('member_quota_mb', mb);
+    if (failed) this.toast.error(failed);
+    else this.toast.show(this.i18n.t('admin.quotaSaved'));
+  }
+
   ngOnInit(): void {
     void this.admin.load();
+    void this.pendingSongs.load();
     void this.invites.load();
     void this.settings.load().then(() => {
       this.maxUploadMb.set(this.settings.maxUploadMb());
       this.language.set(this.settings.defaultLanguage());
+      this.memberQuotaMb.set(this.settings.memberQuotaMb());
     });
   }
 

@@ -209,6 +209,46 @@ Enforced in the database, not just the UI: `songs` and the `songs`/`covers` buck
 are readable by any signed-in member but writable only where `public.is_admin()`.
 Playlists stay per-person, so everyone curates their own from the shared songs.
 
+### Members can add to it too
+
+Uploading is no longer an admin's alone. A member may add to the shared library
+under two brakes, both in the database:
+
+**A share each.** `member_quota_mb` in `app_settings` (150 MB to start) is what
+one member may occupy, and `profiles.upload_quota_bytes` overrides it for one
+person. Admins have no ceiling — they are the ones deciding what the 1 GB is
+spent on. Enforced by a trigger rather than a policy, because a quota is a fact
+about *all* of somebody's rows, and a policy only ever sees the one being
+written. Pending uploads count against it: bytes in the bucket are bytes in the
+bucket.
+
+**An approval.** `songs.approved` is false on anything a non-admin inserts — the
+trigger sets it, whatever the insert asked for — and the read policy shows an
+unapproved row only to its uploader and to admins. So a member's upload is real,
+is theirs, and is invisible to the household until **Settings → Admin →
+Pending** lets it in. Rejecting deletes the row and its audio.
+
+While it waits it belongs to the uploader: they can fix the title, replace the
+cover, or withdraw it entirely. The moment it is approved it belongs to the
+household and only an admin touches it. `canEdit`, `canPushEdits` and the delete
+path all mirror that pair, and there are tests pinning the mirror — it is the
+half that drifts and starts offering buttons the database will refuse.
+
+The order matters and is load-bearing: the app inserts the `songs` row *before*
+uploading the object, so an over-quota upload is refused before a single byte
+reaches the bucket, and the existing rollback removes anything a later failure
+left behind. Storage delete stays admin-only with one exception — the object of
+your own unapproved song — which is what lets a failed upload roll itself back
+and a member withdraw a submission, without handing anyone the ability to delete
+audio the household is listening to.
+
+Verified against the live policies by impersonating each role in rolled-back
+transactions: existing songs stayed visible when the column landed, an admin
+upload is unlimited and live immediately, a member's is forced pending and
+refused at 400 MB against a 150 MB share (counting what they already had
+waiting), a member cannot approve their own, another member cannot see it at
+all, and a listener is still refused outright.
+
 ### Who can do what
 
 Three roles, on `profiles.role`:

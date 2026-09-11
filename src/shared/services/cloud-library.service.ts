@@ -20,6 +20,9 @@ export interface SongRow {
   cover_path: string | null;
   cover_color: string;
   size_bytes: number;
+  // False while an admin has not yet let it into the shared library. Only the
+  // uploader and an admin can see a row in that state at all.
+  approved: boolean;
   created_at: string;
 }
 
@@ -42,7 +45,7 @@ export interface PlaylistSongRow {
 }
 
 const SONG_COLUMNS =
-  'id, owner_id, title, artist, album, duration, storage_path, remote_url, cover_url, cover_path, cover_color, size_bytes, created_at';
+  'id, owner_id, title, artist, album, duration, storage_path, remote_url, cover_url, cover_path, cover_color, size_bytes, approved, created_at';
 const PLAYLIST_COLUMNS = 'id, owner_id, name, cover_color, is_shared, created_at';
 
 // navigator.onLine is unreliable in the Android WebView: it keeps reporting
@@ -293,16 +296,28 @@ export class CloudLibraryService {
     return data;
   }
 
-  async deleteSong(song: SongModel): Promise<void> {
-    if (song.coverPath) {
-      const { error } = await this.client.storage.from(COVER_BUCKET).remove([song.coverPath]);
+  /**
+   * Removes the two objects a song can own, without touching its row.
+   *
+   * Split out of deleteSong because rejecting a pending upload needs exactly
+   * this half: the objects have to go before the row, since once the row is
+   * gone nothing records which files were its and they would sit in the bucket
+   * with nothing pointing at them.
+   */
+  async removeObjects(storagePath: string | null, coverPath: string | null): Promise<void> {
+    if (coverPath) {
+      const { error } = await this.client.storage.from(COVER_BUCKET).remove([coverPath]);
       if (error) console.warn('cover remove failed', error.message);
     }
-    if (song.storagePath) {
-      const { error } = await this.client.storage.from(AUDIO_BUCKET).remove([song.storagePath]);
+    if (storagePath) {
+      const { error } = await this.client.storage.from(AUDIO_BUCKET).remove([storagePath]);
       // A missing object should not block deleting the row.
       if (error) console.warn('storage remove failed', error.message);
     }
+  }
+
+  async deleteSong(song: SongModel): Promise<void> {
+    await this.removeObjects(song.storagePath ?? null, song.coverPath ?? null);
     const { error } = await this.client.from('songs').delete().eq('id', song.id);
     if (error) throw new Error(error.message);
     this.signedUrls.delete(song.id);

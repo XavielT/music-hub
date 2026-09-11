@@ -155,18 +155,30 @@
     </ng-container>
 
     <!-- Worth knowing before it goes into a 1 GB budget everyone shares. -->
-    <p class="add-music-heavy" *ngIf="pendingSaving() > 0 && auth.isAdmin()">
+    <p class="add-music-heavy" *ngIf="pendingSaving() > 0 && auth.canAddToLibrary()">
       <span
         [innerHTML]="'add.heavyWarning' | t: { count: heavyPending().length, size: bytes(pendingSaving()) }"
       ></span>
     </p>
 
-    <label class="add-music-cloud" *ngIf="pending().length > 0 && auth.isAdmin()">
+    <label class="add-music-cloud" *ngIf="pending().length > 0 && auth.canAddToLibrary()">
       <input type="checkbox" [checked]="uploadToCloud()" (change)="uploadToCloud.set($any($event.target).checked)" />
-      <span>{{ 'add.uploadToShared' | t }}</span>
+      <span>{{ (auth.isAdmin() ? 'add.uploadToShared' : 'share.uploadToShared') | t }}</span>
     </label>
-    <p class="add-music-cloud-note" *ngIf="pending().length > 0 && !auth.isAdmin()">
-      {{ 'add.staysOnDevice' | t }}
+    <!-- A member's upload is held until an admin lets it in, which is worth
+         saying before they tap save rather than after. -->
+    <p class="add-music-cloud-note" *ngIf="pending().length > 0 && auth.canAddToLibrary() && !auth.isAdmin()">
+      {{ 'share.waitsForApproval' | t }}
+    </p>
+
+    <!-- Your share of the shared budget, for anyone who has one. -->
+    <p class="add-music-share" *ngIf="auth.canAddToLibrary() && !allowance.unlimited() && allowance.loaded()">
+      <strong>{{ 'share.yourShare' | t }}</strong>
+      ·
+      {{ 'share.usedOf' | t: { used: bytes(allowance.usedBytes()), quota: bytes(allowance.quotaBytes() ?? 0) } }}
+    </p>
+    <p class="add-music-cloud-note" *ngIf="allowance.nearlyFull() && !allowance.unlimited()">
+      {{ 'share.nearlyFull' | t }}
     </p>
 
     <!-- Said once, here, where someone would otherwise go looking for the

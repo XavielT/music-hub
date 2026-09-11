@@ -444,6 +444,10 @@ export const EN = {
   'update.reload': 'Reload',
   'update.banner': 'A new version of Music Hub is ready.',
 
+  'update.installFailed': 'The update could not be installed.',
+  'companion.badToken': 'The companion rejected the token.',
+  'companion.unreachable': 'Could not reach the companion — it may be asleep, the address may be wrong, or the site’s CSP may be blocking it.',
+
   // --- artwork ------------------------------------------------------------
   'artwork.missing': '{count} song(s) have no cover art.',
   'artwork.searching': 'Searching…',
@@ -474,6 +478,7 @@ export const EN = {
   'library.wouldDeleteForGood':
     'This song is only on this device — uploading it first would delete it for good.',
   'library.offlineDelete': 'You are offline — delete this song again when you have a connection.',
+  'library.sharedNotYours': 'This song is part of the shared library — only Xaviel can remove it. Tap ● to free up space on this device.',
   'library.playlistLocalOnly': 'The playlist was removed here but not in the cloud.',
   'library.tooBig':
     '"{title}" is {size} MB — bigger than the {limit} MB limit for one song, so it stays on this device.',
@@ -529,6 +534,36 @@ export const EN = {
   'wanted.foundOne': '"{title}" is on your wanted list — mark it as found?',
   'wanted.markIt': 'Mark it',
   'wanted.notNow': 'Not now',
+
+  // --- contributing to the shared library ---------------------------------
+  'share.yourShare': 'Your share',
+  'share.usedOf': '{used} of {quota} used',
+  'share.unlimited': 'No limit — you run the library.',
+  'share.nearlyFull': 'Almost all of your share is used. Ask Xaviel for more room, or remove something you uploaded.',
+  'share.uploadToShared': 'Add to the shared library',
+  'share.waitsForApproval': 'Songs you add wait for Xaviel to let them in. Everyone sees them once he does.',
+  'share.pending': 'Waiting for approval',
+  'share.pendingBadge': 'pending',
+  'share.pendingNote': 'Only you can see this until it is approved.',
+  'share.withdraw': 'Withdraw',
+  'share.overQuota': 'That is more than your share has room for.',
+
+  'admin.tab.pending': 'Pending',
+  'admin.pendingHeading': 'Waiting to join the library',
+  'admin.pendingNote':
+    'Songs members uploaded. Nobody but the uploader can see one until you approve it; rejecting removes the song and its audio.',
+  'admin.pendingEmpty': 'Nothing waiting.',
+  'admin.approve': 'Approve',
+  'admin.reject': 'Reject',
+  'admin.approved': 'Approved — everyone can see it now.',
+  'admin.rejected': 'Rejected and removed.',
+  'admin.uploadedBy': 'added by {name}',
+  'admin.memberQuota': 'How much each member may add',
+  'admin.memberQuotaHint':
+    'Applies to anyone without their own figure. Admins have no limit. Their pending uploads count against it too.',
+  'admin.quotaFor': 'Share for {name}',
+  'admin.quotaDefault': 'library default',
+  'admin.quotaSaved': 'Saved — that is their new share.',
 
   // --- welcome box --------------------------------------------------------
   'welcome.languageTitle': 'Choose your language',

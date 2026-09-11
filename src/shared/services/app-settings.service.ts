@@ -6,6 +6,9 @@ import { I18nService } from './i18n.service';
 // seeded rows, so an offline start behaves like an online one.
 export const DEFAULT_MAX_UPLOAD_MB = 60;
 export const DEFAULT_LANGUAGE = 'es';
+// What one member may add to the shared library, when they have no figure of
+// their own on the profile.
+export const DEFAULT_MEMBER_QUOTA_MB = 150;
 
 const CACHE_KEY = 'music-hub.app-settings';
 
@@ -24,6 +27,9 @@ export class AppSettingsService {
 
   private _defaultLanguage = signal(DEFAULT_LANGUAGE);
   defaultLanguage = this._defaultLanguage.asReadonly();
+
+  private _memberQuotaMb = signal(DEFAULT_MEMBER_QUOTA_MB);
+  memberQuotaMb = this._memberQuotaMb.asReadonly();
 
   private _saving = signal(false);
   saving = this._saving.asReadonly();
@@ -49,6 +55,8 @@ export class AppSettingsService {
       for (const row of data as { key: string; value: unknown }[]) {
         if (row.key === 'max_upload_mb') this._maxUploadMb.set(toNumber(row.value, DEFAULT_MAX_UPLOAD_MB));
         if (row.key === 'default_language') this._defaultLanguage.set(toText(row.value, DEFAULT_LANGUAGE));
+        if (row.key === 'member_quota_mb')
+          this._memberQuotaMb.set(toNumber(row.value, DEFAULT_MEMBER_QUOTA_MB));
       }
       this.i18n.applyDefault(this._defaultLanguage());
       this.writeCache();
@@ -59,7 +67,10 @@ export class AppSettingsService {
   }
 
   /** Admin-only in the database; a refusal comes back as an error to show. */
-  async save(key: 'max_upload_mb' | 'default_language', value: number | string): Promise<string | null> {
+  async save(
+    key: 'max_upload_mb' | 'default_language' | 'member_quota_mb',
+    value: number | string
+  ): Promise<string | null> {
     this._saving.set(true);
     try {
       const { error } = await this.supabase.client
@@ -67,6 +78,7 @@ export class AppSettingsService {
         .upsert({ key, value: value as never }, { onConflict: 'key' });
       if (error) return error.message;
       if (key === 'max_upload_mb') this._maxUploadMb.set(Number(value));
+      else if (key === 'member_quota_mb') this._memberQuotaMb.set(Number(value));
       else this._defaultLanguage.set(String(value));
       this.writeCache();
       return null;
@@ -81,9 +93,14 @@ export class AppSettingsService {
     try {
       const raw = localStorage.getItem(CACHE_KEY);
       if (!raw) return;
-      const cached = JSON.parse(raw) as { maxUploadMb?: number; defaultLanguage?: string };
+      const cached = JSON.parse(raw) as {
+        maxUploadMb?: number;
+        defaultLanguage?: string;
+        memberQuotaMb?: number;
+      };
       if (cached.maxUploadMb) this._maxUploadMb.set(cached.maxUploadMb);
       if (cached.defaultLanguage) this._defaultLanguage.set(cached.defaultLanguage);
+      if (cached.memberQuotaMb) this._memberQuotaMb.set(cached.memberQuotaMb);
     } catch {
       // Private mode, or something else wrote nonsense there: use the defaults.
     }
@@ -93,7 +110,11 @@ export class AppSettingsService {
     try {
       localStorage.setItem(
         CACHE_KEY,
-        JSON.stringify({ maxUploadMb: this._maxUploadMb(), defaultLanguage: this._defaultLanguage() })
+        JSON.stringify({
+          maxUploadMb: this._maxUploadMb(),
+          defaultLanguage: this._defaultLanguage(),
+          memberQuotaMb: this._memberQuotaMb(),
+        })
       );
     } catch {
       // Nothing to do: the values still hold for this session.

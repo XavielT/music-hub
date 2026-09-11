@@ -124,7 +124,7 @@ export class CompanionService {
       this._health.set(result);
       return result;
     } catch (err) {
-      const result = { ok: false, error: friendly(err) };
+      const result = { ok: false, error: friendly(err, this.i18n.t('companion.unreachable')) };
       this._health.set(result);
       return result;
     } finally {
@@ -186,7 +186,7 @@ export class CompanionService {
         body: body === undefined ? undefined : JSON.stringify(body),
       });
     } catch (err) {
-      throw new Error(friendly(err));
+      throw new Error(friendly(err, this.i18n.t('companion.unreachable')));
     }
     if (response.ok) return response;
 
@@ -195,18 +195,18 @@ export class CompanionService {
       .json()
       .then(payload => (payload as { detail?: string }).detail)
       .catch(() => undefined);
-    if (response.status === 401) throw new Error('The companion rejected the token.');
+    if (response.status === 401) throw new Error(this.i18n.t('companion.badToken'));
     throw new Error(detail || `The companion answered ${response.status}.`);
   }
 }
 
 // A failed fetch to a host that is asleep, gone, or blocked by the page's CSP
-// all look identical from here, so the message covers the three.
-function friendly(err: unknown): string {
+// all look identical from here, so one message covers the three. It is passed
+// in rather than looked up: this is a free function, with no service to reach
+// the dictionary through, and one argument is cheaper than making it a method.
+function friendly(err: unknown, unreachable: string): string {
   const message = err instanceof Error ? err.message : String(err);
-  return /failed to fetch|networkerror|load failed/i.test(message)
-    ? 'Could not reach the companion — it may be asleep, the address may be wrong, or the site’s CSP may be blocking it.'
-    : message;
+  return /failed to fetch|networkerror|load failed/i.test(message) ? unreachable : message;
 }
 
 function read(key: string): string {

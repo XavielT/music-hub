@@ -34,6 +34,9 @@ export interface SongModel {
   // pushes these and clears the flag; until then applyRow must not overwrite
   // the local title/artist/album with the cloud's older copy.
   dirty?: boolean;
+  // Uploaded to the shared library but waiting on an admin. Only its uploader
+  // and an admin can see it at all, and it is theirs alone until approved.
+  pendingApproval?: boolean;
 }
 
 // Songs stored before the cloud fields existed load without them. Fill in
@@ -53,6 +56,7 @@ export function normalizeSong(
     coverPath: raw.coverPath,
     artworkChecked: raw.artworkChecked,
     dirty: raw.dirty,
+    pendingApproval: raw.pendingApproval,
     // Derived from what is really in the store rather than trusted from the
     // record, the same way `downloaded` is: a cleared database would otherwise
     // leave every song pointing at art that is gone.
