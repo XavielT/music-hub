@@ -262,10 +262,25 @@ so the panel's buttons are a convenience, not the control. Deploy it with the
 Supabase MCP or `npx supabase functions deploy admin-users`; JWT verification stays
 on, and its CORS list is the app's origins.
 
-Verified by impersonating each role in SQL, inside rolled-back transactions: a member
-cannot promote themselves or touch another profile, a listener is refused songs and
-requests but keeps playlists, a disabled account reads zero rows everywhere, and the
-last admin cannot be demoted.
+Verified against the live project with a real throwaway member account, since SQL
+impersonation cannot exercise the Edge Function: all four privileged actions answer a
+member with 403, the anon key with 401, and a malformed token with 401. A member
+cannot promote themselves or touch another profile, a listener is refused songs,
+uploads and requests but keeps playlists, a disabled account reads zero rows
+everywhere, and the last admin cannot be demoted. The account was deleted afterwards.
+
+**Every library policy names `to authenticated`.** This is not decoration. The first
+cut of the listener/disabled work rewrote the round-2 policies and dropped that clause
+from each one, and a policy with no role list applies to `PUBLIC` — which includes
+`anon`. Since `is_disabled()` returns false for a caller with no profile, `not
+is_disabled()` passed for anyone holding the anon key, and that key is public by
+design: it ships in the Angular bundle. For a few commits the whole library was
+readable without signing in — song rows with their storage paths, the request queue,
+the bucket listing, signed URLs on demand, and the audio itself. Writes were never
+exposed (`is_admin()` is not executable by `anon`, so they errored rather than
+passed). Fixed in `restrict_library_reads_to_signed_in`; the helper functions had
+their default `PUBLIC EXECUTE` revoked in `harden_role_helper_grants` at the same
+time. If you rewrite a policy in this project, carry the role list with it.
 
 ### Requesting a song
 
