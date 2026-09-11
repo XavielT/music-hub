@@ -1,0 +1,74 @@
+<div class="welcome" *ngIf="visible()">
+  <div class="welcome-card">
+    <!-- Language ------------------------------------------------------->
+    <ng-container *ngIf="step() === 'language'">
+      <h2 class="welcome-title">{{ 'welcome.languageTitle' | t }}</h2>
+      <p class="welcome-body">{{ 'welcome.languageBody' | t }}</p>
+      <div class="welcome-langs">
+        <button
+          class="welcome-lang"
+          *ngFor="let option of languages"
+          [class.active]="i18n.lang() === option.value"
+          (click)="choose(option.value)"
+        >
+          {{ option.label }}
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- Display name --------------------------------------------------->
+    <ng-container *ngIf="step() === 'name'">
+      <h2 class="welcome-title">{{ 'welcome.nameTitle' | t }}</h2>
+      <p class="welcome-body">{{ 'welcome.nameBody' | t }}</p>
+      <input
+        class="welcome-input"
+        type="text"
+        autocomplete="name"
+        [placeholder]="'welcome.namePlaceholder' | t"
+        [(ngModel)]="name"
+        (keyup.enter)="next()"
+      />
+    </ng-container>
+
+    <!-- The tour ------------------------------------------------------->
+    <ng-container *ngIf="step() === 'tour-add'">
+      <span class="welcome-glyph" aria-hidden="true">＋</span>
+      <h2 class="welcome-title">{{ 'welcome.tourAddTitle' | t }}</h2>
+      <p class="welcome-body">{{ 'welcome.tourAddBody' | t }}</p>
+    </ng-container>
+
+    <ng-container *ngIf="step() === 'tour-offline'">
+      <span class="welcome-glyph" aria-hidden="true">⬇</span>
+      <h2 class="welcome-title">{{ 'welcome.tourOfflineTitle' | t }}</h2>
+      <p class="welcome-body">{{ 'welcome.tourOfflineBody' | t }}</p>
+    </ng-container>
+
+    <ng-container *ngIf="step() === 'tour-install'">
+      <span class="welcome-glyph" aria-hidden="true">♫</span>
+      <h2 class="welcome-title">{{ 'welcome.tourInstallTitle' | t }}</h2>
+      <p class="welcome-body">{{ 'welcome.tourInstallBody' | t }}</p>
+    </ng-container>
+
+    <!-- Progress ------------------------------------------------------->
+    <div class="welcome-dots" role="presentation">
+      <span
+        class="welcome-dot"
+        *ngFor="let s of steps; let i = index"
+        [class.on]="i === index()"
+        [class.done]="i < index()"
+      ></span>
+    </div>
+
+    <div class="welcome-actions">
+      <button class="welcome-text-btn" *ngIf="index() > 0" (click)="back()">
+        {{ 'welcome.back' | t }}
+      </button>
+      <button class="welcome-text-btn" *ngIf="index() === 0" (click)="skip()">
+        {{ 'welcome.skip' | t }}
+      </button>
+      <button class="welcome-next" (click)="next()">
+        {{ (isLast() ? 'welcome.finish' : 'welcome.next') | t }}
+      </button>
+    </div>
+  </div>
+</div>

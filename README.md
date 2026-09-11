@@ -574,6 +574,61 @@ the media session driven from a single wrapper that always reports whichever
 element is live — and crossfade only where `volume` is honoured, which rules
 out iOS by construction.
 
+## Languages (español / english)
+
+The whole UI speaks both, and switches at runtime — **Settings → Account →
+Idioma / Language**, labelled in both at once so it is findable whichever one
+the app is currently speaking.
+
+Angular's own i18n is compile-time, which would mean two builds and a reload to
+change language, so this is a small `I18nService`: a `lang` signal, a `t(key,
+params)` lookup, and a `t` pipe. Strings live in `src/shared/i18n/en.ts` and
+`es.ts`. `en.ts` defines `TranslationKey` and `es.ts` is typed as a complete
+`Record` of it, so a key added to one and forgotten in the other **fails the
+build** rather than showing English on somebody's phone. A test also fails on a
+Spanish entry identical to its English one, since that is what a copied-and-
+never-translated key looks like; four are allowed through, and the list says why.
+
+**Both dictionaries are bundled**, not fetched. Two languages of a few hundred
+short strings cost a few KB against a 600 KB bundle, and paying that avoids the
+two things lazy JSON would have cost: an async gap where the first paint shows
+keys instead of words, and a second thing to teach the service worker so the
+offline launch still reads right.
+
+**The `t` pipe is impure**, which is worth stating because the usual advice is
+the opposite. A pure pipe re-runs only when its *input* changes, and the input
+here is a constant key — so a language switch would leave every already-rendered
+string exactly as it was. Reading the signal inside does not rescue it: pure-pipe
+caching is keyed on the argument, not on what the transform touched. It caches
+its own last answer instead, so the per-pass cost is three comparisons.
+
+Which language wins, in order: **the profile**, then **this device**, then
+`app_settings.default_language`, then the browser, then English. `profiles.language`
+is nullable on purpose — null means "never chose", which is what lets the next
+input down have a say; a column defaulting to `'es'` would be indistinguishable
+from someone who picked Spanish. The device copy in `localStorage` is what makes
+the sign-in screen already right, before any profile exists to ask.
+
+Services that produce sentences — `AuthService`'s `friendlyError`, the sync and
+library toasts, the song-item badges — inject `I18nService` and translate at the
+moment of display. An error the server sends that we have no key for falls
+through as its own text, which is at least specific even when it is English.
+
+### The welcome box
+
+First start, once per account: language → the name everyone else sees → three
+slides (add music, listen offline, install it). `profiles.onboarded_at` is what
+records that it has been answered, so it does not greet the same person again on
+a new browser; a per-user `localStorage` key backs it up, because that write
+needs a network and being asked twice offline is worse than being asked once.
+Skipping records it too — nobody should be asked this twice.
+
+Each slide is its own step with its own dot rather than three slides behind a
+third dot: on a five-dot row you can see how much is left, which is the only
+question anyone has during one of these. Inside the installed Android app the
+"install it" slide is not in the sequence at all, rather than hidden, or the dots
+would count a step that never arrives.
+
 ## Settings
 
 The gear in the top right of every signed-in page opens `/settings`, which holds

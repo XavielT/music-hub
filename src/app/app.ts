@@ -9,12 +9,13 @@ import { SyncService } from '../shared/services/sync.service';
 import { UpdateService } from '../shared/services/update.service';
 import { UpdateBanner } from '../shared/components/update-banner/update-banner';
 import { ToastHost } from '../shared/ui/toast/toast';
+import { WelcomeBox } from '../shared/components/welcome-box/welcome-box';
 import { TPipe } from '../shared/i18n/t.pipe';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, PlayerBar, BottomNav, UpdateBanner, ToastHost, TPipe],
+  imports: [CommonModule, RouterOutlet, RouterLink, PlayerBar, BottomNav, UpdateBanner, ToastHost, WelcomeBox, TPipe],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

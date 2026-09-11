@@ -1,0 +1,138 @@
+// Sits above everything, including the player bar and the bottom nav, because
+// it is the only thing on screen until it is answered.
+.welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.welcome-card {
+  width: 100%;
+  max-width: 380px;
+  // Tall enough that the card does not resize between steps, which would make
+  // the buttons jump under a thumb already on its way down.
+  min-height: 310px;
+  display: flex;
+  flex-direction: column;
+  padding: 26px 22px 20px;
+  border-radius: 18px;
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.welcome-glyph {
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--Hub);
+  margin-bottom: 12px;
+}
+
+.welcome-title {
+  font-family: var(--font-heading);
+  font-size: 1.32rem;
+  margin-bottom: 8px;
+}
+
+.welcome-body {
+  font-size: 0.94rem;
+  line-height: 1.45;
+  color: var(--main-ultra-light);
+}
+
+.welcome-langs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.welcome-lang {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 1.02rem;
+  cursor: pointer;
+
+  &.active {
+    background: var(--Hub);
+    border-color: var(--Hub);
+    color: var(--on-Hub);
+    font-weight: 600;
+  }
+}
+
+.welcome-input {
+  margin-top: 18px;
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  font: inherit;
+  font-size: 1rem;
+}
+
+.welcome-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  // Pushes the dots and the buttons to the bottom whatever the step's height.
+  margin-top: auto;
+  padding-top: 22px;
+}
+
+.welcome-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+
+  &.done {
+    background: rgba(255, 255, 255, 0.45);
+  }
+
+  &.on {
+    background: var(--Hub);
+  }
+}
+
+.welcome-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.welcome-text-btn {
+  background: none;
+  border: none;
+  color: var(--main-ultra-light);
+  font: inherit;
+  font-size: 0.92rem;
+  padding: 10px 4px;
+  cursor: pointer;
+}
+
+.welcome-next {
+  margin-left: auto;
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: none;
+  background: var(--Hub);
+  color: var(--on-Hub);
+  font: inherit;
+  font-size: 0.98rem;
+  font-weight: 600;
+  cursor: pointer;
+}
