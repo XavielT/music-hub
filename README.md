@@ -321,6 +321,23 @@ never exploitable, since the `security definer` body reaches the `is_admin()` ga
 with the owner's rights and refuses, but an admin-only provisioning routine does not
 belong on the public API.
 
+The same pass went over the rest of round 2's `security definer` functions, which had
+all kept Postgres' default `PUBLIC EXECUTE`. `claim_download_request()` was gated
+inside and merely reachable. `library_bytes()` and `active_download_requests()` were
+not gated at all: the first is a sum over `songs` that walked past that table's RLS
+and would tell anyone how large the library is, and the second takes an arbitrary
+uuid, so any caller could count any user's queue by supplying their id. Both answer
+only for the caller now — `library_bytes()` returns 0 to a disabled account, and
+`active_download_requests()` returns 0 for somebody else's id rather than raising,
+because the insert policy calls it and a policy that raises turns a refused insert
+into a 500. `rls_auto_enable()` is an event-trigger function that nothing calls;
+EXECUTE is revoked from everyone and the trigger still fires, checked by creating a
+table in a rolled-back transaction and reading `relrowsecurity`.
+
+Supabase's "Public Can Execute SECURITY DEFINER Function" advisor is empty as a
+result. The "Signed-In Users Can Execute" one still lists eleven, and should: signed-in
+users are exactly who those are for, and each gates itself.
+
 `claim_download_request()` is a `security definer` function rather than an
 update, so two admin devices open at once take different rows instead of both
 downloading the same song, and a claim abandoned mid-download — app closed,
