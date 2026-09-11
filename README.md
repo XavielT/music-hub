@@ -228,10 +228,20 @@ Requests carry metadata when the requester could search YouTube and nothing but
 the video id when they could not, so a pasted link is enough on its own: the
 device that fetches it looks the title and artist up on the way past.
 
-The worker runs **in the app**, so requests are fulfilled while Music Hub is
-open on an admin's phone rather than merely while that phone is on. In practice
-that is the next time it is opened; the queue survives in the database until
-then.
+Two things can fulfil a request. The worker **in the app** runs while Music Hub
+is open on an admin's phone — in practice, the next time it is opened; the
+queue survives in the database until then. The **companion on the phone** can
+also do it by itself once linked (*Settings → YouTube companion → Fetch songs
+while the app is closed*), which is what makes "ask for a song and it appears"
+true at midnight as well. Both claim through the same function, so an open app
+and a linked companion take different rows rather than the same one.
+
+The companion signs in as its own `Companion` account rather than borrowing a
+session — Supabase rotates refresh tokens, and two clients sharing one session
+sign each other out within the hour. Linking mints that account's password,
+gives the only copy to the phone, and can be redone at any time to rotate it.
+See `companion/README.md` for what that costs: the account is an admin, because
+adding to the shared library is.
 
 `claim_download_request()` is a `security definer` function rather than an
 update, so two admin devices open at once take different rows instead of both
@@ -245,7 +255,10 @@ Verified against the live policies by impersonating both roles: a member may
 queue their own requests and read the queue, but cannot insert as someone else,
 cannot mark their own request done, and cannot claim work. Verified end to end
 on the phone on 2026-09-09 — a queued request became a 3.4 MB song in the
-shared library, with its storage object, in 31 seconds.
+shared library, with its storage object, in 31 seconds. The unattended path was
+verified the same day: a second request came back a 4.5 MB song owned by
+`Companion`, which is the companion's own worker having done it rather than the
+app.
 
 ### Shared playlists
 

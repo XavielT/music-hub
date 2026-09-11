@@ -10,8 +10,36 @@ export interface CompanionHealth {
   cookies?: boolean;
   // 'termux' when the companion is the one running on this phone.
   where?: string;
+  // Only the Termux companion reports this — see `WorkerStatus`.
+  worker?: WorkerStatus;
   // Filled in when the check failed, for the settings panel to show.
   error?: string;
+}
+
+/**
+ * What the companion's own worker is doing, when it has one.
+ *
+ * The Termux companion can fulfil queued requests by itself, signed in as its
+ * own account, so songs are fetched while the phone is on rather than while
+ * Music Hub is open on it. This is that worker reporting in.
+ */
+export interface WorkerStatus {
+  // It has credentials stored. Says nothing about whether they still work.
+  linked: boolean;
+  signed_in: boolean;
+  account?: string;
+  completed: number;
+  failed: number;
+  last_activity?: string | null;
+  last_error?: string | null;
+}
+
+// What the app hands the companion so it can sign in on its own.
+export interface WorkerCredentials {
+  supabase_url: string;
+  anon_key: string;
+  email: string;
+  password: string;
 }
 
 /**
@@ -101,6 +129,25 @@ export class CompanionService {
     }
   }
 
+  /**
+   * Hand the companion an account of its own, so it can work unattended.
+   *
+   * The companion answers with its status after signing in, so a wrong
+   * password is an error here rather than a silence that lasts until someone
+   * wonders why the queue never drains.
+   */
+  async link(credentials: WorkerCredentials): Promise<WorkerStatus> {
+    const response = await this.call('/link', credentials);
+    const body = (await response.json()) as { worker: WorkerStatus };
+    await this.check();
+    return body.worker;
+  }
+
+  async unlink(): Promise<void> {
+    await this.call('/unlink', {});
+    await this.check();
+  }
+
   // A pasted link resolves to that exact video. Searching for the id instead
   // finds whatever YouTube makes of an eleven-character string, which is
   // usually nothing.
@@ -121,12 +168,19 @@ export class CompanionService {
     return new File([blob], `${videoId}.m4a`, { type: 'audio/mp4' });
   }
 
-  private async call(path: string): Promise<Response> {
+  // `body` turns this into a POST; the companion has no POST route that takes
+  // anything but JSON.
+  private async call(path: string, body?: unknown): Promise<Response> {
     if (!this.configured()) throw new Error('The companion is not set up.');
     let response: Response;
     try {
       response = await fetch(`${this._url()}${path}`, {
-        headers: { Authorization: `Bearer ${this._token()}` },
+        method: body === undefined ? 'GET' : 'POST',
+        headers: {
+          Authorization: `Bearer ${this._token()}`,
+          ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
       });
     } catch (err) {
       throw new Error(friendly(err));
@@ -136,7 +190,7 @@ export class CompanionService {
     // The service sends a sentence worth showing; anything else gets one.
     const detail = await response
       .json()
-      .then(body => (body as { detail?: string }).detail)
+      .then(payload => (payload as { detail?: string }).detail)
       .catch(() => undefined);
     if (response.status === 401) throw new Error('The companion rejected the token.');
     throw new Error(detail || `The companion answered ${response.status}.`);

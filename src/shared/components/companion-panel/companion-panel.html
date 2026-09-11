@@ -56,6 +56,55 @@
     <code>YTDLP_COOKIES_FILE</code>. One running on your own connection does not need them.
   </p>
 
+  <!-- Only the companion on this phone can do this; the hosted one reports no
+       worker at all and the section stays hidden. -->
+  <div class="companion-worker" *ngIf="worker.supported()">
+    <h4>Fetch songs while the app is closed</h4>
+    <p class="companion-note">
+      Requests from the family are normally fulfilled while Music Hub is open on this
+      phone. Linked, the companion does it by itself — signed in as its own account,
+      so a song asked for at midnight is in the library by morning.
+    </p>
+
+    <p class="companion-status" *ngIf="worker.linked()">
+      <span class="companion-dot" [class.ok]="worker.status()?.signed_in && !worker.status()?.last_error"></span>
+      {{ worker.summary() }}
+    </p>
+
+    <div class="companion-actions">
+      <button
+        class="companion-btn"
+        *ngIf="!worker.linked()"
+        (click)="linkWorker()"
+        [disabled]="worker.busy()"
+      >
+        {{ worker.busy() ? 'Linking…' : 'Link this companion' }}
+      </button>
+      <button
+        class="companion-btn"
+        *ngIf="worker.linked()"
+        (click)="linkWorker()"
+        [disabled]="worker.busy()"
+      >
+        {{ worker.busy() ? 'Linking…' : 'Re-link' }}
+      </button>
+      <button
+        class="companion-text-btn"
+        *ngIf="worker.linked()"
+        (click)="unlinkWorker()"
+        [disabled]="worker.busy()"
+      >
+        {{ confirmingUnlink() ? 'Tap again to stop' : 'Stop' }}
+      </button>
+    </div>
+
+    <p class="companion-note">
+      Linking makes a password nobody has to remember, and gives the only copy to this
+      phone — so re-link from here if it is ever lost, rather than looking for it. The
+      account may add to the shared library, which is what fetching a song is.
+    </p>
+  </div>
+
   <p class="companion-note">
     The address and token are kept on this device only — the token is not synced to the
     others, and never goes near the shared library.

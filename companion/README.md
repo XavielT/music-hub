@@ -197,6 +197,39 @@ held, and a download through it returned a 3.4 MB m4a in 7.6 s. Note that
 `BOOT_COMPLETED` is not sent until the device is first unlocked — the companion
 appears roughly two minutes after a reboot, not immediately.
 
+**To have it fetch requested songs on its own:**
+
+By default the queue of songs members have asked for is drained *by the app* —
+so a request is fulfilled the next time Music Hub is open on an admin's phone.
+Linked, the companion drains it itself, and a song asked for at midnight is in
+the library by morning whether or not anyone opened anything.
+
+In Music Hub: **Settings → YouTube companion → Fetch songs while the app is
+closed → Link this companion**. The section only appears for the companion on
+this phone, because it is the only one that can do this.
+
+Linking generates a password, has the database create a `Companion` account
+with it, and hands it to the companion over loopback, which keeps it in
+`~/.musichub/worker.json` (mode 0600). Nobody types or stores that password
+anywhere else — if it is ever lost, link again and it is rotated. The account
+is an admin, because adding to the shared library is an admin act; that is the
+honest cost of the feature.
+
+It signs in as itself rather than borrowing the phone's session on purpose:
+Supabase rotates refresh tokens, so two clients sharing one session sign each
+other out within the hour.
+
+The worker polls every 20 seconds when the queue is empty, claims through the
+same `claim_download_request()` the app uses — so it and an open app take
+different rows rather than downloading the same song twice — and writes a
+failure onto the request itself, where the person who asked for it is looking,
+rather than only into the Termux log.
+
+Verified end to end on 2026-09-09: a queued request became "Luis Fonsi -
+Despacito ft. Daddy Yankee" (4.5 MB) in the shared library, with the request
+marked `done`. The song is owned by `Companion`, not by an admin — which is how
+you can tell the companion's own worker did it rather than an open app.
+
 **The iPhone does not need its own copy.** Add songs on Android, upload them,
 and they arrive through the shared library like any other song.
 

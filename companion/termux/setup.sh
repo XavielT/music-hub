@@ -77,4 +77,7 @@ cat <<BANNER
       curl -sLo b.sh https://raw.githubusercontent.com/XavielT/music-hub/main/companion/termux/enable-boot.sh
       bash b.sh
 
+  To have it fetch requested songs on its own, without Music Hub being open,
+  tap "Link this companion" in that same Settings panel once it is connected.
+
 BANNER
