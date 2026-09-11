@@ -61,6 +61,10 @@ describe('LibraryService editing', () => {
           cloudCalls.push(`cover:${id}`);
           return `owner/${id}.jpg`;
         },
+        deleteSong: async (song: { id: string }) => {
+          if (!cloudUp) throw new Error('offline');
+          cloudCalls.push(`delete:${song.id}`);
+        },
       } as never,
       { isAdmin: () => isAdmin, user: () => ({ id: USER }) } as never,
       { error: () => undefined, show: () => undefined } as never,
@@ -172,6 +176,47 @@ describe('LibraryService editing', () => {
     expect(library.songs().find(s => s.id === local.id)!.title).toBe('Renamed');
     // Nothing was attempted against the shared library.
     expect(cloudCalls).toEqual([]);
+  });
+
+  // 2026-09-11: removing a song from the library took it off the screen and
+  // left it in the shared library, because the cloud branch keyed off
+  // `syncState` and the song happened to be mid-download. A delete that looks
+  // like it worked and did not is the worst version of this bug.
+  it('deletes from the shared library even when the song is mid-download', async () => {
+    await build(true);
+    const id = await addSynced();
+    await library.patchSong(id, { syncState: 'downloading' });
+
+    await library.removeSong(id);
+
+    expect(cloudCalls).toContain(`delete:${id}`);
+    expect(library.songs().find(s => s.id === id)).toBeUndefined();
+  });
+
+  it('leaves a song that was never uploaded to the cloud alone', async () => {
+    await build(true);
+    const song = await library.addLocalSong(
+      new File([new Uint8Array([1, 2, 3])], 'y.mp3', { type: 'audio/mpeg' }),
+      { title: 'Mine Only', artist: 'A', album: 'B', duration: 1 }
+    );
+
+    await library.removeSong(song.id);
+
+    expect(cloudCalls.filter(c => c.startsWith('delete:'))).toEqual([]);
+    expect(library.songs().find(s => s.id === song.id)).toBeUndefined();
+  });
+
+  // A member tapping remove on a shared song is asking for space back, not
+  // asking to take the song away from everyone.
+  it('refuses to remove a shared song for a member, whatever its local state', async () => {
+    await build(false);
+    const id = await addSynced();
+    await library.patchSong(id, { syncState: 'downloading' });
+
+    await library.removeSong(id);
+
+    expect(cloudCalls.filter(c => c.startsWith('delete:'))).toEqual([]);
+    expect(library.songs().find(s => s.id === id)).toBeDefined();
   });
 });
 
@@ -300,4 +345,5 @@ describe('LibraryService cover art', () => {
 
     expect(await db.get<Blob>('covers', song.id)).toBeUndefined();
   });
+
 });

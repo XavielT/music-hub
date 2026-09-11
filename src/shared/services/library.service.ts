@@ -326,25 +326,33 @@ export class LibraryService {
   async removeSong(id: string): Promise<void> {
     const song = this._songs().find(s => s.id === id);
 
-    // A synced song belongs to the shared library, not to the member looking
-    // at it. Freeing space on their own device is what they actually want.
-    if (song?.syncState === 'synced' && !this.auth.isAdmin()) {
+    // Whether a song belongs to the shared library is a fact about the cloud —
+    // it has an object in the bucket — not about this device's bookkeeping.
+    // Keying this off `syncState` alone meant a song caught in a transient
+    // state ('downloading', 'uploading') took the local-only path: it vanished
+    // from this screen, which looks exactly like a successful delete, and
+    // stayed in everyone else's library. Cost an evening on 2026-09-11.
+    const shared = !!song && (song.syncState === 'synced' || !!song.storagePath);
+
+    // A shared song belongs to the library, not to the member looking at it.
+    // Freeing space on their own device is what they actually want.
+    if (shared && !this.auth.isAdmin()) {
       this.toast.error(
         'This song is part of the shared library — only Xaviel can remove it. Tap ● to free up space on this device.'
       );
       return;
     }
 
-    if (song?.syncState === 'synced' && this.online()) {
+    if (shared && this.online()) {
       try {
-        await this.cloud.deleteSong(song);
-        this.cloud.addUsage(-song.sizeBytes);
+        await this.cloud.deleteSong(song!);
+        this.cloud.addUsage(-song!.sizeBytes);
       } catch (err) {
-        this.toast.error(`Could not delete "${song.title}" from the cloud.`);
+        this.toast.error(`Could not delete "${song!.title}" from the cloud.`);
         console.warn('deleteSong failed', err);
         return; // keep it locally rather than drift out of sync
       }
-    } else if (song?.syncState === 'synced') {
+    } else if (shared) {
       this.toast.error('You are offline — delete this song again when you have a connection.');
       return;
     }
