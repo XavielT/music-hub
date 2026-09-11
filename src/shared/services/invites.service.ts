@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { ToastService } from './toast.service';
+import { I18nService } from './i18n.service';
 
 export interface Invite {
   email: string;
@@ -28,7 +29,11 @@ export class InvitesService {
   private _busy = signal(false);
   busy = this._busy.asReadonly();
 
-  constructor(private supabase: SupabaseService, private toast: ToastService) {}
+  constructor(
+    private supabase: SupabaseService,
+    private toast: ToastService,
+    private i18n: I18nService
+  ) {}
 
   async load(): Promise<void> {
     this._loading.set(true);
@@ -85,6 +90,6 @@ export class InvitesService {
     const message = err instanceof Error ? err.message : String(err);
     return /invite|admin|email address/i.test(message)
       ? message
-      : 'Could not reach the server — try again when you have a connection.';
+      : this.i18n.t('err.noConnectionServer');
   }
 }

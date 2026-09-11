@@ -1,4 +1,5 @@
 import { CompanionService } from './companion.service';
+import { I18nService } from './i18n.service';
 
 // This service is the app's only door to a machine on the internet, so what it
 // does with a bad answer matters more than what it does with a good one: a
@@ -34,7 +35,7 @@ describe('CompanionService', () => {
       return Promise.resolve(respond());
     }) as typeof fetch;
 
-    service = new CompanionService();
+    service = new CompanionService(new I18nService());
   });
 
   afterEach(() => {
@@ -60,7 +61,7 @@ describe('CompanionService', () => {
   it('remembers the setup on the next launch, per device', () => {
     service.configure('https://companion.test', 'secret');
     // A second instance is what happens after a reload.
-    const reopened = new CompanionService();
+    const reopened = new CompanionService(new I18nService());
     expect(reopened.configured()).toBe(true);
     expect(reopened.url()).toBe('https://companion.test');
   });

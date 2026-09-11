@@ -149,10 +149,10 @@ export class UpdateService {
       const found = this.isNative ? await this.checkGithub() : await this.checkServiceWorker();
       if (found) return;
       this._status.set('idle');
-      if (announce) this.toast.show(`You are on the latest version (${this._currentVersion()}).`);
+      if (announce) this.toast.show(this.i18n.t('update.onLatest', { version: this._currentVersion() }));
     } catch (e) {
       this._status.set('idle');
-      const message = e instanceof Error ? e.message : 'Could not check for updates.';
+      const message = e instanceof Error ? e.message : this.i18n.t('update.checkFailed');
       this._error.set(message);
       if (announce) this.toast.error(message);
     }
@@ -176,9 +176,9 @@ export class UpdateService {
       { headers: { Accept: 'application/vnd.github+json' }, cache: 'no-store' }
     );
     if (response.status === 403 || response.status === 429) {
-      throw new Error('GitHub is rate-limiting the update check. Try again in a few minutes.');
+      throw new Error(this.i18n.t('update.rateLimited'));
     }
-    if (!response.ok) throw new Error('Could not reach GitHub to check for updates.');
+    if (!response.ok) throw new Error(this.i18n.t('update.githubUnreachable'));
 
     const release = (await response.json()) as GithubRelease;
     const version = (release.tag_name ?? '').replace(/^v/i, '');

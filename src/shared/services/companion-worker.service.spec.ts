@@ -2,6 +2,7 @@ import { signal } from '@angular/core';
 import { CompanionWorkerService, WORKER_EMAIL } from './companion-worker.service';
 import { CompanionHealth, WorkerCredentials, WorkerStatus } from './companion.service';
 import { environment } from '../../environments/environment';
+import { I18nService } from './i18n.service';
 
 // Linking mints a password for an account that may write to the shared
 // library. The parts worth pinning down are the ones that decide whether that
@@ -72,6 +73,8 @@ describe('CompanionWorkerService', () => {
       supabase as never,
       { isAdmin: isAdmin.asReadonly() } as never,
       companion as never
+    ,
+      new I18nService()
     );
   });
 

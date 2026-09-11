@@ -488,6 +488,31 @@ export const ES: Record<TranslationKey, string> = {
   'library.tooBig':
     '"{title}" ocupa {size} MB — más que el límite de {limit} MB por canción, así que se queda en este dispositivo.',
 
+  // --- service messages ---------------------------------------------------
+  'err.noConnectionMoment': 'Sin conexión — inténtalo de nuevo en un momento.',
+  'err.noConnectionServer': 'No se pudo conectar con el servidor — inténtalo cuando tengas conexión.',
+  'update.onLatest': 'Ya tienes la última versión ({version}).',
+  'update.checkFailed': 'No se pudieron buscar actualizaciones.',
+  'update.rateLimited': 'GitHub está limitando las comprobaciones de actualización. Prueba dentro de unos minutos.',
+  'update.githubUnreachable': 'No se pudo conectar con GitHub para buscar actualizaciones.',
+  'sync.showingLocal': 'Sin conexión — mostrando la biblioteca guardada en este dispositivo.',
+  'sync.failed': 'Falló la sincronización: {message}',
+  'library.uploadFailed': 'No se pudo guardar "{title}" en la nube. Se queda en este dispositivo.',
+  'library.cloudFull': 'La nube está llena — se alcanzó el límite de 1 GB, así que "{title}" se queda en este dispositivo. Elimina alguna canción de la nube para hacer sitio.',
+  'library.uploadOffline': 'Sin conexión — "{title}" se queda en este dispositivo. Toca ↑ para reintentarlo luego.',
+  'library.uploadError': 'Falló la subida de "{title}": {message}',
+  'player.nothingOffline': 'No queda nada en la cola que pueda sonar sin conexión — descarga canciones con ⬇ para escucharlas sin internet.',
+  'add.needsAndroidApp': 'Para añadir desde YouTube hace falta la app de Android.',
+  'add.fetchedForLibrary': 'Se descargó "{title}" para la biblioteca ✔',
+  'add.downloadedNotUploaded': 'Se descargó, pero no se pudo subir a la biblioteca compartida.',
+  'add.tooManyWaiting': 'Ya tienes {max} canciones esperando — deja que esas terminen primero.',
+  'companion.noToken': 'El servidor está en pie pero no tiene MUSIC_HUB_TOKEN, así que rechazará todas las peticiones.',
+  'companion.emptyFile': 'El companion devolvió un archivo vacío.',
+  'companion.notSetUp': 'El companion no está configurado.',
+  'companion.workerSignedInFailed': 'Con sesión iniciada, pero el último intento falló: {error}',
+  'companion.workerNotSignedIn': 'Enlazado como {account}, todavía sin iniciar sesión — {done}.',
+  'companion.workerWorking': 'Funcionando como {account} — {done}.',
+
   // --- welcome box --------------------------------------------------------
   'welcome.languageTitle': 'Elige tu idioma',
   'welcome.languageBody': 'Puedes cambiarlo después en Ajustes.',

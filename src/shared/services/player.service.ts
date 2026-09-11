@@ -551,7 +551,7 @@ export class PlayerService {
       return;
     }
     this.toast.error(
-      'Nothing left in the queue can play offline — download songs with ⬇ to listen without a connection.'
+      this.i18n.t('player.nothingOffline')
     );
   }
 

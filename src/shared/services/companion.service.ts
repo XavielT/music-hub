@@ -1,5 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { YoutubeResult } from './youtube.service';
+import { I18nService } from './i18n.service';
 
 const URL_KEY = 'music-hub.companion-url';
 const TOKEN_KEY = 'music-hub.companion-token';
@@ -64,6 +65,8 @@ export class CompanionService {
   url = this._url.asReadonly();
   token = this._token.asReadonly();
 
+  constructor(private i18n: I18nService) {}
+
   configured = computed(() => !!this._url() && !!this._token());
 
   // A companion on this phone needs no cookies: the bot check is about
@@ -115,7 +118,7 @@ export class CompanionService {
         ...body,
         ok: body.ok === true,
         error: (body as { configured?: boolean }).configured === false
-          ? 'The server is up but has no MUSIC_HUB_TOKEN set, so it will refuse every request.'
+          ? this.i18n.t('companion.noToken')
           : undefined,
       };
       this._health.set(result);
@@ -164,14 +167,14 @@ export class CompanionService {
   async downloadAudio(videoId: string): Promise<File> {
     const response = await this.call(`/download?id=${encodeURIComponent(videoId)}`);
     const blob = await response.blob();
-    if (blob.size < 10_000) throw new Error('The companion returned an empty file.');
+    if (blob.size < 10_000) throw new Error(this.i18n.t('companion.emptyFile'));
     return new File([blob], `${videoId}.m4a`, { type: 'audio/mp4' });
   }
 
   // `body` turns this into a POST; the companion has no POST route that takes
   // anything but JSON.
   private async call(path: string, body?: unknown): Promise<Response> {
-    if (!this.configured()) throw new Error('The companion is not set up.');
+    if (!this.configured()) throw new Error(this.i18n.t('companion.notSetUp'));
     let response: Response;
     try {
       response = await fetch(`${this._url()}${path}`, {

@@ -477,6 +477,31 @@ export const EN = {
   'library.tooBig':
     '"{title}" is {size} MB — bigger than the {limit} MB limit for one song, so it stays on this device.',
 
+  // --- service messages ---------------------------------------------------
+  'err.noConnectionMoment': 'No connection — try again in a moment.',
+  'err.noConnectionServer': 'Could not reach the server — try again when you have a connection.',
+  'update.onLatest': 'You are on the latest version ({version}).',
+  'update.checkFailed': 'Could not check for updates.',
+  'update.rateLimited': 'GitHub is rate-limiting the update check. Try again in a few minutes.',
+  'update.githubUnreachable': 'Could not reach GitHub to check for updates.',
+  'sync.showingLocal': 'No connection — showing the library stored on this device.',
+  'sync.failed': 'Sync failed: {message}',
+  'library.uploadFailed': 'Could not save "{title}" to the cloud. It stays on this device.',
+  'library.cloudFull': 'Cloud storage is full — 1 GB limit reached, so "{title}" stays on this device. Delete a cloud song to make room.',
+  'library.uploadOffline': 'No connection — "{title}" stays on this device. Tap ↑ to retry later.',
+  'library.uploadError': 'Upload of "{title}" failed: {message}',
+  'player.nothingOffline': 'Nothing left in the queue can play offline — download songs with ⬇ to listen without a connection.',
+  'add.needsAndroidApp': 'Adding from YouTube needs the Android app.',
+  'add.fetchedForLibrary': 'Fetched "{title}" for the library ✔',
+  'add.downloadedNotUploaded': 'Downloaded, but it could not be uploaded to the shared library.',
+  'add.tooManyWaiting': 'You already have {max} songs waiting — let those finish first.',
+  'companion.noToken': 'The server is up but has no MUSIC_HUB_TOKEN set, so it will refuse every request.',
+  'companion.emptyFile': 'The companion returned an empty file.',
+  'companion.notSetUp': 'The companion is not set up.',
+  'companion.workerSignedInFailed': 'Signed in, but the last attempt failed: {error}',
+  'companion.workerNotSignedIn': 'Linked as {account}, not signed in yet — {done}.',
+  'companion.workerWorking': 'Working as {account} — {done}.',
+
   // --- welcome box --------------------------------------------------------
   'welcome.languageTitle': 'Choose your language',
   'welcome.languageBody': 'You can change this later in Settings.',

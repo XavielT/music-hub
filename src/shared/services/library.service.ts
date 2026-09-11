@@ -207,7 +207,7 @@ export class LibraryService {
         const row = await this.cloud.insertRemoteSong(song, url);
         await this.applyRow(row, false);
       } catch (err) {
-        this.toast.error(`Could not save "${song.title}" to the cloud. It stays on this device.`);
+        this.toast.error(this.i18n.t('library.uploadFailed', { title: song.title }));
         console.warn('insertRemoteSong failed', err);
       }
     }
@@ -251,7 +251,7 @@ export class LibraryService {
 
     if (this.cloud.usedBytes() + file.size > STORAGE_QUOTA_BYTES) {
       this.toast.error(
-        `Cloud storage is full — 1 GB limit reached, so "${song.title}" stays on this device. Delete a cloud song to make room.`
+        this.i18n.t('library.cloudFull', { title: song.title })
       );
       return false;
     }
@@ -268,8 +268,8 @@ export class LibraryService {
       await this.patchSong(song.id, { syncState: 'local-only' });
       this.toast.error(
         isNetworkError(err)
-          ? `No connection — "${song.title}" stays on this device. Tap ↑ to retry later.`
-          : `Upload of "${song.title}" failed: ${(err as Error).message}`
+          ? this.i18n.t('library.uploadOffline', { title: song.title })
+          : this.i18n.t('library.uploadError', { title: song.title, message: (err as Error).message })
       );
       console.warn('uploadSong failed', err);
       return false;

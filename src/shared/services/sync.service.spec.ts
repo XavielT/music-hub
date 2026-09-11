@@ -7,6 +7,7 @@ import { PlayerService } from './player.service';
 import { RealtimeService } from './realtime.service';
 import { SyncService } from './sync.service';
 import { ToastService } from './toast.service';
+import { I18nService } from './i18n.service';
 
 // Live sync turns SyncService into something that runs while the user is doing
 // other things, which puts weight on two behaviours that did not matter when a
@@ -141,7 +142,9 @@ describe('SyncService with live updates', () => {
     // The same failure, when the user pressed the button, is worth reporting.
     await sync.sync();
     expect(toasts.length).toBe(1);
-    expect(toasts[0]).toContain('No connection');
+    // Compared against the dictionary rather than an English sentence: this
+    // suite does not control which language the injected I18nService resolved to.
+    expect(toasts[0]).toBe(TestBed.inject(I18nService).t('sync.showingLocal'));
   });
 
   it('starts live updates for the account and reconciles when one arrives', async () => {

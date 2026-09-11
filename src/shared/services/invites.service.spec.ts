@@ -1,4 +1,5 @@
 import { InvitesService } from './invites.service';
+import { I18nService } from './i18n.service';
 
 // The invite functions raise their own sentences, written for the person who
 // will read them, and everything else is a connection problem. Getting that
@@ -37,6 +38,8 @@ describe('InvitesService', () => {
         },
       } as never,
       { show: (m: string) => toasts.push(m), error: (m: string) => errors.push(m) } as never
+    ,
+      new I18nService()
     );
   });
 

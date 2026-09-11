@@ -159,8 +159,8 @@ export class SyncService {
       if (!options.silent) {
         this.toast.error(
           isNetworkError(err)
-            ? 'No connection — showing the library stored on this device.'
-            : `Sync failed: ${(err as Error).message}`
+            ? this.i18n.t('sync.showingLocal')
+            : this.i18n.t('sync.failed', { message: (err as Error).message })
         );
       }
       console.warn('sync failed', err);

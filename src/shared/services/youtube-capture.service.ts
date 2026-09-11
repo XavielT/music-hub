@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { YoutubeBrowser, PickedVideo } from '../native/youtube-browser.plugin';
+import { I18nService } from './i18n.service';
 
 export interface CapturedSong {
   file: File;
@@ -28,8 +29,10 @@ export class YoutubeCaptureService {
   private _progress = signal<number | null>(null);
   progress = this._progress.asReadonly();
 
+  constructor(private i18n: I18nService) {}
+
   async capture(startUrl?: string): Promise<CapturedSong | null> {
-    if (!this.available) throw new Error('Adding from YouTube needs the Android app.');
+    if (!this.available) throw new Error(this.i18n.t('add.needsAndroidApp'));
 
     // The browser screen downloads and shows its own progress: the bytes have
     // to come through the page, so there is nothing for this side to report

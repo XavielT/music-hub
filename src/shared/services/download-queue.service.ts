@@ -246,7 +246,7 @@ export class DownloadQueueService {
       if (!uploaded) {
         await this.finish(request.id, {
           status: 'failed',
-          error: 'Downloaded, but it could not be uploaded to the shared library.',
+          error: this.i18n.t('add.downloadedNotUploaded'),
           title,
           artist,
         });
@@ -254,7 +254,7 @@ export class DownloadQueueService {
       }
 
       await this.finish(request.id, { status: 'done', song_id: song.id, title, artist });
-      this.toast.show(`Fetched "${title || request.video_id}" for the library ✔`);
+      this.toast.show(this.i18n.t('add.fetchedForLibrary', { title: title || request.video_id }));
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       await this.finish(request.id, { status: 'failed', error: message.slice(0, 300), title, artist });
@@ -280,10 +280,10 @@ export class DownloadQueueService {
       return this.i18n.t('add.queuedAlready');
     }
     if (code === '42501' || /row-level security/i.test(message)) {
-      return `You already have ${MAX_ACTIVE_PER_MEMBER} songs waiting — let those finish first.`;
+      return this.i18n.t('add.tooManyWaiting', { max: MAX_ACTIVE_PER_MEMBER });
     }
     return /failed to fetch|networkerror|load failed/i.test(message)
-      ? 'No connection — try again in a moment.'
+      ? this.i18n.t('err.noConnectionMoment')
       : message;
   }
 }

@@ -3,6 +3,7 @@ import { environment } from '../../environments/environment';
 import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
 import { CompanionService, WorkerStatus } from './companion.service';
+import { I18nService } from './i18n.service';
 
 // The account the companion signs in as. Fixed in the database function too —
 // re-linking rotates its password rather than making a second account.
@@ -50,15 +51,16 @@ export class CompanionWorkerService {
     const worker = this.status();
     if (!worker?.linked) return '';
     const done = `${worker.completed} fetched${worker.failed ? `, ${worker.failed} failed` : ''}`;
-    if (worker.last_error) return `Signed in, but the last attempt failed: ${worker.last_error}`;
-    if (!worker.signed_in) return `Linked as ${worker.account}, not signed in yet — ${done}.`;
-    return `Working as ${worker.account} — ${done}.`;
+    if (worker.last_error) return this.i18n.t('companion.workerSignedInFailed', { error: worker.last_error ?? '' });
+    if (!worker.signed_in) return this.i18n.t('companion.workerNotSignedIn', { account: worker.account ?? '', done });
+    return this.i18n.t('companion.workerWorking', { account: worker.account ?? '', done });
   });
 
   constructor(
     private supabase: SupabaseService,
     private auth: AuthService,
-    private companion: CompanionService
+    private companion: CompanionService,
+    private i18n: I18nService
   ) {}
 
   /**

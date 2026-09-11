@@ -29,6 +29,10 @@ function profile(over: Partial<ProfileModel> = {}): ProfileModel {
 describe('WelcomeBox', () => {
   let saved: { name?: string; language?: string };
   let onboarded: number;
+  // Choosing a language here writes the same key the rest of the suite reads.
+  let previousLang: string | null;
+
+  beforeEach(() => (previousLang = localStorage.getItem('music-hub.lang')));
 
   async function render(p: ProfileModel | null, seenHere = false) {
     saved = {};
@@ -62,7 +66,8 @@ describe('WelcomeBox', () => {
 
   afterEach(() => {
     localStorage.removeItem('music-hub.onboarded.' + USER);
-    localStorage.removeItem('music-hub.lang');
+    if (previousLang === null) localStorage.removeItem('music-hub.lang');
+    else localStorage.setItem('music-hub.lang', previousLang);
   });
 
   it('asks an account that has never answered', async () => {

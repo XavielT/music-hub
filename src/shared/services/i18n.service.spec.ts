@@ -10,8 +10,20 @@ import { ES } from '../i18n/es';
 const KEY = 'music-hub.lang';
 
 describe('I18nService', () => {
-  beforeEach(() => localStorage.removeItem(KEY));
-  afterEach(() => localStorage.removeItem(KEY));
+  // The rest of the suite resolves its language through a root-injected
+  // I18nService, which reads this key — so leaving one behind would decide
+  // another spec's language for it.
+  let previous: string | null;
+
+  beforeEach(() => {
+    previous = localStorage.getItem(KEY);
+    localStorage.removeItem(KEY);
+  });
+
+  afterEach(() => {
+    if (previous === null) localStorage.removeItem(KEY);
+    else localStorage.setItem(KEY, previous);
+  });
 
   it('starts from the device choice when there is one', () => {
     localStorage.setItem(KEY, 'es');

@@ -41,7 +41,9 @@ describe('AdminService', () => {
       },
     };
 
-    service = new AdminService(supabase as never, { user: () => ({ id: 'me' }) } as never);
+    service = new AdminService(supabase as never, { user: () => ({ id: 'me' }) } as never,
+      new I18nService()
+    );
   });
 
   it('reads the table from the admin-gated function', async () => {

@@ -1,6 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
+import { I18nService } from './i18n.service';
 import { UserRole } from '../models/profile.model';
 
 // One row of the admin panel's user table. Shaped by `admin_user_overview()`,
@@ -49,7 +50,8 @@ export class AdminService {
 
   constructor(
     private supabase: SupabaseService,
-    private auth: AuthService
+    private auth: AuthService,
+    private i18n: I18nService
   ) {}
 
   async load(): Promise<void> {
@@ -60,7 +62,7 @@ export class AdminService {
       if (error) throw new Error(error.message);
       this._users.set((data ?? []) as AdminUserRow[]);
     } catch (err) {
-      this._error.set(message(err));
+      this._error.set(message(err, this.i18n.t('err.noConnectionMoment')));
     } finally {
       this._loading.set(false);
     }
@@ -99,13 +101,13 @@ export class AdminService {
       // A non-2xx comes back as an error whose body holds the sentence the
       // function wrote; without this the user gets "Edge Function returned a
       // non-2xx status code", which says nothing.
-      if (error) throw new Error(await detail(error));
+      if (error) throw new Error(await detail(error, this.i18n.t('err.noConnectionMoment')));
       const failed = (data as { error?: string } | null)?.error;
       if (failed) throw new Error(failed);
       if (options.reload !== false) await this.load();
       return true;
     } catch (err) {
-      this._error.set(message(err));
+      this._error.set(message(err, this.i18n.t('err.noConnectionMoment')));
       return false;
     } finally {
       this._busyWith.set(null);
@@ -121,7 +123,7 @@ export class AdminService {
 
 // supabase-js wraps a non-2xx in a FunctionsHttpError whose `context` is the
 // original Response, so the sentence is one await away.
-async function detail(error: unknown): Promise<string> {
+async function detail(error: unknown, offline: string): Promise<string> {
   const context = (error as { context?: Response }).context;
   if (context && typeof context.json === 'function') {
     try {
@@ -131,12 +133,13 @@ async function detail(error: unknown): Promise<string> {
       // Not JSON: fall through to the generic message.
     }
   }
-  return message(error);
+  return message(error, offline);
 }
 
-function message(err: unknown): string {
+// `offline` is the translated sentence to use when the failure is plainly a
+// dead connection; anything else is the server's own words, which are more
+// specific than ours would be.
+function message(err: unknown, offline: string): string {
   const text = err instanceof Error ? err.message : String(err);
-  return /failed to fetch|networkerror|load failed/i.test(text)
-    ? 'No connection — try again in a moment.'
-    : text;
+  return /failed to fetch|networkerror|load failed/i.test(text) ? offline : text;
 }
