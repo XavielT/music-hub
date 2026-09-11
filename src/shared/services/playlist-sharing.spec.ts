@@ -1,6 +1,7 @@
 import { DbService } from './db.service';
 import { LibraryService } from './library.service';
 import { PlaylistRow } from './cloud-library.service';
+import { I18nService } from './i18n.service';
 
 // A shared playlist is the first thing in this app that one account can change
 // and another account owns, so the line between the two is what these cover:
@@ -64,6 +65,8 @@ describe('Shared playlists', () => {
       { error: (m: string) => toasts.push(m), show: (m: string) => toasts.push(m) } as never,
       { maxUploadBytes: () => 1024 * 1024 * 1024, maxUploadMb: () => 1024 } as never,
       { find: async () => null } as never
+    ,
+      new I18nService()
     );
     await library.activate(ME);
   }

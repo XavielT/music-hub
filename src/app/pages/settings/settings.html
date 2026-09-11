@@ -1,50 +1,71 @@
 <div class="settings">
   <header class="settings-header">
-    <button class="settings-back" (click)="back()" title="Back">‹</button>
-    <h1 class="settings-title">Settings</h1>
+    <button class="settings-back" (click)="back()" [title]="'common.back' | t">‹</button>
+    <h1 class="settings-title">{{ 'settings.title' | t }}</h1>
   </header>
 
   <!-- Account -->
   <section class="settings-section">
-    <h2 class="settings-section-title">Account</h2>
+    <h2 class="settings-section-title">{{ 'settings.account' | t }}</h2>
     <div class="settings-account">
       <div class="settings-account-avatar">{{ accountInitial() }}</div>
       <div class="settings-account-info">
         <span class="settings-account-name">{{ auth.displayName() }}</span>
         <span class="settings-account-email">{{ auth.user()?.email }}</span>
       </div>
-      <span class="settings-badge" *ngIf="auth.isAdmin()">Admin</span>
+      <span class="settings-badge" *ngIf="auth.isAdmin()">{{ 'settings.admin' | t }}</span>
     </div>
 
     <button class="settings-row-btn" (click)="openAdmin()" *ngIf="auth.isAdmin()">
       <span>
-        <strong>Admin</strong>
-        <em>Who can do what, invites, and the library's own settings.</em>
+        <strong>{{ 'settings.admin' | t }}</strong>
+        <em>{{ 'settings.adminHint' | t }}</em>
       </span>
-      <span class="settings-row-action">Open</span>
+      <span class="settings-row-action">{{ 'common.open' | t }}</span>
     </button>
+
+    <!-- Labelled in both languages, so it is findable whichever one the app is
+         currently speaking. -->
+    <div class="settings-row settings-row--language">
+      <span>
+        <strong>Idioma / Language</strong>
+        <em>{{ 'settings.languageHint' | t }}</em>
+      </span>
+      <div class="settings-langs">
+        <button
+          class="settings-lang"
+          *ngFor="let option of languages"
+          [class.active]="i18n.lang() === option.value"
+          (click)="setLanguage(option.value)"
+        >
+          {{ option.label }}
+        </button>
+      </div>
+    </div>
 
     <button class="settings-row-btn" (click)="sendPasswordReset()" [disabled]="sendingReset()">
       <span>
-        <strong>Change password</strong>
-        <em>We email you a link — nothing to type in here.</em>
+        <strong>{{ 'settings.changePassword' | t }}</strong>
+        <em>{{ 'settings.changePasswordHint' | t }}</em>
       </span>
-      <span class="settings-row-action">{{ sendingReset() ? 'Sending…' : 'Send link' }}</span>
+      <span class="settings-row-action">{{
+        sendingReset() ? ('settings.sending' | t) : ('settings.sendLink' | t)
+      }}</span>
     </button>
 
     <button class="settings-row-btn settings-row-btn--danger" (click)="signOut()">
       <span>
-        <strong>Sign out</strong>
-        <em>Downloaded songs stay on this device for the next sign-in.</em>
+        <strong>{{ 'settings.signOut' | t }}</strong>
+        <em>{{ 'settings.signOutHint' | t }}</em>
       </span>
-      <span class="settings-row-action">Sign out</span>
+      <span class="settings-row-action">{{ 'settings.signOut' | t }}</span>
     </button>
   </section>
 
   <!-- Appearance -->
   <section class="settings-section">
-    <h2 class="settings-section-title">Appearance</h2>
-    <p class="settings-note">The accent colour, used everywhere in the app.</p>
+    <h2 class="settings-section-title">{{ 'settings.appearance' | t }}</h2>
+    <p class="settings-note">{{ 'settings.accentNote' | t }}</p>
     <div class="settings-swatches">
       <button
         class="settings-swatch"
@@ -58,26 +79,26 @@
 
       <!-- Anything the presets do not cover. The swatch shows the current
            colour, and the input on top of it opens the system picker. -->
-      <label class="settings-swatch settings-swatch--custom" [style.background]="theme.accent()" title="Custom colour">
+      <label class="settings-swatch settings-swatch--custom" [style.background]="theme.accent()" [title]="'settings.customColour' | t">
         <input type="color" [value]="theme.accent()" (input)="onCustomAccent($event)" />
       </label>
     </div>
     <button class="settings-text-btn" *ngIf="!theme.isDefault()" (click)="theme.reset()">
-      Back to amber
+      {{ 'settings.backToAmber' | t }}
     </button>
   </section>
 
   <!-- Cloud library -->
   <section class="settings-section">
-    <h2 class="settings-section-title">Shared library</h2>
+    <h2 class="settings-section-title">{{ 'settings.sharedLibrary' | t }}</h2>
 
     <div class="settings-quota">
       <div class="settings-quota-row">
-        <span>Cloud storage</span>
+        <span>{{ 'settings.cloudStorage' | t }}</span>
         <span class="settings-quota-usage" [class.warn]="nearQuota()">
           {{ usedLabel() }} / {{ quotaLabel }}
         </span>
-        <button class="settings-icon-btn" (click)="sync.sync()" [disabled]="sync.syncing()" title="Sync now">
+        <button class="settings-icon-btn" (click)="sync.sync()" [disabled]="sync.syncing()" [title]="'settings.syncNow' | t">
           {{ sync.syncing() ? '⋯' : '⟳' }}
         </button>
       </div>
@@ -85,7 +106,7 @@
         <div class="settings-quota-bar-fill" [class.warn]="nearQuota()" [style.width.%]="usedPercent()"></div>
       </div>
       <p class="settings-note" *ngIf="nearQuota() && auth.isAdmin()">
-        Close to the 1 GB limit — delete a few cloud songs before adding more.
+        {{ 'settings.nearQuota' | t }}
       </p>
       <p class="settings-note settings-live" *ngIf="liveLabel()">
         <span class="settings-live-dot" [class]="'settings-live-dot--' + realtime.status()"></span>
@@ -95,31 +116,28 @@
 
     <div class="settings-row" *ngIf="pendingUploads() > 0 && auth.isAdmin()">
       <span>
-        <strong>{{ pendingUploads() }} song(s) only on this device</strong>
-        <em>Upload them so they play everywhere.</em>
+        <strong>{{ 'settings.onlyOnDevice' | t: { count: pendingUploads() } }}</strong>
+        <em>{{ 'settings.uploadThem' | t }}</em>
       </span>
       <button class="settings-row-action-btn" (click)="sync.uploadAll()" [disabled]="sync.uploading()">
-        {{ sync.uploading() ? 'Uploading…' : 'Upload all' }}
+        {{ sync.uploading() ? ('settings.uploading' | t) : ('settings.uploadAll' | t) }}
       </button>
     </div>
     <p class="settings-note" *ngIf="pendingUploads() > 0 && !auth.isAdmin()">
-      {{ pendingUploads() }} song(s) stay on this device — the shared library is added to by Xaviel.
+      {{ 'settings.staysOnDevice' | t: { count: pendingUploads() } }}
     </p>
     <p class="settings-note" *ngIf="sync.uploadProgress() as p">
       {{ p.done + 1 }} / {{ p.total }} — {{ p.title }}
     </p>
 
     <p class="settings-note">
-      {{ downloadedCount() }} of {{ library.songs().length }} song(s) are downloaded for offline play.
+      {{ 'settings.downloadedCount' | t: { done: downloadedCount(), total: library.songs().length } }}
     </p>
 
     <div class="settings-row" *ngIf="library.clearableDownloads().length > 0">
       <span>
-        <strong>Clear downloads</strong>
-        <em>
-          Frees {{ formatBytes(clearableBytes()) }}. The songs stay in your library and stream
-          until you download them again.
-        </em>
+        <strong>{{ 'settings.clearDownloads' | t }}</strong>
+        <em>{{ 'settings.clearDownloadsHint' | t: { size: formatBytes(clearableBytes()) } }}</em>
       </span>
       <button
         class="settings-row-action-btn"
@@ -127,62 +145,63 @@
         (click)="clearDownloads()"
         [disabled]="clearing()"
       >
-        {{ clearing() ? 'Clearing…' : confirmingClear() ? 'Confirm' : 'Clear' }}
+        {{ clearing() ? ('settings.clearing' | t) : confirmingClear() ? ('common.confirm' | t) : ('settings.clear' | t) }}
       </button>
     </div>
     <p class="settings-note" *ngIf="library.unclearableDownloads().length > 0">
-      {{ library.unclearableDownloads().length }} song(s) are only on this device, so their audio
-      is kept — clearing those would delete them.
+      {{ 'settings.unclearable' | t: { count: library.unclearableDownloads().length } }}
     </p>
 
     <button class="settings-row-btn" (click)="openStorage()">
       <span>
-        <strong>Where the space is going</strong>
-        <em>What is filling the 1 GB, and what compressing would give back.</em>
+        <strong>{{ 'settings.whereSpaceGoes' | t }}</strong>
+        <em>{{ 'settings.whereSpaceGoesHint' | t }}</em>
       </span>
-      <span class="settings-row-action">Storage</span>
+      <span class="settings-row-action">{{ 'settings.storage' | t }}</span>
     </button>
   </section>
 
   <!-- Invites -->
   <section class="settings-section" *ngIf="auth.isAdmin()">
-    <h2 class="settings-section-title">Who can join</h2>
+    <h2 class="settings-section-title">{{ 'settings.whoCanJoin' | t }}</h2>
     <app-invites-panel></app-invites-panel>
   </section>
 
   <!-- YouTube companion -->
   <section class="settings-section" *ngIf="auth.isAdmin()">
-    <h2 class="settings-section-title">YouTube companion</h2>
+    <h2 class="settings-section-title">{{ 'settings.youtubeCompanion' | t }}</h2>
     <app-companion-panel></app-companion-panel>
   </section>
 
   <!-- Artwork -->
   <section class="settings-section">
-    <h2 class="settings-section-title">Cover art</h2>
+    <h2 class="settings-section-title">{{ 'settings.coverArt' | t }}</h2>
     <p class="settings-note">
-      Artwork is read from each file's tags. Songs that carry none can be looked up online.
+      {{ 'settings.coverArtNote' | t }}
     </p>
     <app-artwork-backfill></app-artwork-backfill>
     <p class="settings-note" *ngIf="library.missingArtwork().length === 0">
-      Every song has artwork, or has already been looked up.
+      {{ 'settings.artworkAllDone' | t }}
     </p>
   </section>
 
   <!-- Updates -->
   <section class="settings-section">
-    <h2 class="settings-section-title">Updates</h2>
+    <h2 class="settings-section-title">{{ 'settings.updates' | t }}</h2>
 
     <!-- Android only: the app cannot install its own updates without this, and
          Android revokes it again for apps it thinks are unused. -->
     <div class="settings-row" *ngIf="isNative && update.canInstall() === false">
       <span>
-        <strong>Allow Music Hub to install updates</strong>
-        <em>Off right now, so an update has to be installed by hand.</em>
+        <strong>{{ 'settings.allowInstalls' | t }}</strong>
+        <em>{{ 'settings.allowInstallsHint' | t }}</em>
       </span>
-      <button class="settings-row-action-btn" (click)="allowInstalls()">Allow</button>
+      <button class="settings-row-action-btn" (click)="allowInstalls()">
+        {{ 'settings.allow' | t }}
+      </button>
     </div>
     <p class="settings-note settings-note--ok" *ngIf="isNative && update.canInstall() === true">
-      ✓ Music Hub can install its own updates.
+      ✓ {{ 'settings.canInstall' | t }}
     </p>
 
     <app-update-panel></app-update-panel>

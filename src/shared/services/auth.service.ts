@@ -204,6 +204,51 @@ export class AuthService {
     this.applySession(null);
   }
 
+  /**
+   * Stores the language on the profile. Best-effort on purpose: the caller has
+   * already applied it locally, and a failed write offline should not undo a
+   * choice the user just made and can see on screen.
+   */
+  async saveLanguage(language: 'es' | 'en'): Promise<void> {
+    const user = this._user();
+    if (!user) return;
+    try {
+      await this.supabase.client.from('profiles').update({ language }).eq('id', user.id);
+      const profile = this._profile();
+      if (profile) this._profile.set({ ...profile, language });
+    } catch {
+      // Offline: the device copy carries it until the next successful write.
+    }
+  }
+
+  /** Records that the welcome box has been finished or skipped. */
+  async markOnboarded(): Promise<void> {
+    const user = this._user();
+    if (!user) return;
+    const when = new Date().toISOString();
+    try {
+      await this.supabase.client.from('profiles').update({ onboarded_at: when }).eq('id', user.id);
+    } catch {
+      // The local flag still stops it reappearing on this device.
+    }
+    const profile = this._profile();
+    if (profile) this._profile.set({ ...profile, onboarded_at: when });
+  }
+
+  /** Used by the welcome box, which asks for the name it will show. */
+  async saveDisplayName(displayName: string): Promise<void> {
+    const user = this._user();
+    const name = displayName.trim();
+    if (!user || !name) return;
+    try {
+      await this.supabase.client.from('profiles').update({ display_name: name }).eq('id', user.id);
+      const profile = this._profile();
+      if (profile) this._profile.set({ ...profile, display_name: name });
+    } catch {
+      // Non-fatal: the name in the cloud stays as it was.
+    }
+  }
+
   // Reloads the profile row for the signed-in user (no-op when signed out).
   async refreshProfile(): Promise<void> {
     const user = this._user();

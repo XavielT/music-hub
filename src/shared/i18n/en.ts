@@ -295,9 +295,14 @@ export const EN = {
   'settings.allow': 'Allow',
   'settings.canInstall': 'Music Hub can install its own updates.',
   'settings.resetFailed': 'Could not send the reset email.',
-  'settings.live.connected': 'Live — changes from other devices appear on their own.',
+  'settings.live.connected': 'Live — changes made on another device show up here on their own.',
   'settings.live.connecting': 'Connecting to live updates…',
-  'settings.live.offline': 'Not live — pull to sync instead.',
+  'settings.live.offline': 'Live updates are offline — pull with ⟳ until the connection is back.',
+
+  'settings.nothingToClear': 'Nothing to clear.',
+  'settings.cleared': 'Cleared {count} download(s) — {size} freed. They stream until you download them again.',
+  'settings.installsAllowed': 'Music Hub can install its own updates now.',
+  'settings.installsStillOff': 'Still off — updates will have to be installed by hand.',
 
   // --- storage page -------------------------------------------------------
   'storage.title': 'Storage',
@@ -346,8 +351,8 @@ export const EN = {
   'admin.enable': 'Enable',
   'admin.disable': 'Disable',
   'admin.sendReset': 'Send reset',
-  'admin.roleNote.admin': 'Full run of the place: uploads, deletes, invites and this panel.',
-  'admin.roleNote.member': 'Plays everything, keeps playlists, and can ask for a song.',
+  'admin.roleNote.admin': 'Runs the library — uploads, edits, deletes, and this panel.',
+  'admin.roleNote.member': 'Plays everything, keeps playlists, can ask for a song.',
   'admin.roleNote.listener': 'Plays and downloads. Cannot add to or remove from the library.',
   'admin.invitesNote':
     'Sign-ups are invite-only: an address has to be on this list before an account can be made with it. Withdrawing an invite closes the door to a new sign-up — it does not remove someone who already joined.',
@@ -372,7 +377,9 @@ export const EN = {
   'admin.sendFailed': 'Could not send it.',
   'admin.badMegabytes': 'That has to be a number of megabytes above zero.',
   'admin.languageSaved': 'Saved — new accounts start in that language.',
-  'admin.uploadLimitSaved': 'Saved — that is the new upload limit.',
+  'admin.uploadLimitSaved': 'Uploads are capped at {mb} MB per song.',
+
+  'admin.thatAccount': 'That account',
 
   // --- invites panel ------------------------------------------------------
   'invites.note':

@@ -332,3 +332,32 @@
   background: #ff6b6b;
   color: #fff;
 }
+
+// Language picker: two pills rather than a <select>, because there are exactly
+// two and a native select on a phone opens a sheet for a one-tap choice.
+.settings-row--language {
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.settings-langs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.settings-lang {
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+
+  &.active {
+    background: var(--Hub);
+    border-color: var(--Hub);
+    color: var(--on-Hub);
+  }
+}

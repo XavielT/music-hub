@@ -1,7 +1,6 @@
 <div class="invites" *ngIf="auth.isAdmin()">
   <p class="invites-note">
-    Registration is open in the app but the database turns away anyone not on this list. Adding
-    an address lets that person create their own account.
+    {{ 'invites.note' | t }}
   </p>
 
   <div class="invites-add">
@@ -12,11 +11,11 @@
       [(ngModel)]="email"
       (keyup.enter)="add()"
     />
-    <input type="text" placeholder="Who is it? (optional)" [(ngModel)]="note" (keyup.enter)="add()" />
-    <button (click)="add()" [disabled]="invites.busy() || !email.trim()">Invite</button>
+    <input type="text" [placeholder]="'invites.whoIsIt' | t" [(ngModel)]="note" (keyup.enter)="add()" />
+    <button (click)="add()" [disabled]="invites.busy() || !email.trim()">{{ 'admin.invite' | t }}</button>
   </div>
 
-  <p class="invites-note" *ngIf="invites.loading()">Loading the list…</p>
+  <p class="invites-note" *ngIf="invites.loading()">{{ 'invites.loading' | t }}</p>
 
   <div class="invites-row" *ngFor="let invite of invites.invites()">
     <span class="invites-who">
@@ -24,7 +23,7 @@
       <em *ngIf="invite.note">{{ invite.note }}</em>
     </span>
     <span class="invites-state" [class.joined]="invite.has_joined">
-      {{ invite.has_joined ? 'Joined' : 'Not yet' }}
+      {{ invite.has_joined ? ('invites.joined' | t) : ('invites.notYet' | t) }}
     </span>
     <button
       class="invites-remove"
@@ -32,22 +31,18 @@
       (click)="remove(invite.email)"
       [disabled]="invites.busy()"
       [title]="
-        invite.has_joined
-          ? 'Withdraws the invite. Their account stays.'
-          : 'Withdraws the invite before they register.'
+        invite.has_joined ? ('invites.withdrawJoined' | t) : ('invites.withdrawWaiting' | t)
       "
     >
-      {{ confirming() === invite.email ? 'Confirm' : 'Withdraw' }}
+      {{ confirming() === invite.email ? ('common.confirm' | t) : ('admin.withdraw' | t) }}
     </button>
   </div>
 
   <p class="invites-note" *ngIf="!invites.loading() && invites.invites().length === 0">
-    Nobody is invited yet — not even you, which means this list could not be read. Check the
-    connection and reopen settings.
+    {{ 'invites.emptyWarning' | t }}
   </p>
 
   <p class="invites-note">
-    Withdrawing only closes the door to a new sign-up. Someone who already has an account keeps
-    it, along with everything they have downloaded.
+    {{ 'invites.footnote' | t }}
   </p>
 </div>

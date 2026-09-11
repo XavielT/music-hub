@@ -303,9 +303,14 @@ export const ES: Record<TranslationKey, string> = {
   'settings.allow': 'Permitir',
   'settings.canInstall': 'Music Hub puede instalar sus propias actualizaciones.',
   'settings.resetFailed': 'No se pudo enviar el correo.',
-  'settings.live.connected': 'En directo — los cambios de otros dispositivos aparecen solos.',
+  'settings.live.connected': 'En directo — lo que cambies en otro dispositivo aparece aquí solo.',
   'settings.live.connecting': 'Conectando con los cambios en directo…',
-  'settings.live.offline': 'Sin directo — sincroniza a mano.',
+  'settings.live.offline': 'Los cambios en directo están desconectados — usa ⟳ hasta que vuelva la conexión.',
+
+  'settings.nothingToClear': 'No hay nada que borrar.',
+  'settings.cleared': 'Se borraron {count} descarga(s) — {size} liberados. Seguirán sonando por internet hasta que las vuelvas a descargar.',
+  'settings.installsAllowed': 'Music Hub ya puede instalar sus propias actualizaciones.',
+  'settings.installsStillOff': 'Sigue desactivado — las actualizaciones habrá que instalarlas a mano.',
 
   // --- storage page -------------------------------------------------------
   'storage.title': 'Almacenamiento',
@@ -355,9 +360,8 @@ export const ES: Record<TranslationKey, string> = {
   'admin.enable': 'Activar',
   'admin.disable': 'Desactivar',
   'admin.sendReset': 'Enviar enlace',
-  'admin.roleNote.admin':
-    'Manda en todo: subir, eliminar, invitar y este panel.',
-  'admin.roleNote.member': 'Escucha todo, tiene sus playlists y puede pedir canciones.',
+  'admin.roleNote.admin': 'Lleva la biblioteca — sube, edita, elimina, y este panel.',
+  'admin.roleNote.member': 'Escucha todo, tiene sus playlists, puede pedir canciones.',
   'admin.roleNote.listener':
     'Escucha y descarga. No puede añadir ni quitar nada de la biblioteca.',
   'admin.invitesNote':
@@ -383,7 +387,9 @@ export const ES: Record<TranslationKey, string> = {
   'admin.sendFailed': 'No se pudo enviar.',
   'admin.badMegabytes': 'Tiene que ser un número de megabytes mayor que cero.',
   'admin.languageSaved': 'Guardado — las cuentas nuevas empiezan en ese idioma.',
-  'admin.uploadLimitSaved': 'Guardado — ese es el nuevo límite de subida.',
+  'admin.uploadLimitSaved': 'Las subidas quedan limitadas a {mb} MB por canción.',
+
+  'admin.thatAccount': 'Esa cuenta',
 
   // --- invites panel ------------------------------------------------------
   'invites.note':

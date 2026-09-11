@@ -1,5 +1,6 @@
 import { DbService } from './db.service';
 import { LibraryService } from './library.service';
+import { I18nService } from './i18n.service';
 
 // Covers the path from "a file's tags had a picture in them" to "the UI has a
 // URL it can show", which is the part that has no other way of being tested:
@@ -72,6 +73,8 @@ describe('LibraryService editing', () => {
       // library, not the ceiling.
       { maxUploadBytes: () => 1024 * 1024 * 1024, maxUploadMb: () => 1024 } as never,
       { find: async () => null } as never
+    ,
+      new I18nService()
     );
     await library.activate(USER);
   }
@@ -236,6 +239,8 @@ describe('LibraryService.findDuplicate', () => {
       { error: () => undefined, show: () => undefined } as never,
       { maxUploadBytes: () => 1024 * 1024 * 1024, maxUploadMb: () => 1024 } as never,
       { find: async () => null } as never
+    ,
+      new I18nService()
     );
     await library.activate(USER);
     await library.addLocalSong(new File([new Uint8Array([1])], 'a.mp3'), {
@@ -281,6 +286,8 @@ describe('LibraryService cover art', () => {
       { maxUploadBytes: () => 1024 * 1024 * 1024, maxUploadMb: () => 1024 } as never,
       // Nothing in here goes looking for artwork online.
       { find: async () => null } as never
+    ,
+      new I18nService()
     );
     await library.activate(USER);
   });

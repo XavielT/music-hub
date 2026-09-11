@@ -9,14 +9,8 @@ import { InvitesService } from '../../../shared/services/invites.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { STORAGE_QUOTA_BYTES } from '../../../shared/services/cloud-library.service';
 import { UserRole } from '../../../shared/models/profile.model';
-
-// What each role means, in the words the panel shows. Kept next to the picker
-// because a role nobody can explain is a role nobody sets correctly.
-export const ROLE_NOTES: Record<UserRole, string> = {
-  admin: 'Runs the library — uploads, edits, deletes, and this panel.',
-  member: 'Plays everything, keeps playlists, can ask for a song.',
-  listener: 'Plays and downloads. Cannot add to or remove from the library.',
-};
+import { I18nService } from '../../../shared/services/i18n.service';
+import { TPipe } from '../../../shared/i18n/t.pipe';
 
 /**
  * Users, invites and settings for whoever runs the library.
@@ -28,13 +22,12 @@ export const ROLE_NOTES: Record<UserRole, string> = {
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TPipe],
   templateUrl: './admin.html',
   styleUrl: './admin.scss',
 })
 export class AdminComponent implements OnInit {
   readonly roles: UserRole[] = ['admin', 'member', 'listener'];
-  readonly roleNotes = ROLE_NOTES;
   readonly quotaLabel = formatBytes(STORAGE_QUOTA_BYTES);
 
   tab = signal<'users' | 'invites' | 'settings'>('users');
@@ -62,7 +55,8 @@ export class AdminComponent implements OnInit {
     public invites: InvitesService,
     public settings: AppSettingsService,
     private toast: ToastService,
-    private router: Router
+    private router: Router,
+    private i18n: I18nService
   ) {}
 
   ngOnInit(): void {
@@ -95,7 +89,7 @@ export class AdminComponent implements OnInit {
     const ok = await this.admin.setRole(user.id, role);
     if (ok) this.toast.show(`${this.label(user)} is now a ${role}.`);
     else {
-      this.toast.error(this.admin.error() ?? 'That did not go through.');
+      this.toast.error(this.admin.error() ?? this.i18n.t('admin.actionFailed'));
       // Put the picker back where the database still has it.
       (event.target as HTMLSelectElement).value = user.role;
     }
@@ -110,14 +104,14 @@ export class AdminComponent implements OnInit {
           : `${this.label(user)} is disabled and signed out everywhere.`
       );
     } else {
-      this.toast.error(this.admin.error() ?? 'That did not go through.');
+      this.toast.error(this.admin.error() ?? this.i18n.t('admin.actionFailed'));
     }
   }
 
   async sendReset(user: AdminUserRow): Promise<void> {
     const ok = await this.admin.sendReset(user.id);
     if (ok) this.toast.show(`Reset link sent to ${user.email}.`);
-    else this.toast.error(this.admin.error() ?? 'Could not send it.');
+    else this.toast.error(this.admin.error() ?? this.i18n.t('admin.sendFailed'));
   }
 
   askDelete(user: AdminUserRow): void {
@@ -136,7 +130,7 @@ export class AdminComponent implements OnInit {
     const ok = await this.admin.deleteUser(user.id);
     this.deleting.set(null);
     if (ok) this.toast.show(`${this.label(user)} and everything they uploaded are gone.`);
-    else this.toast.error(this.admin.error() ?? 'That did not go through.');
+    else this.toast.error(this.admin.error() ?? this.i18n.t('admin.actionFailed'));
   }
 
   async addInvite(): Promise<void> {
@@ -151,22 +145,22 @@ export class AdminComponent implements OnInit {
   async saveUploadLimit(): Promise<void> {
     const mb = Math.round(this.maxUploadMb());
     if (!(mb > 0)) {
-      this.toast.error('That has to be a number of megabytes above zero.');
+      this.toast.error(this.i18n.t('admin.badMegabytes'));
       return;
     }
     const failed = await this.settings.save('max_upload_mb', mb);
     if (failed) this.toast.error(failed);
-    else this.toast.show(`Uploads are capped at ${mb} MB per song.`);
+    else this.toast.show(this.i18n.t('admin.uploadLimitSaved', { mb }));
   }
 
   async saveLanguage(): Promise<void> {
     const failed = await this.settings.save('default_language', this.language());
     if (failed) this.toast.error(failed);
-    else this.toast.show('Saved — new accounts start in that language.');
+    else this.toast.show(this.i18n.t('admin.languageSaved'));
   }
 
   private label(user: AdminUserRow): string {
-    return user.display_name.trim() || user.email || 'That account';
+    return user.display_name.trim() || user.email || this.i18n.t('admin.thatAccount');
   }
 
   back(): void {

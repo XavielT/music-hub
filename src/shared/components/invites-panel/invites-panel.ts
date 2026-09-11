@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { InvitesService } from '../../services/invites.service';
+import { TPipe } from '../../i18n/t.pipe';
 
 // Who is allowed to register. Admins only — and not only in the sense of a
 // hidden section: the functions behind it refuse anybody else outright.
 @Component({
   selector: 'app-invites-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TPipe],
   templateUrl: './invites-panel.html',
   styleUrl: './invites-panel.scss',
 })

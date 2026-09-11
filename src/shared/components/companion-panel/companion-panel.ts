@@ -5,6 +5,8 @@ import { AuthService } from '../../services/auth.service';
 import { CompanionService } from '../../services/companion.service';
 import { CompanionWorkerService } from '../../services/companion-worker.service';
 import { ToastService } from '../../services/toast.service';
+import { I18nService } from '../../services/i18n.service';
+import { TPipe } from '../../i18n/t.pipe';
 
 // Where the yt-dlp companion lives. Admin-only, because only admins add to the
 // shared library — and because the token is a credential for a service that
@@ -12,7 +14,7 @@ import { ToastService } from '../../services/toast.service';
 @Component({
   selector: 'app-companion-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TPipe],
   templateUrl: './companion-panel.html',
   styleUrl: './companion-panel.scss',
 })
@@ -30,7 +32,8 @@ export class CompanionPanel implements OnInit {
     public auth: AuthService,
     public companion: CompanionService,
     public worker: CompanionWorkerService,
-    private toast: ToastService
+    private toast: ToastService,
+    private i18n: I18nService
   ) {
     this.url = companion.url();
     this.token = companion.token();
@@ -47,7 +50,7 @@ export class CompanionPanel implements OnInit {
     this.companion.configure(this.url, this.token);
     const health = await this.companion.check();
     if (health.ok && !health.error) this.toast.show(`Companion reachable — yt-dlp ${health.ytdlp}.`);
-    else this.toast.error(health.error ?? 'The companion did not answer.');
+    else this.toast.error(health.error ?? this.i18n.t('companion.noAnswer'));
   }
 
   // The Termux companion always listens here, so this saves typing an address
@@ -64,8 +67,8 @@ export class CompanionPanel implements OnInit {
 
   async linkWorker(): Promise<void> {
     const ok = await this.worker.enable();
-    if (ok) this.toast.show('The companion will fetch requested songs on its own now.');
-    else this.toast.error(this.worker.error() ?? 'Could not link the companion.');
+    if (ok) this.toast.show(this.i18n.t('companion.workerLinked'));
+    else this.toast.error(this.worker.error() ?? this.i18n.t('companion.linkFailed'));
   }
 
   async unlinkWorker(): Promise<void> {
@@ -76,7 +79,7 @@ export class CompanionPanel implements OnInit {
     }
     this.confirmingUnlink.set(false);
     const ok = await this.worker.disable();
-    if (ok) this.toast.show('Stopped. Requests are fulfilled only while the app is open.');
-    else this.toast.error(this.worker.error() ?? 'Could not stop the companion worker.');
+    if (ok) this.toast.show(this.i18n.t('companion.workerStopped'));
+    else this.toast.error(this.worker.error() ?? this.i18n.t('companion.stopFailed'));
   }
 }

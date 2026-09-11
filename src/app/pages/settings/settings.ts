@@ -9,6 +9,7 @@ import { RealtimeService } from '../../../shared/services/realtime.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { UpdateService } from '../../../shared/services/update.service';
 import { ThemeService } from '../../../shared/services/theme.service';
+import { I18nService, LANGUAGES, Lang } from '../../../shared/services/i18n.service';
 import {
   CloudLibraryService,
   STORAGE_QUOTA_BYTES,
@@ -18,12 +19,13 @@ import { ArtworkBackfill } from '../../../shared/components/artwork-backfill/art
 import { InstallHint } from '../../../shared/components/install-hint/install-hint';
 import { InvitesPanel } from '../../../shared/components/invites-panel/invites-panel';
 import { CompanionPanel } from '../../../shared/components/companion-panel/companion-panel';
+import { TPipe } from '../../../shared/i18n/t.pipe';
 
 // Everything about the app and the account, so the library can be about music.
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, UpdatePanel, ArtworkBackfill, InstallHint, InvitesPanel, CompanionPanel],
+  imports: [CommonModule, UpdatePanel, ArtworkBackfill, InstallHint, InvitesPanel, CompanionPanel, TPipe],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })
@@ -44,11 +46,11 @@ export class SettingsComponent implements OnInit {
   liveLabel = computed(() => {
     switch (this.realtime.status()) {
       case 'live':
-        return 'Live — changes made on another device show up here on their own.';
+        return this.i18n.t('settings.live.connected');
       case 'connecting':
-        return 'Connecting to live updates…';
+        return this.i18n.t('settings.live.connecting');
       case 'error':
-        return 'Live updates are offline — pull with ⟳ until the connection is back.';
+        return this.i18n.t('settings.live.offline');
       default:
         return '';
     }
@@ -75,7 +77,8 @@ export class SettingsComponent implements OnInit {
     public update: UpdateService,
     public theme: ThemeService,
     private toast: ToastService,
-    private router: Router
+    private router: Router,
+    public i18n: I18nService
   ) {}
 
   ngOnInit(): void {
@@ -110,7 +113,7 @@ export class SettingsComponent implements OnInit {
     const result = await this.auth.sendPasswordReset(email);
     this.sendingReset.set(false);
     if (result.ok) this.toast.show(result.message ?? `Reset link sent to ${email}.`);
-    else this.toast.error(result.message ?? 'Could not send the reset email.');
+    else this.toast.error(result.message ?? this.i18n.t('settings.resetFailed'));
   }
 
   onCustomAccent(event: Event): void {
@@ -130,8 +133,8 @@ export class SettingsComponent implements OnInit {
     this.clearing.set(false);
     this.toast.show(
       cleared === 0
-        ? 'Nothing to clear.'
-        : `Cleared ${cleared} download${cleared === 1 ? '' : 's'} — ${this.formatBytes(freedBytes)} freed. They stream until you download them again.`
+        ? this.i18n.t('settings.nothingToClear')
+        : this.i18n.t('settings.cleared', { count: cleared, size: this.formatBytes(freedBytes) })
     );
   }
 
@@ -139,9 +142,21 @@ export class SettingsComponent implements OnInit {
     const granted = await this.update.requestInstallPermission();
     this.toast.show(
       granted
-        ? 'Music Hub can install its own updates now.'
-        : 'Still off — updates will have to be installed by hand.'
+        ? this.i18n.t('settings.installsAllowed')
+        : this.i18n.t('settings.installsStillOff')
     );
+  }
+
+  readonly languages = LANGUAGES;
+
+  /**
+   * Applies the language now and remembers it on the profile, so it follows the
+   * user to their other devices. The local switch is not conditional on the
+   * write succeeding: offline, the device copy is still the right answer.
+   */
+  async setLanguage(lang: Lang): Promise<void> {
+    this.i18n.use(lang);
+    await this.auth.saveLanguage(lang);
   }
 
   openAdmin(): void {

@@ -13,13 +13,14 @@ import {
   formatBitrate,
   formatBytes,
 } from '../../../shared/services/storage-report';
+import { TPipe } from '../../../shared/i18n/t.pipe';
 
 // Where the 1 GB is going, and what could be got back. The quota bar in
 // settings says how full it is; this says what is filling it.
 @Component({
   selector: 'app-storage',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TPipe],
   templateUrl: './storage.html',
   styleUrl: './storage.scss',
 })

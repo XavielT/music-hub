@@ -5,6 +5,7 @@ import { AppSettingsService, DEFAULT_MAX_UPLOAD_MB, DEFAULT_LANGUAGE } from './a
 import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
 import { adminGuard } from '../guards/admin.guard';
+import { I18nService } from './i18n.service';
 
 // The panel is the least trustworthy part of this feature — it is the part an
 // attacker can see. What is worth pinning down is that it never pretends an
@@ -111,7 +112,7 @@ describe('AppSettingsService', () => {
         }),
       },
     };
-    return new AppSettingsService(supabase as never);
+    return new AppSettingsService(supabase as never, new I18nService());
   }
 
   beforeEach(() => {

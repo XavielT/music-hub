@@ -1,6 +1,7 @@
 import { signal } from '@angular/core';
 import { DownloadQueueService } from './download-queue.service';
 import { DownloadRequestRow, isActive, requestLabel } from '../models/download-request.model';
+import { I18nService } from './i18n.service';
 
 // The worker is the part with teeth: it claims rows other devices can also see,
 // downloads real files, and writes to a shared library. What it does when a
@@ -145,6 +146,8 @@ describe('DownloadQueueService', () => {
         uploadSong: async () => uploadResult,
       } as never,
       { show: (m: string) => toasts.push(m), error: (m: string) => errors.push(m) } as never
+    ,
+      new I18nService()
     );
   });
 

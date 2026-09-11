@@ -1,6 +1,7 @@
 import { DbService } from './db.service';
 import { PlayerService, shuffleKeepingFirst } from './player.service';
 import { SongModel } from '../models/song.model';
+import { I18nService } from './i18n.service';
 
 // Queue behaviour is the part of this app with the most invisible state:
 // a shuffled order, an original order to get back to, an index into whichever
@@ -81,6 +82,8 @@ describe('PlayerService', () => {
         },
       } as never,
       { error: (text: string) => errors.push(text), show: () => undefined } as never
+    ,
+      new I18nService()
     );
   }
 
@@ -303,7 +306,9 @@ describe('PlayerService', () => {
         } as never,
         { getStreamUrl: async () => 'https://example.test/stream' } as never,
         { error: () => undefined, show: () => undefined } as never
-      );
+      ,
+      new I18nService()
+    );
       await revived.restoreSession();
 
       expect(revived.current()?.id).toBe('c');
@@ -334,7 +339,9 @@ describe('PlayerService', () => {
         } as never,
         { getStreamUrl: async () => 'https://example.test/stream' } as never,
         { error: () => undefined, show: () => undefined } as never
-      );
+      ,
+      new I18nService()
+    );
       await revived.restoreSession();
 
       expect(revived.queue().map(s => s.id)).toEqual(['a', 'c']);

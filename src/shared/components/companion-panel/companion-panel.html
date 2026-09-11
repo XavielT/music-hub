@@ -1,24 +1,22 @@
 <div class="companion" *ngIf="auth.isAdmin()">
   <p class="companion-note">
-    YouTube no longer hands playable audio to anything a browser or a WebView can be, so
-    downloads go through a small service you run. See <code>companion/README.md</code> for
-    deploying it — it is a Dockerfile and two environment variables.
+    <span [innerHTML]="'companion.intro' | t"></span>
   </p>
 
   <button class="companion-text-btn" (click)="useThisPhone()">
-    Use the companion running on this phone
+    {{ 'companion.useThisPhone' | t }}
   </button>
 
   <label class="companion-field">
-    <span>Address</span>
+    <span>{{ 'companion.address' | t }}</span>
     <input type="url" placeholder="https://music-hub-companion.onrender.com" [(ngModel)]="url" />
   </label>
 
   <label class="companion-field">
-    <span>Token</span>
+    <span>{{ 'companion.token' | t }}</span>
     <input
       [type]="revealed() ? 'text' : 'password'"
-      placeholder="MUSIC_HUB_TOKEN from the server"
+      [placeholder]="'companion.tokenPlaceholder' | t"
       autocomplete="off"
       [(ngModel)]="token"
     />
@@ -26,20 +24,27 @@
 
   <div class="companion-actions">
     <button class="companion-btn" (click)="save()" [disabled]="companion.checking() || !url.trim()">
-      {{ companion.checking() ? 'Checking…' : 'Save and test' }}
+      {{ companion.checking() ? ('companion.checking' | t) : ('companion.saveAndTest' | t) }}
     </button>
     <button class="companion-text-btn" (click)="revealed.set(!revealed())">
-      {{ revealed() ? 'Hide token' : 'Show token' }}
+      {{ revealed() ? ('companion.hideToken' | t) : ('companion.showToken' | t) }}
     </button>
     <button class="companion-text-btn" *ngIf="companion.configured()" (click)="forget()">
-      Forget
+      {{ 'companion.forget' | t }}
     </button>
   </div>
 
   <p class="companion-status" *ngIf="companion.health() as health">
     <span class="companion-dot" [class.ok]="health.ok && !health.error"></span>
     <ng-container *ngIf="health.ok && !health.error">
-      Reachable — yt-dlp {{ health.ytdlp }}{{ health.cookies ? ', with cookies' : '' }}.
+      {{
+        'companion.reachable'
+          | t
+            : {
+                version: health.ytdlp ?? '',
+                cookies: health.cookies ? ('companion.withCookies' | t) : ''
+              }
+      }}
     </ng-container>
     <ng-container *ngIf="!health.ok || health.error">{{ health.error }}</ng-container>
   </p>
@@ -51,19 +56,15 @@
     class="companion-note"
     *ngIf="companion.health()?.ok && companion.health()?.cookies === false && !companion.isLocal()"
   >
-    ⚠ No cookies loaded. A companion on a hosting provider will be refused by YouTube
-    ("confirm you're not a bot") — add a <code>cookies.txt</code> as a secret file and set
-    <code>YTDLP_COOKIES_FILE</code>. One running on your own connection does not need them.
+    <span [innerHTML]="'companion.noCookies' | t"></span>
   </p>
 
   <!-- Only the companion on this phone can do this; the hosted one reports no
        worker at all and the section stays hidden. -->
   <div class="companion-worker" *ngIf="worker.supported()">
-    <h4>Fetch songs while the app is closed</h4>
+    <h4>{{ 'companion.workerHeading' | t }}</h4>
     <p class="companion-note">
-      Requests from the family are normally fulfilled while Music Hub is open on this
-      phone. Linked, the companion does it by itself — signed in as its own account,
-      so a song asked for at midnight is in the library by morning.
+      {{ 'companion.workerNote' | t }}
     </p>
 
     <p class="companion-status" *ngIf="worker.linked()">
@@ -78,7 +79,7 @@
         (click)="linkWorker()"
         [disabled]="worker.busy()"
       >
-        {{ worker.busy() ? 'Linking…' : 'Link this companion' }}
+        {{ worker.busy() ? ('companion.linking' | t) : ('companion.link' | t) }}
       </button>
       <button
         class="companion-btn"
@@ -86,7 +87,7 @@
         (click)="linkWorker()"
         [disabled]="worker.busy()"
       >
-        {{ worker.busy() ? 'Linking…' : 'Re-link' }}
+        {{ worker.busy() ? ('companion.linking' | t) : ('companion.relink' | t) }}
       </button>
       <button
         class="companion-text-btn"
@@ -94,19 +95,16 @@
         (click)="unlinkWorker()"
         [disabled]="worker.busy()"
       >
-        {{ confirmingUnlink() ? 'Tap again to stop' : 'Stop' }}
+        {{ confirmingUnlink() ? ('companion.tapAgainToStop' | t) : ('companion.stop' | t) }}
       </button>
     </div>
 
     <p class="companion-note">
-      Linking makes a password nobody has to remember, and gives the only copy to this
-      phone — so re-link from here if it is ever lost, rather than looking for it. The
-      account may add to the shared library, which is what fetching a song is.
+      {{ 'companion.workerFootnote' | t }}
     </p>
   </div>
 
   <p class="companion-note">
-    The address and token are kept on this device only — the token is not synced to the
-    others, and never goes near the shared library.
+    {{ 'companion.footnote' | t }}
   </p>
 </div>

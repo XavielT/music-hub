@@ -1,6 +1,7 @@
 import { DbService } from './db.service';
 import { PLAYBACK_SPEEDS, PlayerService } from './player.service';
 import { SongModel } from '../models/song.model';
+import { I18nService } from './i18n.service';
 
 // Speed and the sleep timer are both "settings that outlive a song", and both
 // have a way of quietly not applying: the element resets playbackRate on every
@@ -64,6 +65,8 @@ describe('Playback speed and the sleep timer', () => {
         },
       } as never,
       { error: (t: string) => messages.push(t), show: (t: string) => messages.push(t) } as never
+    ,
+      new I18nService()
     );
   }
 
