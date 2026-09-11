@@ -3,14 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
+import { I18nService } from '../../../shared/services/i18n.service';
 import { InstallHint } from '../../../shared/components/install-hint/install-hint';
+import { TPipe } from '../../../shared/i18n/t.pipe';
 
 type AuthMode = 'login' | 'register' | 'forgot';
 
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [CommonModule, FormsModule, InstallHint],
+  imports: [CommonModule, FormsModule, InstallHint, TPipe],
   templateUrl: './auth.html',
   styleUrl: './auth.scss',
 })
@@ -24,7 +26,12 @@ export class AuthComponent {
   password = '';
   displayName = '';
 
-  constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute) {
+  constructor(
+    private auth: AuthService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private i18n: I18nService
+  ) {
     // Landed here because the account was disabled mid-session, rather than by
     // signing out.
     const reason = this.auth.takeSignedOutReason();
@@ -92,19 +99,19 @@ export class AuthComponent {
   }
 
   submitLabel(): string {
-    if (this.busy()) return 'Please wait...';
-    if (this.mode() === 'login') return 'Sign in';
-    return this.mode() === 'register' ? 'Create account' : 'Send reset link';
+    if (this.busy()) return this.i18n.t('auth.working');
+    if (this.mode() === 'login') return this.i18n.t('auth.signIn');
+    return this.i18n.t(this.mode() === 'register' ? 'auth.createAccount' : 'auth.sendResetLink');
   }
 
   private validate(): string {
-    if (!this.email.trim()) return 'Enter your email.';
-    if (!this.email.includes('@')) return 'That email address does not look valid.';
+    if (!this.email.trim()) return this.i18n.t('auth.enterEmail');
+    if (!this.email.includes('@')) return this.i18n.t('auth.err.badEmail');
     if (this.mode() === 'forgot') return '';
-    if (!this.password) return 'Enter your password.';
+    if (!this.password) return this.i18n.t('auth.enterPassword');
     if (this.mode() === 'register') {
-      if (this.password.length < 6) return 'Password is too weak — use at least 6 characters.';
-      if (!this.displayName.trim()) return 'Enter a display name.';
+      if (this.password.length < 6) return this.i18n.t('auth.err.weakPassword');
+      if (!this.displayName.trim()) return this.i18n.t('auth.enterDisplayName');
     }
     return '';
   }

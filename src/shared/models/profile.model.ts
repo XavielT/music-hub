@@ -21,4 +21,11 @@ export interface ProfileModel {
   // policy refuses it, so the app signs it out rather than showing an empty
   // library that looks like a bug.
   disabled: boolean;
+  // The language this account chose, or null when it never has. Null is not
+  // the same as 'en': it is what lets the device's own choice, and then the
+  // library default, still have a say.
+  language: 'es' | 'en' | null;
+  // When the welcome box was finished or skipped. Null means it has not been
+  // seen, which is also true of every account that existed before it did.
+  onboarded_at: string | null;
 }

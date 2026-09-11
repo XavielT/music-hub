@@ -6,11 +6,12 @@ import { SongItem } from '../../../shared/components/song-item/song-item';
 import { SongEditor } from '../../../shared/components/song-editor/song-editor';
 import { PlaylistPicker } from '../../../shared/components/playlist-picker/playlist-picker';
 import { SongModel } from '../../../shared/models/song.model';
+import { TPipe } from '../../../shared/i18n/t.pipe';
 
 @Component({
   selector: 'app-search',
   standalone: true,
-  imports: [CommonModule, SongItem, SongEditor, PlaylistPicker],
+  imports: [CommonModule, SongItem, SongEditor, PlaylistPicker, TPipe],
   templateUrl: './search.html',
   styleUrl: './search.scss',
 })

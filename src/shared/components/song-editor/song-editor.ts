@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { LibraryService } from '../../services/library.service';
 import { shrinkCover } from '../../services/tags';
 import { SongModel } from '../../models/song.model';
+import { TPipe } from '../../i18n/t.pipe';
 
 // Corrects what a file got wrong about itself. Same sheet-from-the-bottom
 // shape as the playlist picker, so it reads as part of the app rather than a
@@ -11,7 +12,7 @@ import { SongModel } from '../../models/song.model';
 @Component({
   selector: 'app-song-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TPipe],
   templateUrl: './song-editor.html',
   styleUrl: './song-editor.scss',
 })

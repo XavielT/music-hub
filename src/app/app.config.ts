@@ -12,6 +12,7 @@ import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 import { AuthService } from '../shared/services/auth.service';
 import { ThemeService } from '../shared/services/theme.service';
+import { I18nService } from '../shared/services/i18n.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -26,6 +27,13 @@ export const appConfig: ApplicationConfig = {
     // colour every launch and only correct itself once you went looking.
     provideAppInitializer(() => {
       inject(ThemeService);
+    }),
+    // Same reasoning for the language: constructing the service is what reads
+    // the device's choice and sets <html lang>. Without this the first paint —
+    // the auth screen, most often — would be in English until something else
+    // happened to inject it.
+    provideAppInitializer(() => {
+      inject(I18nService);
     }),
     // Service worker for the installable web app only. Inside the Capacitor
     // WebView the native shell already serves the assets locally, and a second

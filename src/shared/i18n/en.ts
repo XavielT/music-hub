@@ -1,0 +1,465 @@
+/**
+ * English dictionary — and the shape every other language must match.
+ *
+ * `TranslationKey` is derived from this object, and `es.ts` is typed as a
+ * complete record of it, so a missing or misspelled Spanish key fails the build
+ * rather than quietly showing English (or the raw key) on somebody's phone.
+ *
+ * Keys are dotted and grouped by feature. `{name}` placeholders are filled by
+ * `t(key, { name })`.
+ */
+export const EN = {
+  // --- shared words -------------------------------------------------------
+  'common.back': 'Back',
+  'common.cancel': 'Cancel',
+  'common.save': 'Save',
+  'common.saving': 'Saving…',
+  'common.saved': 'Saved',
+  'common.delete': 'Delete',
+  'common.create': 'Create',
+  'common.remove': 'Remove',
+  'common.more': 'More',
+  'common.open': 'Open',
+  'common.confirm': 'Confirm',
+  'common.off': 'Off',
+  'common.shuffle': 'Shuffle',
+  'common.playAll': 'Play all',
+  'common.play': 'Play',
+  'common.loading': 'Loading…',
+  'common.song': '{count} song',
+  'common.songs': '{count} songs',
+
+  // --- bottom navigation --------------------------------------------------
+  'nav.home': 'Home',
+  'nav.search': 'Search',
+  'nav.library': 'Library',
+  'nav.add': 'Add',
+  'nav.settings': 'Settings',
+
+  // --- sign in / register -------------------------------------------------
+  'auth.tagline': 'Your library, on every device.',
+  'auth.signIn': 'Sign in',
+  'auth.register': 'Register',
+  'auth.forgotHint': "Enter your email and we'll send you a link to set a new password.",
+  'auth.inviteHint': 'Music Hub is invite-only — register with an email Xaviel has already added.',
+  'auth.email': 'Email',
+  'auth.displayName': 'Display name',
+  'auth.password': 'Password',
+  'auth.forgotPassword': 'Forgot password?',
+  'auth.backToSignIn': 'Back to sign in',
+  'auth.noAccount': 'No account yet?',
+  'auth.haveAccount': 'Already have an account?',
+  'auth.sendResetLink': 'Send reset link',
+  'auth.createAccount': 'Create account',
+  'auth.enterEmail': 'Enter your email.',
+  'auth.enterPassword': 'Enter your password.',
+  'auth.enterDisplayName': 'Enter a display name.',
+  'auth.working': 'Just a moment…',
+  'auth.newPassword': 'New password',
+  'auth.newPasswordTagline': "Pick something you'll remember this time.",
+  'auth.repeatNewPassword': 'Repeat new password',
+  'auth.savePassword': 'Save password',
+  'auth.passwordsDiffer': 'The two passwords do not match.',
+  'auth.passwordTooShort': 'Use at least 6 characters.',
+  'auth.passwordChanged': 'Password changed — signing you in…',
+  'auth.checkingLink': 'Checking the link…',
+
+  // Messages the auth service produces for a failure. Kept as keys so the
+  // sentence can be translated; anything the server says that is not one of
+  // these falls through as its own text.
+  'auth.err.inviteOnly': 'Sign-ups are invite-only. Ask Xaviel to add your email, then register.',
+  'auth.err.badCredentials': 'Wrong email or password.',
+  'auth.err.unconfirmed': 'Confirm your email first, then sign in.',
+  'auth.err.alreadyRegistered': 'That email is already registered. Try signing in instead.',
+  'auth.err.weakPassword': 'Password is too weak — use at least 6 characters.',
+  'auth.err.badEmail': 'That email address does not look valid.',
+  'auth.err.staleLink':
+    'That reset link is no longer valid — it may have expired or already been used. Ask for a new one from the sign-in page.',
+  'auth.err.samePassword': 'Choose a password different from your current one.',
+  'auth.err.rateLimited': 'Too many attempts. Wait a minute and try again.',
+  'auth.err.offline': 'No connection to the server. Check your internet and try again.',
+  'auth.err.generic': 'Something went wrong. Try again.',
+  'auth.confirmEmail': 'Check your inbox to confirm your email, then sign in.',
+  'auth.resetSent': 'Reset link sent — check your inbox (and the spam folder).',
+  'auth.accountDisabled': 'This account has been disabled. Ask Xaviel if you think that is a mistake.',
+
+  // --- home ---------------------------------------------------------------
+  'home.greetingMorning': 'Good morning',
+  'home.greetingAfternoon': 'Good afternoon',
+  'home.greetingEvening': 'Good evening',
+  'home.emptyTitle': 'Your library is empty',
+  'home.emptyText': 'Add songs from your device to start listening.',
+  'home.addMusic': 'Add music',
+  'home.recentlyAdded': 'Recently added',
+  'home.yourPlaylists': 'Your playlists',
+
+  // --- search -------------------------------------------------------------
+  'search.title': 'Search',
+  'search.placeholder': 'Songs, artists or albums…',
+  'search.empty': 'No results in your library.',
+
+  // --- library ------------------------------------------------------------
+  'library.title': 'Your library',
+  'library.tab.songs': 'songs',
+  'library.tab.artists': 'artists',
+  'library.tab.albums': 'albums',
+  'library.tab.playlists': 'playlists',
+  'library.empty': 'No songs yet. Add some from the ＋ tab.',
+  'library.nothingHere': 'Nothing here yet.',
+  'library.newPlaylistName': 'New playlist name',
+  'library.sharedWithYou': 'Shared with you',
+  'library.by': 'by {name}',
+  'library.sharedWithEveryone': 'Shared with everyone',
+  'library.listenerNote':
+    'Your account can listen and download everything in the library — ask Xaviel to add music to it.',
+
+  // --- a song row ---------------------------------------------------------
+  'song.needsConnection': 'needs connection',
+  'song.playNext': 'Play next',
+  'song.addToQueue': 'Add to queue',
+  'song.editInfo': 'Edit info',
+  'song.addToPlaylist': 'Add to playlist',
+  'song.badge.onDevice': 'On this device',
+  'song.badge.download': 'Download for offline',
+  'song.badge.downloading': 'Downloading…',
+  'song.badge.cloud': 'In the shared library',
+  'song.badge.localOnly': 'Only on this device',
+  'song.badge.upload': 'Upload to the shared library',
+  'song.badge.uploading': 'Uploading…',
+
+  // --- playlist picker ----------------------------------------------------
+  'picker.title': 'Add to playlist',
+
+  // --- song editor --------------------------------------------------------
+  'editor.title': 'Edit info',
+  'editor.replaceCover': 'Replace cover',
+  'editor.fieldTitle': 'Title',
+  'editor.fieldArtist': 'Artist',
+  'editor.fieldAlbum': 'Album',
+  'editor.localOnlyNote': 'This change stays on this device until it can reach the shared library.',
+
+  // --- player -------------------------------------------------------------
+  'player.shuffleOn': 'Shuffle on',
+  'player.shuffleOff': 'Shuffle off',
+  'player.previous': 'Previous',
+  'player.next': 'Next',
+  'player.repeatOff': 'Repeat off',
+  'player.repeatAll': 'Repeat all',
+  'player.repeatOne': 'Repeat one',
+  'player.volume': 'Volume',
+  'player.speed': 'Playback speed',
+  'player.sleepTimer': 'Sleep timer',
+  'player.sleepNote': 'Playback pauses — the queue and the position stay put.',
+  'player.sleepMinutes': '{count} min',
+  'player.sleepEndOfSong': 'End of song',
+  'player.sleepPaused': 'Sleep timer — playback paused.',
+  'player.queue': 'Queue',
+  'player.hideQueue': 'Hide queue',
+  'player.playingNow': 'Playing now',
+  'player.nextUp': 'Next up',
+  'player.playThisNext': 'Play this next',
+  'player.moveUp': 'Move up',
+  'player.moveDown': 'Move down',
+  'player.lastSong': 'Last song in the queue.',
+  'player.lastSongRepeat': 'Last song — the queue starts over next.',
+
+  // --- playlist details ---------------------------------------------------
+  'playlist.sharedBy': 'shared by {name}',
+  'playlist.download': 'Download',
+  'playlist.offline': 'Offline',
+  'playlist.downloadAllTitle': 'Download every song for offline listening',
+  'playlist.shuffleTitle': 'Play this playlist in random order',
+  'playlist.share': 'Share',
+  'playlist.shared': 'Shared',
+  'playlist.stopSharing': 'Stop sharing with the household',
+  'playlist.startSharing': 'Let everyone see and add to this playlist',
+  'playlist.ownerHint':
+    'Everyone in the household can see this and add songs to it. Only you can rename, unshare or delete it.',
+  'playlist.guestHint':
+    'A shared playlist — you can add and remove songs, and everyone sees the change.',
+  'playlist.empty': 'This playlist is empty. Add songs from Search or Library with the ＋ button.',
+  'playlist.deleteConfirm': 'Delete this playlist? The songs stay in your library.',
+
+  // --- add music ----------------------------------------------------------
+  'add.title': 'Add music',
+  'add.fromYoutube': 'From YouTube',
+  'add.ytUnavailable':
+    "Searching YouTube needs the installed Android app or a companion — a browser cannot reach YouTube's API directly. You can still <strong>paste a YouTube link</strong> below and ask for the song; it will be fetched and added to the shared library.",
+  'add.downloadsViaCompanion': 'Downloads go through your companion.',
+  'add.noCompanionHere':
+    'No companion on this device, so songs are <strong>requested</strong> rather than downloaded here. A device that has one fetches them, and they appear in the shared library for everyone.',
+  'add.browseYoutube': 'Browse YouTube and add a song',
+  'add.openingYoutube': 'Opening YouTube…',
+  'add.browseNote':
+    'Opens YouTube here in the app. Find a song, press play, then tap <strong>Add this song to Music Hub</strong>. Nothing to set up.',
+  'add.downloadingPercent': 'Downloading — {percent}%',
+  'add.ytSearchPlaceholder': 'Search a song or paste a YouTube link',
+  'add.requestThisSong': 'Request this song',
+  'add.request': 'Request',
+  'add.requestTitle': 'Ask a device with a companion to fetch this',
+  'add.downloadHere': 'Download to this device',
+  'add.requestedSongs': 'Requested songs',
+  'add.removeRequest': 'Remove this request',
+  'add.fromThisDevice': 'From this device',
+  'add.pickFiles': 'Tap to pick audio files',
+  'add.pickFilesHint':
+    'mp3, m4a, mp4, wav, ogg, flac — name them "Artist - Title.mp3" to auto-fill the info',
+  'add.readingTags': 'Reading tags from the files…',
+  'add.albumOptional': 'Album (optional)',
+  'add.duplicate': 'Looks like a duplicate of <strong>{title}</strong> — you can still add it.',
+  'add.heavyWarning':
+    '{count} of these are above 200 kbps and would take {size} more of the shared 1 GB than they need to. Compressing them first with <code>./tools/compress-for-cloud.sh</code> is transparent on a phone — or upload them as they are, it is a nudge rather than a gate.',
+  'add.uploadToShared': 'Upload to the shared library so they play on every device',
+  'add.staysOnDevice':
+    'These songs stay on this device. The shared cloud library is added to by Xaviel — everything in it is already available to you to play and download.',
+  'add.saveCount': 'Save {count} song(s)',
+  'add.fromUrl': 'From a direct audio URL',
+  'add.urlPlaceholder': 'https:// direct audio link (.mp3, .m4a…)',
+  'add.addSong': 'Add song',
+  'add.urlNote': 'Paste a direct link to an audio file and it will stream in the app (needs internet).',
+  'add.urlNeedsFields': 'A direct audio URL and a title are both needed.',
+  'add.savedCount': 'Added {count} song(s) to your library.',
+  'add.status.pending': 'Waiting for a device to fetch it',
+  'add.status.working': 'Being fetched now…',
+  'add.status.done': 'Added to the library',
+  'add.status.failed': 'Could not be fetched — {error}',
+  'add.queuedAlready': 'That song is already in the queue.',
+  'add.requestSent': 'Asked for that song — it will appear in the library once it is fetched.',
+
+  // --- settings -----------------------------------------------------------
+  'settings.title': 'Settings',
+  'settings.account': 'Account',
+  'settings.admin': 'Admin',
+  'settings.adminHint': "Who can do what, invites, and the library's own settings.",
+  'settings.changePassword': 'Change password',
+  'settings.changePasswordHint': 'We email you a link — nothing to type in here.',
+  'settings.sendLink': 'Send link',
+  'settings.sending': 'Sending…',
+  'settings.signOut': 'Sign out',
+  'settings.signOutHint': 'Downloaded songs stay on this device for the next sign-in.',
+  'settings.language': 'Language',
+  'settings.languageHint': 'Applies right away, and follows you to your other devices.',
+  'settings.appearance': 'Appearance',
+  'settings.accentNote': 'The accent colour, used everywhere in the app.',
+  'settings.customColour': 'Custom colour',
+  'settings.backToAmber': 'Back to amber',
+  'settings.sharedLibrary': 'Shared library',
+  'settings.cloudStorage': 'Cloud storage',
+  'settings.syncNow': 'Sync now',
+  'settings.nearQuota': 'Close to the 1 GB limit — delete a few cloud songs before adding more.',
+  'settings.onlyOnDevice': '{count} song(s) only on this device',
+  'settings.uploadThem': 'Upload them so they play everywhere.',
+  'settings.uploadAll': 'Upload all',
+  'settings.uploading': 'Uploading…',
+  'settings.staysOnDevice': '{count} song(s) stay on this device — the shared library is added to by Xaviel.',
+  'settings.downloadedCount': '{done} of {total} song(s) are downloaded for offline play.',
+  'settings.clearDownloads': 'Clear downloads',
+  'settings.clearDownloadsHint':
+    'Frees {size}. The songs stay in your library and stream until you download them again.',
+  'settings.clearing': 'Clearing…',
+  'settings.clear': 'Clear',
+  'settings.unclearable':
+    '{count} song(s) are only on this device, so their audio is kept — clearing those would delete them.',
+  'settings.whereSpaceGoes': 'Where the space is going',
+  'settings.whereSpaceGoesHint': 'What is filling the 1 GB, and what compressing would give back.',
+  'settings.storage': 'Storage',
+  'settings.whoCanJoin': 'Who can join',
+  'settings.youtubeCompanion': 'YouTube companion',
+  'settings.coverArt': 'Cover art',
+  'settings.coverArtNote':
+    "Artwork is read from each file's tags. Songs that carry none can be looked up online.",
+  'settings.artworkAllDone': 'Every song has artwork, or has already been looked up.',
+  'settings.updates': 'Updates',
+  'settings.allowInstalls': 'Allow Music Hub to install updates',
+  'settings.allowInstallsHint': 'Off right now, so an update has to be installed by hand.',
+  'settings.allow': 'Allow',
+  'settings.canInstall': 'Music Hub can install its own updates.',
+  'settings.resetFailed': 'Could not send the reset email.',
+  'settings.live.connected': 'Live — changes from other devices appear on their own.',
+  'settings.live.connecting': 'Connecting to live updates…',
+  'settings.live.offline': 'Not live — pull to sync instead.',
+
+  // --- storage page -------------------------------------------------------
+  'storage.title': 'Storage',
+  'storage.ofShared': 'of {quota} shared',
+  'storage.cloudSummary':
+    '{count} songs in the cloud, averaging {average} each — room for about <strong>{room}</strong> more at that size.',
+  'storage.nothingYet': 'Nothing in the cloud yet.',
+  'storage.roomBack': 'Room you could get back',
+  'storage.heavySummary':
+    '{count} song(s) are stored above 200 kbps. Re-encoding them to AAC 160k would free about <strong>{size}</strong> — roughly {songs} more songs’ worth.',
+  'storage.reencodeNote':
+    'That is a re-encode, so it happens on a computer with the originals, not here: <code>./tools/compress-for-cloud.sh ~/Music/originals ~/Music/for-cloud</code>, then replace them through the ＋ tab. AAC 160k is transparent on phones and earbuds.',
+  'storage.andMore': '…and {count} more.',
+  'storage.nothingToReclaim': 'None worth chasing — every song in the cloud is already at a sensible bitrate.',
+  'storage.onThisDevice': 'On this device',
+  'storage.deviceSummary':
+    '{count} song(s) downloaded, using about {size}. Downloaded songs stream once instead of on every play, which is the cheapest thing you can do about the {egress}/month transfer limit.',
+  'storage.clearingNote':
+    'Clearing downloads is in <strong>Settings → Shared library</strong>. It frees space here and changes nothing in the cloud.',
+  'storage.theLimits': 'The limits',
+  'storage.limitsNote':
+    'The free tier gives {quota} of storage and {egress} of transfer a month. Storage is the number above. <strong>Transfer is not measurable from in here</strong> — only Supabase counts it — so if playback starts failing at the end of a month, check the project’s usage page before looking for a bug.',
+  'storage.outgrowingNote':
+    'Running out of storage for good is not the end: the README’s <em>Outgrowing 1 GB</em> section has the migration path to Cloudflare R2, which is the same app with a different bucket.',
+
+  // --- admin panel --------------------------------------------------------
+  'admin.title': 'Admin',
+  'admin.ofQuotaUsed': 'of {quota} used',
+  'admin.activeAccount': 'active account',
+  'admin.activeAccounts': 'active accounts',
+  'admin.disabledCount': '{count} disabled',
+  'admin.songsInLibrary': 'songs in the library',
+  'admin.tab.users': 'Users',
+  'admin.tab.invites': 'Invites',
+  'admin.tab.settings': 'Settings',
+  'admin.loadingAccounts': 'Loading accounts…',
+  'admin.noNameYet': 'No name yet',
+  'admin.you': 'you',
+  'admin.disabledTag': 'disabled',
+  'admin.noEmail': 'no email',
+  'admin.joinedSeen': 'Joined {joined} · last seen {seen}',
+  'admin.role': 'Role',
+  'admin.role.admin': 'admin',
+  'admin.role.member': 'member',
+  'admin.role.listener': 'listener',
+  'admin.enable': 'Enable',
+  'admin.disable': 'Disable',
+  'admin.sendReset': 'Send reset',
+  'admin.roleNote.admin': 'Full run of the place: uploads, deletes, invites and this panel.',
+  'admin.roleNote.member': 'Plays everything, keeps playlists, and can ask for a song.',
+  'admin.roleNote.listener': 'Plays and downloads. Cannot add to or remove from the library.',
+  'admin.invitesNote':
+    'Sign-ups are invite-only: an address has to be on this list before an account can be made with it. Withdrawing an invite closes the door to a new sign-up — it does not remove someone who already joined.',
+  'admin.whoTheyAre': 'who they are (optional)',
+  'admin.invite': 'Invite',
+  'admin.joined': 'joined',
+  'admin.waiting': 'waiting',
+  'admin.withdraw': 'Withdraw',
+  'admin.nobodyInvited': 'Nobody is invited yet.',
+  'admin.maxUpload': 'Largest song that can be uploaded',
+  'admin.maxUploadHint':
+    "Applies to everyone who can upload. The shared library's own ceiling is {quota} whatever this says.",
+  'admin.defaultLanguage': 'Language new accounts start in',
+  'admin.defaultLanguageHint': 'Anyone can change their own afterwards.',
+  'admin.deleteHeading': 'Delete {name}?',
+  'admin.deleteBody':
+    'Their account, their playlists and the {count} they uploaded ({size}) go with it. This cannot be undone.',
+  'admin.deleteAsk': 'Type <strong>{name}</strong> to confirm.',
+  'admin.keepIt': 'Keep it',
+  'admin.deleteForGood': 'Delete for good',
+  'admin.actionFailed': 'That did not go through.',
+  'admin.sendFailed': 'Could not send it.',
+  'admin.badMegabytes': 'That has to be a number of megabytes above zero.',
+  'admin.languageSaved': 'Saved — new accounts start in that language.',
+  'admin.uploadLimitSaved': 'Saved — that is the new upload limit.',
+
+  // --- invites panel ------------------------------------------------------
+  'invites.note':
+    'Registration is open in the app but the database turns away anyone not on this list. Adding an address lets that person create their own account.',
+  'invites.whoIsIt': 'Who is it? (optional)',
+  'invites.loading': 'Loading the list…',
+  'invites.joined': 'Joined',
+  'invites.notYet': 'Not yet',
+  'invites.withdrawJoined': 'Withdraws the invite. Their account stays.',
+  'invites.withdrawWaiting': 'Withdraws the invite before they register.',
+  'invites.emptyWarning':
+    'Nobody is invited yet — not even you, which means this list could not be read. Check the connection and reopen settings.',
+  'invites.footnote':
+    'Withdrawing only closes the door to a new sign-up. Someone who already has an account keeps it, along with everything they have downloaded.',
+
+  // --- companion panel ----------------------------------------------------
+  'companion.intro':
+    'YouTube no longer hands playable audio to anything a browser or a WebView can be, so downloads go through a small service you run. See <code>companion/README.md</code> for deploying it — it is a Dockerfile and two environment variables.',
+  'companion.useThisPhone': 'Use the companion running on this phone',
+  'companion.address': 'Address',
+  'companion.token': 'Token',
+  'companion.tokenPlaceholder': 'MUSIC_HUB_TOKEN from the server',
+  'companion.checking': 'Checking…',
+  'companion.saveAndTest': 'Save and test',
+  'companion.hideToken': 'Hide token',
+  'companion.showToken': 'Show token',
+  'companion.forget': 'Forget',
+  'companion.reachable': 'Reachable — yt-dlp {version}{cookies}.',
+  'companion.withCookies': ', with cookies',
+  'companion.noCookies':
+    '⚠ No cookies loaded. A companion on a hosting provider will be refused by YouTube ("confirm you’re not a bot") — add a <code>cookies.txt</code> as a secret file and set <code>YTDLP_COOKIES_FILE</code>. One running on your own connection does not need them.',
+  'companion.workerHeading': 'Fetch songs while the app is closed',
+  'companion.workerNote':
+    'Requests from the family are normally fulfilled while Music Hub is open on this phone. Linked, the companion does it by itself — signed in as its own account, so a song asked for at midnight is in the library by morning.',
+  'companion.linking': 'Linking…',
+  'companion.link': 'Link this companion',
+  'companion.relink': 'Re-link',
+  'companion.tapAgainToStop': 'Tap again to stop',
+  'companion.stop': 'Stop',
+  'companion.workerFootnote':
+    'Linking makes a password nobody has to remember, and gives the only copy to this phone — so re-link from here if it is ever lost, rather than looking for it. The account may add to the shared library, which is what fetching a song is.',
+  'companion.footnote':
+    'The address and token are kept on this device only — the token is not synced to the others, and never goes near the shared library.',
+  'companion.noAnswer': 'The companion did not answer.',
+  'companion.workerLinked': 'The companion will fetch requested songs on its own now.',
+  'companion.linkFailed': 'Could not link the companion.',
+  'companion.workerStopped': 'Stopped. Requests are fulfilled only while the app is open.',
+  'companion.stopFailed': 'Could not stop the companion worker.',
+
+  // --- updates ------------------------------------------------------------
+  'update.checkForUpdates': 'Check for updates',
+  'update.checking': 'Checking…',
+  'update.versionAvailable': 'Version {version} is available',
+  'update.newerBuild': 'A newer build is ready to load.',
+  'update.readyToInstall': 'The update is ready to install.',
+  'update.allowInstalls': 'Allow Music Hub to install apps, then press Update again.',
+  'update.notNow': 'Not now',
+  'update.update': 'Update',
+  'update.installing': 'Installing…',
+  'update.downloading': 'Downloading…',
+  'update.reload': 'Reload',
+  'update.banner': 'A new version of Music Hub is ready.',
+
+  // --- artwork ------------------------------------------------------------
+  'artwork.missing': '{count} song(s) have no cover art.',
+  'artwork.searching': 'Searching…',
+  'artwork.find': 'Find artwork',
+
+  // --- install hint -------------------------------------------------------
+  'install.title': 'Install Music Hub',
+  'install.iosSteps':
+    'Tap <strong>Share</strong> in Safari, then <strong>Add to Home Screen</strong>. It opens full screen and keeps your downloaded songs available offline.',
+  'install.install': 'Install',
+
+  // --- sync / library toasts ---------------------------------------------
+  'sync.offlineLibrary': 'You are offline — showing the library stored on this device.',
+  'sync.offlineUploads': 'You are offline — uploads need a connection.',
+  'sync.offlineDownloads': 'You are offline — downloads need a connection.',
+  'sync.uploaded': '{count} song(s) uploaded to the cloud.',
+  'sync.uploadsFailed': '{count} upload(s) failed.',
+  'sync.availableOffline': '{count} song(s) available offline.',
+  'library.wouldDeleteForGood':
+    'This song is only on this device — uploading it first would delete it for good.',
+  'library.offlineDelete': 'You are offline — delete this song again when you have a connection.',
+  'library.playlistLocalOnly': 'The playlist was removed here but not in the cloud.',
+  'library.tooBig':
+    '"{title}" is {size} MB — bigger than the {limit} MB limit for one song, so it stays on this device.',
+
+  // --- welcome box --------------------------------------------------------
+  'welcome.languageTitle': 'Choose your language',
+  'welcome.languageBody': 'You can change this later in Settings.',
+  'welcome.nameTitle': 'What should we call you?',
+  'welcome.nameBody': 'This is the name the rest of the household sees on your playlists.',
+  'welcome.namePlaceholder': 'Your name',
+  'welcome.tourAddTitle': 'Add your music',
+  'welcome.tourAddBody':
+    'The ＋ tab takes audio files straight off this device — or a link, if somebody can fetch it for you.',
+  'welcome.tourOfflineTitle': 'Listen without signal',
+  'welcome.tourOfflineBody':
+    'Download a song with the ⬇ button and it plays in aeroplane mode, on the underground, anywhere.',
+  'welcome.tourInstallTitle': 'Keep it on your home screen',
+  'welcome.tourInstallBody':
+    'On iPhone: Share, then Add to Home Screen. On a computer: the install button in the address bar.',
+  'welcome.next': 'Next',
+  'welcome.back': 'Back',
+  'welcome.finish': 'Start listening',
+  'welcome.skip': 'Skip',
+} as const;
+
+export type TranslationKey = keyof typeof EN;

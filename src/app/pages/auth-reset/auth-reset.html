@@ -2,8 +2,8 @@
   <div class="auth-card">
     <div class="auth-brand">
       <span class="auth-brand-icon">♫</span>
-      <h1 class="auth-brand-name">New password</h1>
-      <p class="auth-brand-tagline">Pick something you'll remember this time.</p>
+      <h1 class="auth-brand-name">{{ 'auth.newPassword' | t }}</h1>
+      <p class="auth-brand-tagline">{{ 'auth.newPasswordTagline' | t }}</p>
     </div>
 
     <form class="auth-form" *ngIf="ready()" (ngSubmit)="submit()">
@@ -12,7 +12,7 @@
         type="password"
         name="password"
         autocomplete="new-password"
-        placeholder="New password"
+        [placeholder]="'auth.newPassword' | t"
         [(ngModel)]="password"
       />
       <input
@@ -20,7 +20,7 @@
         type="password"
         name="confirm"
         autocomplete="new-password"
-        placeholder="Repeat new password"
+        [placeholder]="'auth.repeatNewPassword' | t"
         [(ngModel)]="confirm"
       />
 
@@ -28,13 +28,13 @@
       <p class="auth-notice" *ngIf="notice()">{{ notice() }}</p>
 
       <button class="auth-submit" type="submit" [disabled]="busy()">
-        {{ busy() ? 'Saving...' : 'Save password' }}
+        {{ busy() ? ('common.saving' | t) : ('auth.savePassword' | t) }}
       </button>
     </form>
 
     <div class="auth-form" *ngIf="!ready()">
       <p class="auth-error">{{ error() }}</p>
-      <button class="auth-submit" type="button" (click)="backToSignIn()">Back to sign in</button>
+      <button class="auth-submit" type="button" (click)="backToSignIn()">{{ 'auth.backToSignIn' | t }}</button>
     </div>
   </div>
 </div>

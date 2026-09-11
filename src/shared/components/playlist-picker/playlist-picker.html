@@ -1,17 +1,17 @@
 <div class="playlist-picker-backdrop" (click)="closed.emit()"></div>
 <div class="playlist-picker">
-  <h3 class="playlist-picker-title">Add to playlist</h3>
+  <h3 class="playlist-picker-title">{{ 'picker.title' | t }}</h3>
 
   <!-- Existing playlists -->
   <button class="playlist-picker-item" *ngFor="let p of library.playlists()" (click)="picked.emit(p.id)">
     <span class="playlist-picker-dot" [style.background]="p.coverColor"></span>
     {{ p.name }}
-    <span class="playlist-picker-count">{{ p.songIds.length }} songs</span>
+    <span class="playlist-picker-count">{{ 'common.songs' | t: { count: p.songIds.length } }}</span>
   </button>
 
   <!-- New playlist -->
   <div class="playlist-picker-new">
-    <input type="text" placeholder="New playlist name" [(ngModel)]="newName" (keyup.enter)="create()" />
-    <button class="playlist-picker-create" (click)="create()">Create</button>
+    <input type="text" [placeholder]="'library.newPlaylistName' | t" [(ngModel)]="newName" (keyup.enter)="create()" />
+    <button class="playlist-picker-create" (click)="create()">{{ 'common.create' | t }}</button>
   </div>
 </div>

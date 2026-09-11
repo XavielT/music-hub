@@ -3,9 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
-
-const EXPIRED_LINK =
-  'That reset link is no longer valid — it may have expired or already been used. Ask for a new one from the sign-in page.';
+import { I18nService } from '../../../shared/services/i18n.service';
+import { TPipe } from '../../../shared/i18n/t.pipe';
 
 // Landing page for the recovery link in the reset email.
 //
@@ -24,7 +23,7 @@ const EXPIRED_LINK =
 @Component({
   selector: 'app-auth-reset',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TPipe],
   templateUrl: './auth-reset.html',
   styleUrl: './auth-reset.scss',
 })
@@ -37,7 +36,11 @@ export class AuthResetComponent implements OnInit {
   password = '';
   confirm = '';
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(
+    private auth: AuthService,
+    private router: Router,
+    private i18n: I18nService
+  ) {}
 
   async ngOnInit(): Promise<void> {
     const failure = this.linkError();
@@ -61,7 +64,7 @@ export class AuthResetComponent implements OnInit {
     }
 
     if (!this.auth.signedIn()) {
-      this.error.set(EXPIRED_LINK);
+      this.error.set(this.i18n.t('auth.err.staleLink'));
       return;
     }
     this.ready.set(true);
@@ -73,7 +76,9 @@ export class AuthResetComponent implements OnInit {
   private linkError(): string {
     const search = new URLSearchParams(window.location.search);
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-    return search.get('error_description') || hash.get('error_description') ? EXPIRED_LINK : '';
+    return search.get('error_description') || hash.get('error_description')
+      ? this.i18n.t('auth.err.staleLink')
+      : '';
   }
 
   async submit(): Promise<void> {
@@ -82,11 +87,11 @@ export class AuthResetComponent implements OnInit {
     this.notice.set('');
 
     if (this.password.length < 6) {
-      this.error.set('Password is too weak — use at least 6 characters.');
+      this.error.set(this.i18n.t('auth.err.weakPassword'));
       return;
     }
     if (this.password !== this.confirm) {
-      this.error.set('The two passwords do not match.');
+      this.error.set(this.i18n.t('auth.passwordsDiffer'));
       return;
     }
 
@@ -98,7 +103,7 @@ export class AuthResetComponent implements OnInit {
       this.error.set(result.message);
       return;
     }
-    this.notice.set('Password updated. Taking you to your library...');
+    this.notice.set(this.i18n.t('auth.passwordChanged'));
     await this.router.navigateByUrl('/');
   }
 

@@ -1,10 +1,10 @@
 <div class="search">
   <!-- Search input -->
-  <h1 class="search-title">Search</h1>
+  <h1 class="search-title">{{ 'search.title' | t }}</h1>
   <input
     class="search-input"
     type="search"
-    placeholder="Songs, artists or albums..."
+    [placeholder]="'search.placeholder' | t"
     (input)="onInput($event)"
   />
 
@@ -22,7 +22,7 @@
       (edit)="editing.set(song)"
     ></app-song-item>
 
-    <p class="search-empty" *ngIf="results().length === 0">No results in your library.</p>
+    <p class="search-empty" *ngIf="results().length === 0">{{ 'search.empty' | t }}</p>
   </div>
 
   <!-- Playlist picker overlay -->

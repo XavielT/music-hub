@@ -2,11 +2,12 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LibraryService } from '../../services/library.service';
+import { TPipe } from '../../i18n/t.pipe';
 
 @Component({
   selector: 'app-playlist-picker',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TPipe],
   templateUrl: './playlist-picker.html',
   styleUrl: './playlist-picker.scss',
 })

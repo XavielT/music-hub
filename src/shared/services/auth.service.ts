@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { EmailOtpType, Session, User } from '@supabase/supabase-js';
 import { AUTH_STORAGE_KEY, SupabaseService } from './supabase.service';
 import { ProfileModel, UserRole } from '../models/profile.model';
+import { I18nService } from './i18n.service';
 import { environment } from '../../environments/environment';
 
 export interface AuthResult {
@@ -16,7 +17,8 @@ export interface AuthResult {
 // hard-block on a network call.
 const SESSION_TIMEOUT_MS = 4000;
 
-const PROFILE_COLUMNS = 'id, display_name, created_at, is_admin, role, disabled';
+const PROFILE_COLUMNS =
+  'id, display_name, created_at, is_admin, role, disabled, language, onboarded_at';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -53,7 +55,10 @@ export class AuthService {
 
   private initialized = false;
 
-  constructor(private supabase: SupabaseService) {}
+  constructor(
+    private supabase: SupabaseService,
+    private i18n: I18nService
+  ) {}
 
   // Restores the session (from storage, no network needed) and keeps the
   // signals in sync afterwards. Safe to call more than once.
@@ -91,7 +96,7 @@ export class AuthService {
 
       // No session means email confirmation is enabled on the project.
       if (!data.session) {
-        return { ok: true, message: 'Check your inbox to confirm your email, then sign in.' };
+        return { ok: true, message: this.i18n.t('auth.confirmEmail') };
       }
 
       this.applySession(data.session);
@@ -132,7 +137,7 @@ export class AuthService {
         redirectTo: `${this.resetOrigin()}/auth/reset`,
       });
       if (error) return { ok: false, message: this.friendlyError(error) };
-      return { ok: true, message: 'Reset link sent — check your inbox (and the spam folder).' };
+      return { ok: true, message: this.i18n.t('auth.resetSent') };
     } catch (err) {
       return { ok: false, message: this.friendlyError(err) };
     } finally {
@@ -236,13 +241,14 @@ export class AuthService {
       if (error || !data) return;
       const profile = data as ProfileModel;
       this._profile.set(profile);
+      // The profile outranks the device: it is what makes the choice follow
+      // you to a browser that has never seen you.
+      this.i18n.applyRemote(profile.language);
       // Every policy already refuses a disabled account, so staying signed in
       // would mean an app that loads and then shows nothing, which reads as a
       // bug rather than as a decision somebody made.
       if (profile.disabled) {
-        this._signedOutReason.set(
-          'This account has been disabled. Ask Xaviel if you think that is a mistake.'
-        );
+        this._signedOutReason.set(this.i18n.t('auth.accountDisabled'));
         await this.signOut();
       }
     } catch {
@@ -261,7 +267,9 @@ export class AuthService {
         .maybeSingle();
 
       if (data) {
-        this._profile.set(data as ProfileModel);
+        const existing = data as ProfileModel;
+        this._profile.set(existing);
+        this.i18n.applyRemote(existing.language);
         return;
       }
 
@@ -308,6 +316,13 @@ export class AuthService {
     });
   }
 
+  /**
+   * Maps whatever Supabase said to one of our own sentences.
+   *
+   * Returns a translated string rather than a key, because the caller only
+   * ever displays it. Anything unrecognised falls through as the server's own
+   * text, which is at least specific even when it is English.
+   */
   private friendlyError(err: unknown): string {
     const raw = err instanceof Error ? err.message : String(err);
     const message = raw.toLowerCase();
@@ -318,16 +333,19 @@ export class AuthService {
     // only thing that can fail the insert (the profile trigger swallows
     // conflicts), so both spellings mean the same thing to the user.
     if (message.includes('invite-only') || message.includes('database error saving new user'))
-      return 'Sign-ups are invite-only. Ask Xaviel to add your email, then register.';
-    if (message.includes('invalid login credentials')) return 'Wrong email or password.';
-    if (message.includes('email not confirmed')) return 'Confirm your email first, then sign in.';
-    if (message.includes('already registered') || message.includes('already been registered'))
-      return 'That email is already registered. Try signing in instead.';
-    if (message.includes('user already exists')) return 'That email is already registered. Try signing in instead.';
+      return this.i18n.t('auth.err.inviteOnly');
+    if (message.includes('invalid login credentials')) return this.i18n.t('auth.err.badCredentials');
+    if (message.includes('email not confirmed')) return this.i18n.t('auth.err.unconfirmed');
+    if (
+      message.includes('already registered') ||
+      message.includes('already been registered') ||
+      message.includes('user already exists')
+    )
+      return this.i18n.t('auth.err.alreadyRegistered');
     if (message.includes('password should be') || message.includes('weak password'))
-      return 'Password is too weak — use at least 6 characters.';
+      return this.i18n.t('auth.err.weakPassword');
     if (message.includes('unable to validate email') || message.includes('invalid email'))
-      return 'That email address does not look valid.';
+      return this.i18n.t('auth.err.badEmail');
     // A recovery link that was already used, has expired, or was opened in a
     // different browser than the one that asked for it.
     if (
@@ -338,13 +356,13 @@ export class AuthService {
       message.includes('auth session missing') ||
       message.includes('invalid or has expired')
     )
-      return 'That reset link is no longer valid — it may have expired or already been used. Ask for a new one from the sign-in page.';
+      return this.i18n.t('auth.err.staleLink');
     if (message.includes('same as the old') || message.includes('should be different'))
-      return 'Choose a password different from your current one.';
+      return this.i18n.t('auth.err.samePassword');
     if (message.includes('rate limit') || message.includes('too many'))
-      return 'Too many attempts. Wait a minute and try again.';
+      return this.i18n.t('auth.err.rateLimited');
     if (message.includes('failed to fetch') || message.includes('network') || message.includes('timeout'))
-      return 'No connection to the server. Check your internet and try again.';
-    return raw || 'Something went wrong. Try again.';
+      return this.i18n.t('auth.err.offline');
+    return raw || this.i18n.t('auth.err.generic');
   }
 }

@@ -3,28 +3,24 @@
     <div class="auth-brand">
       <span class="auth-brand-icon">♫</span>
       <h1 class="auth-brand-name">Music Hub</h1>
-      <p class="auth-brand-tagline">Your library, on every device.</p>
+      <p class="auth-brand-tagline">{{ 'auth.tagline' | t }}</p>
     </div>
 
     <div class="auth-tabs" *ngIf="mode() !== 'forgot'">
-      <button class="auth-tab" [class.active]="mode() === 'login'" (click)="setMode('login')">Sign in</button>
-      <button class="auth-tab" [class.active]="mode() === 'register'" (click)="setMode('register')">Register</button>
+      <button class="auth-tab" [class.active]="mode() === 'login'" (click)="setMode('login')">{{ 'auth.signIn' | t }}</button>
+      <button class="auth-tab" [class.active]="mode() === 'register'" (click)="setMode('register')">{{ 'auth.register' | t }}</button>
     </div>
 
     <form class="auth-form" (ngSubmit)="submit()">
-      <p class="auth-hint" *ngIf="mode() === 'forgot'">
-        Enter your email and we'll send you a link to set a new password.
-      </p>
-      <p class="auth-hint" *ngIf="mode() === 'register'">
-        Music Hub is invite-only — register with an email Xaviel has already added.
-      </p>
+      <p class="auth-hint" *ngIf="mode() === 'forgot'">{{ 'auth.forgotHint' | t }}</p>
+      <p class="auth-hint" *ngIf="mode() === 'register'">{{ 'auth.inviteHint' | t }}</p>
 
       <input
         class="auth-input"
         type="email"
         name="email"
         autocomplete="email"
-        placeholder="Email"
+        [placeholder]="'auth.email' | t"
         [(ngModel)]="email"
       />
 
@@ -34,7 +30,7 @@
         type="text"
         name="displayName"
         autocomplete="name"
-        placeholder="Display name"
+        [placeholder]="'auth.displayName' | t"
         [(ngModel)]="displayName"
       />
 
@@ -44,7 +40,7 @@
         type="password"
         name="password"
         [attr.autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"
-        placeholder="Password"
+        [placeholder]="'auth.password' | t"
         [(ngModel)]="password"
       />
 
@@ -54,20 +50,20 @@
       <button class="auth-submit" type="submit" [disabled]="busy()">{{ submitLabel() }}</button>
 
       <button class="auth-link" type="button" *ngIf="mode() === 'login'" (click)="setMode('forgot')">
-        Forgot password?
+        {{ 'auth.forgotPassword' | t }}
       </button>
       <button class="auth-link" type="button" *ngIf="mode() === 'forgot'" (click)="setMode('login')">
-        Back to sign in
+        {{ 'auth.backToSignIn' | t }}
       </button>
     </form>
 
     <p class="auth-switch" *ngIf="mode() === 'login'">
-      No account yet?
-      <button (click)="setMode('register')">Register</button>
+      {{ 'auth.noAccount' | t }}
+      <button (click)="setMode('register')">{{ 'auth.register' | t }}</button>
     </p>
     <p class="auth-switch" *ngIf="mode() === 'register'">
-      Already have an account?
-      <button (click)="setMode('login')">Sign in</button>
+      {{ 'auth.haveAccount' | t }}
+      <button (click)="setMode('login')">{{ 'auth.signIn' | t }}</button>
     </p>
 
     <!-- Installing before signing in is the natural order on iPhone, so the

@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { I18nService } from './i18n.service';
 
 // Defaults used until the table answers, and if it never does. They match the
 // seeded rows, so an offline start behaves like an online one.
@@ -27,8 +28,14 @@ export class AppSettingsService {
   private _saving = signal(false);
   saving = this._saving.asReadonly();
 
-  constructor(private supabase: SupabaseService) {
+  constructor(
+    private supabase: SupabaseService,
+    private i18n: I18nService
+  ) {
     this.readCache();
+    // Lowest-priority input to the language: applied only if neither the
+    // profile nor this device has ever chosen one.
+    this.i18n.applyDefault(this._defaultLanguage());
   }
 
   maxUploadBytes(): number {
@@ -43,6 +50,7 @@ export class AppSettingsService {
         if (row.key === 'max_upload_mb') this._maxUploadMb.set(toNumber(row.value, DEFAULT_MAX_UPLOAD_MB));
         if (row.key === 'default_language') this._defaultLanguage.set(toText(row.value, DEFAULT_LANGUAGE));
       }
+      this.i18n.applyDefault(this._defaultLanguage());
       this.writeCache();
     } catch {
       // Offline, or a disabled account reading zero rows: the cached values
