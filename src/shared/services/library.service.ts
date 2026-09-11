@@ -293,8 +293,8 @@ export class LibraryService {
       await this.patchSong(song.id, { syncState: 'synced' });
       this.toast.error(
         isNetworkError(err)
-          ? `No connection — "${song.title}" could not be downloaded.`
-          : `Could not download "${song.title}".`
+          ? this.i18n.t('library.downloadOffline', { title: song.title })
+          : this.i18n.t('library.downloadFailed', { title: song.title })
       );
       console.warn('downloadSong failed', err);
       return false;
@@ -366,7 +366,7 @@ export class LibraryService {
         await this.cloud.deleteSong(song!);
         this.cloud.addUsage(-song!.sizeBytes);
       } catch (err) {
-        this.toast.error(`Could not delete "${song!.title}" from the cloud.`);
+        this.toast.error(this.i18n.t('library.deleteCloudFailed', { title: song!.title }));
         console.warn('deleteSong failed', err);
         return; // keep it locally rather than drift out of sync
       }
@@ -729,7 +729,12 @@ export class LibraryService {
     // Someone else's shared playlist is not this account's to delete: the
     // policy would refuse it, and the next sync would bring it back anyway.
     if (playlist && !this.canManagePlaylist(playlist)) {
-      this.toast.error(`Only ${this.playlistOwnerLabel(playlist)} can delete "${playlist.name}".`);
+      this.toast.error(
+        this.i18n.t('library.playlistNotYours', {
+          owner: this.playlistOwnerLabel(playlist) ?? '',
+          name: playlist.name,
+        })
+      );
       return;
     }
     await this.db.delete('playlists', id);

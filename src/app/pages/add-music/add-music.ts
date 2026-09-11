@@ -279,7 +279,7 @@ export class AddMusicComponent implements OnDestroy {
       this.ytError.set(
         msg.includes('decipher') || msg.includes('clients failed')
           ? this.i18n.t('add.err.botProtection')
-          : `Download failed: ${msg}`
+          : this.i18n.t('add.downloadFailed', { message: msg })
       );
     }
     this.ytDownloading.set(null);

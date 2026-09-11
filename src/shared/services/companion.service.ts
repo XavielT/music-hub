@@ -103,7 +103,7 @@ export class CompanionService {
   // the address is right and the token is wrong — worth telling apart.
   async check(): Promise<CompanionHealth> {
     if (!this._url()) {
-      const result = { ok: false, error: 'No address set.' };
+      const result = { ok: false, error: this.i18n.t('companion.noAddress') };
       this._health.set(result);
       return result;
     }
@@ -196,7 +196,7 @@ export class CompanionService {
       .then(payload => (payload as { detail?: string }).detail)
       .catch(() => undefined);
     if (response.status === 401) throw new Error(this.i18n.t('companion.badToken'));
-    throw new Error(detail || `The companion answered ${response.status}.`);
+    throw new Error(detail || this.i18n.t('companion.answered', { status: response.status }));
   }
 }
 

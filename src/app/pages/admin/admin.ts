@@ -156,7 +156,7 @@ export class AdminComponent implements OnInit {
 
   async sendReset(user: AdminUserRow): Promise<void> {
     const ok = await this.admin.sendReset(user.id);
-    if (ok) this.toast.show(`Reset link sent to ${user.email}.`);
+    if (ok) this.toast.show(this.i18n.t('settings.resetSentTo', { email: user.email ?? '' }));
     else this.toast.error(this.admin.error() ?? this.i18n.t('admin.sendFailed'));
   }
 

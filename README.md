@@ -725,6 +725,27 @@ library toasts, the song-item badges — inject `I18nService` and translate at t
 moment of display. An error the server sends that we have no key for falls
 through as its own text, which is at least specific even when it is English.
 
+**What is deliberately still English**, so a future sweep does not "fix" it:
+
+- `'Unknown artist'` is a *data value*, not a label. It is written into the song
+  row and matches the column default in Postgres. Translating it would mean a
+  song's artist changed when you switched language, and the artists tab would
+  group the same artist under two names.
+- Thrown `Error`s that no screen shows — `'Song has no cloud audio'`, `'Cover
+  download failed'`, `'All clients failed (…)'`, the IndexedDB upgrade warning.
+  These are read in a console by whoever is debugging. Every one of them is
+  caught by a caller that produces its own translated sentence.
+- The repo slug, the Capacitor plugin name, `Bearer …`. Not copy at all.
+
+To check the rest, sweep without truncating — the first pass at this printed only
+the first four matches per file and missed four strings, then eleven more:
+
+```bash
+for f in $(find src -name '*.ts' ! -name '*.spec.ts' ! -path '*/i18n/*'); do
+  grep -noE "'[A-Z][a-z][^']{12,}'" "$f" | sed "s|^|$f:|"
+done
+```
+
 ### The welcome box
 
 First start, once per account: language → the name everyone else sees → three

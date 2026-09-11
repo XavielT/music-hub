@@ -565,6 +565,17 @@ export const EN = {
   'admin.quotaDefault': 'library default',
   'admin.quotaSaved': 'Saved — that is their new share.',
 
+  'library.downloadOffline': 'No connection — "{title}" could not be downloaded.',
+  'library.downloadFailed': 'Could not download "{title}".',
+  'library.deleteCloudFailed': 'Could not delete "{title}" from the cloud.',
+  'library.playlistNotYours': 'Only {owner} can delete "{name}".',
+  'settings.resetSentTo': 'Reset link sent to {email}.',
+  'add.downloadFailed': 'Download failed: {message}',
+  'companion.reachableToast': 'Companion reachable — yt-dlp {version}.',
+  'companion.noAddress': 'No address set.',
+  'companion.answered': 'The companion answered {status}.',
+  'update.noApk': 'Release {version} has no {asset} attached yet.',
+
   // --- welcome box --------------------------------------------------------
   'welcome.languageTitle': 'Choose your language',
   'welcome.languageBody': 'You can change this later in Settings.',

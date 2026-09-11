@@ -578,6 +578,17 @@ export const ES: Record<TranslationKey, string> = {
   'admin.quotaDefault': 'lo que diga la biblioteca',
   'admin.quotaSaved': 'Guardado — esa es su nueva parte.',
 
+  'library.downloadOffline': 'Sin conexión — no se pudo descargar "{title}".',
+  'library.downloadFailed': 'No se pudo descargar "{title}".',
+  'library.deleteCloudFailed': 'No se pudo eliminar "{title}" de la nube.',
+  'library.playlistNotYours': 'Solo {owner} puede eliminar "{name}".',
+  'settings.resetSentTo': 'Enlace enviado a {email}.',
+  'add.downloadFailed': 'Falló la descarga: {message}',
+  'companion.reachableToast': 'El companion responde — yt-dlp {version}.',
+  'companion.noAddress': 'No hay ninguna dirección configurada.',
+  'companion.answered': 'El companion respondió {status}.',
+  'update.noApk': 'La versión {version} todavía no tiene {asset} adjunto.',
+
   // --- welcome box --------------------------------------------------------
   'welcome.languageTitle': 'Elige tu idioma',
   'welcome.languageBody': 'Puedes cambiarlo después en Ajustes.',

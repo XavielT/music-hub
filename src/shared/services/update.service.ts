@@ -187,7 +187,7 @@ export class UpdateService {
 
     const apk = (release.assets ?? []).find(a => a.name === APK_ASSET);
     if (!apk) {
-      throw new Error(`Release ${version} has no ${APK_ASSET} attached yet.`);
+      throw new Error(this.i18n.t('update.noApk', { version, asset: APK_ASSET }));
     }
 
     this._available.set({

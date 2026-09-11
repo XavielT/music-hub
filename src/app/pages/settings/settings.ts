@@ -112,7 +112,7 @@ export class SettingsComponent implements OnInit {
     this.sendingReset.set(true);
     const result = await this.auth.sendPasswordReset(email);
     this.sendingReset.set(false);
-    if (result.ok) this.toast.show(result.message ?? `Reset link sent to ${email}.`);
+    if (result.ok) this.toast.show(result.message ?? this.i18n.t('settings.resetSentTo', { email }));
     else this.toast.error(result.message ?? this.i18n.t('settings.resetFailed'));
   }
 

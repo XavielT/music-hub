@@ -49,7 +49,8 @@ export class CompanionPanel implements OnInit {
   async save(): Promise<void> {
     this.companion.configure(this.url, this.token);
     const health = await this.companion.check();
-    if (health.ok && !health.error) this.toast.show(`Companion reachable — yt-dlp ${health.ytdlp}.`);
+    if (health.ok && !health.error)
+      this.toast.show(this.i18n.t('companion.reachableToast', { version: health.ytdlp ?? '' }));
     else this.toast.error(health.error ?? this.i18n.t('companion.noAnswer'));
   }
 
