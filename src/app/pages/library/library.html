@@ -1,6 +1,10 @@
 <div class="library">
   <h1 class="library-title">Your library</h1>
 
+  <p class="library-listener-note" *ngIf="auth.role() === 'listener'">
+    {{ listenerNote }}
+  </p>
+
   <!-- Tabs -->
   <div class="library-tabs">
     <button

@@ -209,11 +209,63 @@ Enforced in the database, not just the UI: `songs` and the `songs`/`covers` buck
 are readable by any signed-in member but writable only where `public.is_admin()`.
 Playlists stay per-person, so everyone curates their own from the shared songs.
 
-To make someone an admin:
+### Who can do what
+
+Three roles, on `profiles.role`:
+
+| | admin | member | listener |
+|---|---|---|---|
+| Play, download, keep playlists | ✅ | ✅ | ✅ |
+| Ask for a song (the request queue) | ✅ | ✅ | ❌ |
+| Add to / remove from the shared library | ✅ | ❌ | ❌ |
+| Invites, roles, settings (the Admin panel) | ✅ | ❌ | ❌ |
+
+A **listener** is the account for someone whose additions you do not want against
+the 1 GB — the kids. They can play and download everything; they cannot grow or
+shrink the library, and a request is only an upload with a delay, so that is closed
+to them too. A **disabled** account is denied every read and write, and is signed
+out of its live sessions rather than left staring at an empty library.
+
+Set from **Settings → Admin → Users**, which is the only supported way: the panel
+calls an Edge Function that holds the `service_role` key, because that key must
+never reach the app. The SQL equivalent still works for bootstrapping:
 
 ```sql
-update public.profiles set is_admin = true where id = '<their auth user id>';
+update public.profiles set role = 'admin' where id = '<their auth user id>';
 ```
+
+`is_admin` is still a column — app builds already on family phones read it — but it
+is derived from `role` by trigger and is not worth setting by hand.
+
+**Nobody promotes themselves.** The profiles update policy used to have no
+`with check` at all, which meant any member could set their own `is_admin` and take
+the library; a trigger now refuses any change to `role` or `disabled` that does not
+come from an admin (or from the Edge Function's service key), and refuses to strip
+the last admin whoever is asking. `public.profile_role()` and `public.is_disabled()`
+are the helpers the policies use — `current_role` is a reserved word, hence the name.
+
+### The Admin panel
+
+**Settings → Admin**, visible only to admins and behind `adminGuard`. Three tabs:
+
+- **Users** — everyone, with their email, role, storage used and last sign-in, from
+  one `admin_user_overview()` call. Change a role, disable or enable an account,
+  send a password-reset email, or delete an account outright (which takes their
+  songs and their storage folder with it, and asks you to type the name first).
+- **Invites** — the `allowed_emails` list from round 2, with who has already joined.
+- **Settings** — `max_upload_mb` (checked on the upload path, alongside the 1 GB
+  ceiling) and `default_language` (what a new account starts in).
+
+The four privileged actions live in the `admin-users` Edge Function. It verifies the
+caller's JWT, loads their profile, and refuses anyone who is not an enabled admin —
+so the panel's buttons are a convenience, not the control. Deploy it with the
+Supabase MCP or `npx supabase functions deploy admin-users`; JWT verification stays
+on, and its CORS list is the app's origins.
+
+Verified by impersonating each role in SQL, inside rolled-back transactions: a member
+cannot promote themselves or touch another profile, a listener is refused songs and
+requests but keeps playlists, a disabled account reads zero rows everywhere, and the
+last admin cannot be demoted.
 
 ### Requesting a song
 

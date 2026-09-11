@@ -54,7 +54,7 @@
 
     <!-- No way to search, but a link is all a request needs: the device that
          fetches it looks the title and artist up on the way past. -->
-    <div class="add-music-link-request" *ngIf="!ytAvailable() && pastedLink()">
+    <div class="add-music-link-request" *ngIf="!ytAvailable() && pastedLink() && auth.canAddToLibrary()">
       <button
         class="add-music-browse-btn"
         (click)="requestPastedLink()"
@@ -80,7 +80,7 @@
         {{ ytDownloading() === r.id ? '⏳' : '⇩' }}
       </button>
       <button
-        *ngIf="!canFetchHere()"
+        *ngIf="!canFetchHere() && auth.canAddToLibrary()"
         class="add-music-yt-download add-music-yt-request"
         (click)="requestSong(r)"
         [disabled]="queue.busy()"
@@ -166,6 +166,13 @@
     <p class="add-music-cloud-note" *ngIf="pending().length > 0 && !auth.isAdmin()">
       These songs stay on this device. The shared cloud library is added to by Xaviel — everything
       in it is already available to you to play and download.
+    </p>
+
+    <!-- Said once, here, where someone would otherwise go looking for the
+         button: a listener account cannot add to the shared library at all,
+         and the database is what enforces that. -->
+    <p class="add-music-cloud-note" *ngIf="auth.role() === 'listener'">
+      {{ listenerNote }}
     </p>
 
     <button class="add-music-save" *ngIf="pending().length > 0" [disabled]="saving()" (click)="saveAll()">

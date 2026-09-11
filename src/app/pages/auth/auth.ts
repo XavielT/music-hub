@@ -24,7 +24,12 @@ export class AuthComponent {
   password = '';
   displayName = '';
 
-  constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute) {}
+  constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute) {
+    // Landed here because the account was disabled mid-session, rather than by
+    // signing out.
+    const reason = this.auth.takeSignedOutReason();
+    if (reason) this.error.set(reason);
+  }
 
   setMode(mode: AuthMode): void {
     this.mode.set(mode);

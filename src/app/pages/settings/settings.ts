@@ -144,6 +144,10 @@ export class SettingsComponent implements OnInit {
     );
   }
 
+  openAdmin(): void {
+    void this.router.navigateByUrl('/admin');
+  }
+
   openStorage(): void {
     void this.router.navigateByUrl('/storage');
   }

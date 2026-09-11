@@ -16,6 +16,14 @@
       <span class="settings-badge" *ngIf="auth.isAdmin()">Admin</span>
     </div>
 
+    <button class="settings-row-btn" (click)="openAdmin()" *ngIf="auth.isAdmin()">
+      <span>
+        <strong>Admin</strong>
+        <em>Who can do what, invites, and the library's own settings.</em>
+      </span>
+      <span class="settings-row-action">Open</span>
+    </button>
+
     <button class="settings-row-btn" (click)="sendPasswordReset()" [disabled]="sendingReset()">
       <span>
         <strong>Change password</strong>

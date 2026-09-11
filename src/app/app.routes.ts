@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from '../shared/guards/auth.guard';
+import { adminGuard } from '../shared/guards/admin.guard';
 
 export const routes: Routes = [
   // Landing page for the password-recovery link. No guard: the link itself
@@ -38,6 +39,11 @@ export const routes: Routes = [
     path: 'settings',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/settings/settings').then(m => m.SettingsComponent),
+  },
+  {
+    path: 'admin',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () => import('./pages/admin/admin').then(m => m.AdminComponent),
   },
   {
     path: 'storage',

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../shared/services/auth.service';
+import { LISTENER_NOTE } from '../../../shared/models/listener-note';
 import { LibraryService, SongGroup } from '../../../shared/services/library.service';
 import { PlayerService } from '../../../shared/services/player.service';
 import { SyncService } from '../../../shared/services/sync.service';
@@ -22,6 +23,8 @@ type LibraryTab = 'songs' | 'artists' | 'albums' | 'playlists';
   styleUrl: './library.scss',
 })
 export class LibraryComponent {
+  readonly listenerNote = LISTENER_NOTE;
+
   editing = signal<SongModel | null>(null);
   tab = signal<LibraryTab>('songs');
   selectedGroup = signal<SongGroup | null>(null);

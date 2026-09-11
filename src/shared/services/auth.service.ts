@@ -2,7 +2,7 @@ import { Injectable, computed, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { EmailOtpType, Session, User } from '@supabase/supabase-js';
 import { AUTH_STORAGE_KEY, SupabaseService } from './supabase.service';
-import { ProfileModel } from '../models/profile.model';
+import { ProfileModel, UserRole } from '../models/profile.model';
 import { environment } from '../../environments/environment';
 
 export interface AuthResult {
@@ -15,6 +15,8 @@ export interface AuthResult {
 // the app anyway. Offline the token refresh can hang, and the app must never
 // hard-block on a network call.
 const SESSION_TIMEOUT_MS = 4000;
+
+const PROFILE_COLUMNS = 'id, display_name, created_at, is_admin, role, disabled';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -31,9 +33,23 @@ export class AuthService {
   // Only admins may write to the shared cloud library. Defaults to false while
   // the profile is still loading (or offline), so the UI never offers an upload
   // that the database would reject.
-  isAdmin = computed(() => this._profile()?.is_admin === true);
+  isAdmin = computed(() => this.role() === 'admin' && !this.disabled());
+
+  // Defaults to 'member' while the profile is loading: the most cautious
+  // reading that still lets someone use the app.
+  role = computed<UserRole>(() => this._profile()?.role ?? 'member');
+  disabled = computed(() => this._profile()?.disabled === true);
+  // A listener may play everything and download for offline, but the library
+  // is read-only to them.
+  canAddToLibrary = computed(() => this.role() !== 'listener' && !this.disabled());
   // Best label we have for the current user: display name, else email.
   displayName = computed(() => this._profile()?.display_name?.trim() || this._user()?.email || '');
+
+  // Why the last sign-out happened, when it was not the user's idea. Read once
+  // by the auth screen and cleared, so it explains itself instead of looking
+  // like the session simply expired.
+  private _signedOutReason = signal('');
+  signedOutReason = this._signedOutReason.asReadonly();
 
   private initialized = false;
 
@@ -203,14 +219,32 @@ export class AuthService {
     if (user.id !== previousId || this._profile() === null) void this.loadProfile(user.id);
   }
 
+  // Read and cleared by the auth screen: it is news exactly once.
+  takeSignedOutReason(): string {
+    const reason = this._signedOutReason();
+    if (reason) this._signedOutReason.set('');
+    return reason;
+  }
+
   private async loadProfile(userId: string): Promise<void> {
     try {
       const { data, error } = await this.supabase.client
         .from('profiles')
-        .select('id, display_name, created_at, is_admin')
+        .select(PROFILE_COLUMNS)
         .eq('id', userId)
         .maybeSingle();
-      if (!error && data) this._profile.set(data as ProfileModel);
+      if (error || !data) return;
+      const profile = data as ProfileModel;
+      this._profile.set(profile);
+      // Every policy already refuses a disabled account, so staying signed in
+      // would mean an app that loads and then shows nothing, which reads as a
+      // bug rather than as a decision somebody made.
+      if (profile.disabled) {
+        this._signedOutReason.set(
+          'This account has been disabled. Ask Xaviel if you think that is a mistake.'
+        );
+        await this.signOut();
+      }
     } catch {
       // Offline: keep whatever we have, the UI falls back to the email.
     }
@@ -222,7 +256,7 @@ export class AuthService {
     try {
       const { data } = await this.supabase.client
         .from('profiles')
-        .select('id, display_name, created_at, is_admin')
+        .select(PROFILE_COLUMNS)
         .eq('id', user.id)
         .maybeSingle();
 
@@ -236,7 +270,7 @@ export class AuthService {
       const { data: inserted } = await this.supabase.client
         .from('profiles')
         .insert({ id: user.id, display_name: fallbackName })
-        .select('id, display_name, created_at, is_admin')
+        .select(PROFILE_COLUMNS)
         .maybeSingle();
       if (inserted) this._profile.set(inserted as ProfileModel);
     } catch {

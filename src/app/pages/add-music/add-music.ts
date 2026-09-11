@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Capacitor } from '@capacitor/core';
 import { AuthService } from '../../../shared/services/auth.service';
+import { LISTENER_NOTE } from '../../../shared/models/listener-note';
 import { LibraryService } from '../../../shared/services/library.service';
 import { YoutubeService, YoutubeResult } from '../../../shared/services/youtube.service';
 import { CompanionService } from '../../../shared/services/companion.service';
@@ -56,6 +57,8 @@ const YT_TIMEOUT_MS = 15000;
   styleUrl: './add-music.scss',
 })
 export class AddMusicComponent implements OnDestroy {
+  readonly listenerNote = LISTENER_NOTE;
+
   pending = signal<PendingSong[]>([]);
 
   // What these files would cost the shared 1 GB if uploaded as they are, and

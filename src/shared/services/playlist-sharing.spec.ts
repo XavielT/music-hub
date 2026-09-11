@@ -62,6 +62,7 @@ describe('Shared playlists', () => {
       } as never,
       { isAdmin: () => true, user: () => ({ id: ME }) } as never,
       { error: (m: string) => toasts.push(m), show: (m: string) => toasts.push(m) } as never,
+      { maxUploadBytes: () => 1024 * 1024 * 1024, maxUploadMb: () => 1024 } as never,
       { find: async () => null } as never
     );
     await library.activate(ME);

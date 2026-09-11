@@ -11,6 +11,7 @@ import {
 } from './cloud-library.service';
 import { ArtworkService } from './artwork.service';
 import { ToastService } from './toast.service';
+import { AppSettingsService } from './app-settings.service';
 import { SongModel, normalizeSong } from '../models/song.model';
 import { PlaylistModel, normalizePlaylist } from '../models/playlist.model';
 
@@ -53,6 +54,7 @@ export class LibraryService {
     private cloud: CloudLibraryService,
     private auth: AuthService,
     private toast: ToastService,
+    private settings: AppSettingsService,
     private artwork: ArtworkService
   ) {}
 
@@ -231,8 +233,16 @@ export class LibraryService {
       return false;
     }
 
-    // Running head-first into the 1 GB wall fails with a raw storage error,
-    // so the quota is checked before a single byte goes up.
+    // Both ceilings, checked before a byte goes up: the per-song limit the
+    // admin set, and the shared library's own 1 GB.
+    const perSong = this.settings.maxUploadBytes();
+    if (file.size > perSong) {
+      this.toast.error(
+        `"${song.title}" is ${formatMb(file.size)} MB — bigger than the ${this.settings.maxUploadMb()} MB limit for one song, so it stays on this device.`
+      );
+      return false;
+    }
+
     if (this.cloud.usedBytes() + file.size > STORAGE_QUOTA_BYTES) {
       this.toast.error(
         `Cloud storage is full — 1 GB limit reached, so "${song.title}" stays on this device. Delete a cloud song to make room.`
@@ -923,4 +933,11 @@ function normaliseName(text: string): string {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '');
+}
+
+// Whole megabytes, because the limit it is compared against is set in whole
+// megabytes and "63.7 MB is over the 60 MB limit" should not need a second
+// look.
+function formatMb(bytes: number): number {
+  return Math.round(bytes / (1024 * 1024));
 }

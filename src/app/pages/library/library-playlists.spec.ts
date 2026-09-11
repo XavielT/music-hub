@@ -59,7 +59,10 @@ describe('Library playlists tab', () => {
         provideRouter([]),
         { provide: LibraryService, useValue: library },
         { provide: PlayerService, useValue: { current: signal(null).asReadonly() } },
-        { provide: AuthService, useValue: { isAdmin: () => true, user: () => ({ id: ME }) } },
+        {
+          provide: AuthService,
+          useValue: { isAdmin: () => true, role: () => 'admin', user: () => ({ id: ME }) },
+        },
         {
           provide: SyncService,
           useValue: { syncing: signal(false).asReadonly(), uploading: signal(false).asReadonly() },

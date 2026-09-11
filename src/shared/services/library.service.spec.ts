@@ -68,6 +68,9 @@ describe('LibraryService editing', () => {
       } as never,
       { isAdmin: () => isAdmin, user: () => ({ id: USER }) } as never,
       { error: () => undefined, show: () => undefined } as never,
+      // Whatever the admin set for the per-song cap; the specs care about the
+      // library, not the ceiling.
+      { maxUploadBytes: () => 1024 * 1024 * 1024, maxUploadMb: () => 1024 } as never,
       { find: async () => null } as never
     );
     await library.activate(USER);
@@ -231,6 +234,7 @@ describe('LibraryService.findDuplicate', () => {
       { usedBytes: () => 0, addUsage: () => undefined } as never,
       { isAdmin: () => false, user: () => ({ id: USER }) } as never,
       { error: () => undefined, show: () => undefined } as never,
+      { maxUploadBytes: () => 1024 * 1024 * 1024, maxUploadMb: () => 1024 } as never,
       { find: async () => null } as never
     );
     await library.activate(USER);
@@ -274,6 +278,7 @@ describe('LibraryService cover art', () => {
       { usedBytes: () => 0, addUsage: () => undefined } as never,
       { isAdmin: () => false, user: () => ({ id: USER }) } as never,
       { error: () => undefined, show: () => undefined } as never,
+      { maxUploadBytes: () => 1024 * 1024 * 1024, maxUploadMb: () => 1024 } as never,
       // Nothing in here goes looking for artwork online.
       { find: async () => null } as never
     );

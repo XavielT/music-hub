@@ -1,0 +1,172 @@
+<div class="admin">
+  <header class="admin-header">
+    <button class="admin-back" (click)="back()" title="Back">‹</button>
+    <h1 class="admin-title">Admin</h1>
+  </header>
+
+  <!-- Overview: the three numbers worth knowing before changing anything. -->
+  <section class="admin-overview">
+    <div class="admin-stat">
+      <span class="admin-stat-value">{{ formatBytes(admin.totalBytes()) }}</span>
+      <span class="admin-stat-label">of {{ quotaLabel }} used</span>
+      <div class="admin-bar"><div class="admin-bar-fill" [style.width.%]="usedPercent()"></div></div>
+    </div>
+    <div class="admin-stat">
+      <span class="admin-stat-value">{{ activeUsers() }}</span>
+      <span class="admin-stat-label">
+        active {{ activeUsers() === 1 ? 'account' : 'accounts' }}
+        <em *ngIf="admin.users().length !== activeUsers()">
+          · {{ admin.users().length - activeUsers() }} disabled
+        </em>
+      </span>
+    </div>
+    <div class="admin-stat">
+      <span class="admin-stat-value">{{ admin.totalSongs() }}</span>
+      <span class="admin-stat-label">songs in the library</span>
+    </div>
+  </section>
+
+  <div class="admin-tabs">
+    <button class="admin-tab" [class.active]="tab() === 'users'" (click)="tab.set('users')">Users</button>
+    <button class="admin-tab" [class.active]="tab() === 'invites'" (click)="tab.set('invites')">Invites</button>
+    <button class="admin-tab" [class.active]="tab() === 'settings'" (click)="tab.set('settings')">Settings</button>
+  </div>
+
+  <p class="admin-error" *ngIf="admin.error()">{{ admin.error() }}</p>
+
+  <!-- Users -->
+  <section class="admin-section" *ngIf="tab() === 'users'">
+    <p class="admin-note" *ngIf="admin.loading() && admin.users().length === 0">Loading accounts…</p>
+
+    <article class="admin-user" *ngFor="let user of admin.users()" [class.is-disabled]="user.disabled">
+      <div class="admin-user-head">
+        <div class="admin-avatar">{{ initial(user) }}</div>
+        <div class="admin-user-who">
+          <span class="admin-user-name">
+            {{ user.display_name || 'No name yet' }}
+            <em class="admin-you" *ngIf="admin.isSelf(user.id)">you</em>
+            <em class="admin-off" *ngIf="user.disabled">disabled</em>
+          </span>
+          <span class="admin-user-email">{{ user.email || 'no email' }}</span>
+        </div>
+        <div class="admin-user-figures">
+          <span>{{ formatBytes(user.bytes_used) }}</span>
+          <span>{{ user.song_count }} {{ user.song_count === 1 ? 'song' : 'songs' }}</span>
+        </div>
+      </div>
+
+      <div class="admin-user-meta">
+        Joined {{ formatDate(user.created_at) }} · last seen {{ formatDate(user.last_sign_in_at) }}
+      </div>
+
+      <div class="admin-user-actions">
+        <label class="admin-role">
+          <span>Role</span>
+          <select [value]="user.role" (change)="changeRole(user, $event)" [disabled]="admin.busyWith() === user.id">
+            <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+          </select>
+        </label>
+
+        <button class="admin-btn" (click)="toggleDisabled(user)"
+                [disabled]="admin.busyWith() === user.id || admin.isSelf(user.id)">
+          {{ user.disabled ? 'Enable' : 'Disable' }}
+        </button>
+        <button class="admin-btn" (click)="sendReset(user)"
+                [disabled]="admin.busyWith() === user.id || !user.email">
+          Send reset
+        </button>
+        <button class="admin-btn admin-btn--danger" (click)="askDelete(user)"
+                [disabled]="admin.busyWith() === user.id || admin.isSelf(user.id)">
+          Delete
+        </button>
+      </div>
+
+      <p class="admin-role-note">{{ roleNotes[user.role] }}</p>
+    </article>
+  </section>
+
+  <!-- Invites -->
+  <section class="admin-section" *ngIf="tab() === 'invites'">
+    <p class="admin-note">
+      Sign-ups are invite-only: an address has to be on this list before an account can be
+      made with it. Withdrawing an invite closes the door to a new sign-up — it does not
+      remove someone who already joined.
+    </p>
+
+    <div class="admin-invite-form">
+      <input type="email" placeholder="name@example.com" [(ngModel)]="inviteEmail" autocomplete="off" />
+      <input type="text" placeholder="who they are (optional)" [(ngModel)]="inviteNote" />
+      <button class="admin-btn" (click)="addInvite()" [disabled]="invites.busy() || !inviteEmail.trim()">
+        Invite
+      </button>
+    </div>
+
+    <div class="admin-invite" *ngFor="let invite of invites.invites()">
+      <div class="admin-invite-who">
+        <span class="admin-invite-email">{{ invite.email }}</span>
+        <span class="admin-invite-note">{{ invite.note || '—' }}</span>
+      </div>
+      <span class="admin-tag" [class.joined]="invite.has_joined">
+        {{ invite.has_joined ? 'joined' : 'waiting' }}
+      </span>
+      <button class="admin-btn" (click)="invites.remove(invite.email)" [disabled]="invites.busy()">
+        Withdraw
+      </button>
+    </div>
+
+    <p class="admin-note" *ngIf="invites.invites().length === 0 && !invites.loading()">
+      Nobody is invited yet.
+    </p>
+  </section>
+
+  <!-- Settings -->
+  <section class="admin-section" *ngIf="tab() === 'settings'">
+    <label class="admin-field">
+      <span>Largest song that can be uploaded</span>
+      <div class="admin-field-row">
+        <input type="number" min="1" max="500" [ngModel]="maxUploadMb()" (ngModelChange)="maxUploadMb.set($event)" />
+        <span class="admin-unit">MB</span>
+        <button class="admin-btn" (click)="saveUploadLimit()" [disabled]="settings.saving()">Save</button>
+      </div>
+      <em>
+        Applies to everyone who can upload. The shared library's own ceiling is
+        {{ quotaLabel }} whatever this says.
+      </em>
+    </label>
+
+    <label class="admin-field">
+      <span>Language new accounts start in</span>
+      <div class="admin-field-row">
+        <select [ngModel]="language()" (ngModelChange)="language.set($event)">
+          <option value="es">Español</option>
+          <option value="en">English</option>
+        </select>
+        <button class="admin-btn" (click)="saveLanguage()" [disabled]="settings.saving()">Save</button>
+      </div>
+      <em>Anyone can change their own afterwards.</em>
+    </label>
+  </section>
+</div>
+
+<!-- Deleting takes the account and everything it uploaded, and nothing brings
+     it back, so it asks for the name rather than for a second tap. -->
+<div class="admin-modal" *ngIf="deleting() as user" (click)="deleting.set(null)">
+  <div class="admin-modal-card" (click)="$event.stopPropagation()">
+    <h2>Delete {{ user.display_name || user.email }}?</h2>
+    <p>
+      Their account, their playlists and the {{ user.song_count }}
+      {{ user.song_count === 1 ? 'song' : 'songs' }} they uploaded
+      ({{ formatBytes(user.bytes_used) }}) go with it. This cannot be undone.
+    </p>
+    <p class="admin-modal-ask">
+      Type <strong>{{ user.display_name || user.email }}</strong> to confirm.
+    </p>
+    <input type="text" [(ngModel)]="confirmName" autocomplete="off" />
+    <div class="admin-modal-actions">
+      <button class="admin-btn" (click)="deleting.set(null)">Keep it</button>
+      <button class="admin-btn admin-btn--danger" (click)="confirmDelete()" [disabled]="!canConfirmDelete()">
+        Delete for good
+      </button>
+    </div>
+  </div>
+</div>

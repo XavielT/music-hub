@@ -4,6 +4,7 @@ import { CloudLibraryService, isNetworkError } from './cloud-library.service';
 import { LibraryService } from './library.service';
 import { PlayerService } from './player.service';
 import { RealtimeService } from './realtime.service';
+import { AppSettingsService } from './app-settings.service';
 import { DownloadQueueService } from './download-queue.service';
 import { ToastService } from './toast.service';
 import { SongModel } from '../models/song.model';
@@ -42,7 +43,8 @@ export class SyncService {
     private player: PlayerService,
     private realtime: RealtimeService,
     private queue: DownloadQueueService,
-    private toast: ToastService
+    private toast: ToastService,
+    private settings: AppSettingsService
   ) {
     // The account is the unit of state here: the local database, the library
     // signals, the signed URLs and the player all belong to one user and all
@@ -83,6 +85,9 @@ export class SyncService {
     // start() loads them and, on an admin device with a companion, begins
     // working through them.
     this.queue.start();
+    // The admin's limits, refreshed per account rather than per upload. The
+    // cached copy covers the gap and an offline start.
+    void this.settings.load();
   }
 
   // Everything that belongs to the account that is going away.
