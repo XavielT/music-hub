@@ -746,6 +746,26 @@ for f in $(find src -name '*.ts' ! -name '*.spec.ts' ! -path '*/i18n/*'); do
 done
 ```
 
+### Checking the Spanish
+
+`renders-in-spanish.spec.ts` renders the sign-in screen, the welcome box and the
+wanted list with the language set to `es`, then reads the words back off them:
+the Spanish must be there, the English it replaced must be gone, and a language
+switch must reach strings that are *already* on screen — which is the whole
+reason the pipe is impure.
+
+It exists because the visual pass could not happen here. Chrome in this
+environment cannot reach a local server at all (no network events fire, while
+`curl` to the same URL from the same shell answers 200), and loading the built
+app from `file://` leaves the renderer unresponsive to `Runtime.evaluate` and
+`Page.captureScreenshot`. Karma drives the same Chrome binary against components
+perfectly well, so the check lives there.
+
+**It is not a substitute for looking at the app.** Nothing in it would notice a
+Spanish string overflowing its button, and Spanish runs longer than English —
+that is the failure mode this cannot see. The value was confirmed by mutation:
+reverting one binding to literal English fails the suite immediately.
+
 ### The welcome box
 
 First start, once per account: language → the name everyone else sees → three
