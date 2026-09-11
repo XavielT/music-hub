@@ -24,10 +24,35 @@ function open(name: string, version: number, upgrade?: (db: IDBDatabase) => void
   });
 }
 
+/**
+ * Deletes a database and waits until it is actually gone.
+ *
+ * `onblocked` deliberately does not resolve. It fires when a connection is
+ * still open, which means the database is *not* deleted — resolving there would
+ * report success and let the next spec seed a version 1 database on top of a
+ * version 2 one, which surfaces as a VersionError a long way from its cause.
+ * DbService closes its connection from `onversionchange`, so the delete does go
+ * through and `onsuccess` follows. The timeout is there so that if it ever
+ * stops going through, this says so, instead of hanging until Jasmine's own
+ * timeout blames whichever spec happened to be running.
+ */
 function drop(name: string): Promise<void> {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const req = indexedDB.deleteDatabase(name);
-    req.onsuccess = req.onerror = req.onblocked = () => resolve();
+    const timer = setTimeout(
+      () =>
+        reject(
+          new Error(`deleteDatabase(${name}) is still blocked — a connection was left open`)
+        ),
+      3000
+    );
+    const finish = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    req.onsuccess = req.onerror = finish;
+    req.onblocked = () =>
+      console.warn(`deleteDatabase(${name}) blocked, waiting for the connection to close`);
   });
 }
 

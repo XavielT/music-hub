@@ -12,6 +12,17 @@ module.exports = function (config) {
       require('karma-coverage'),
       require('@angular-devkit/build-angular/plugins/karma'),
     ],
+    client: {
+      jasmine: {
+        // Jasmine 5 randomises spec order by default and picks a fresh seed
+        // each run, which the progress reporter never prints — so a failure
+        // that depends on ordering leaves nothing to reproduce it with.
+        // JASMINE_SEED=123 npm test pins the order; without it the behaviour
+        // is unchanged.
+        random: true,
+        seed: process.env['JASMINE_SEED'] || undefined,
+      },
+    },
     reporters: ['progress', 'kjhtml'],
     browsers: ['ChromeHeadless'],
     restartOnFileChange: true,
