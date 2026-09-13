@@ -53,3 +53,7 @@ __pycache__/
 companion/.venv/
 companion/cookies.txt
 companion/.token
+
+# Supabase keys — service_role must never be committed.
+supa.env
+*.env
