@@ -32,9 +32,11 @@ export const appConfig: ApplicationConfig = {
     // the device's choice and sets <html lang>. Without this the first paint —
     // the auth screen, most often — would be in English until something else
     // happened to inject it.
-    provideAppInitializer(() => {
-      inject(I18nService);
-    }),
+    //
+    // The returned promise is the other half: dictionaries are lazy chunks now,
+    // and awaiting init() here is what guarantees the words have arrived before
+    // anything renders. Drop the `return` and the first paint is raw keys.
+    provideAppInitializer(() => inject(I18nService).init()),
     // Service worker for the installable web app only. Inside the Capacitor
     // WebView the native shell already serves the assets locally, and a second
     // cache layer there would fight it.

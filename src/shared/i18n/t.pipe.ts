@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { I18nService } from '../services/i18n.service';
-import { TranslationKey } from './en';
+import type { TranslationKey } from './en';
 
 /**
  * `{{ 'library.title' | t }}`, and `{{ 'admin.deleteUser' | t: { name: x } }}`
