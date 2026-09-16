@@ -358,4 +358,20 @@ describe('LibraryService cover art', () => {
     expect(await db.get<Blob>('covers', song.id)).toBeUndefined();
   });
 
+  // deactivate() runs from SyncService's auth effect, which on the signed-out
+  // path calls it on every pass with nothing to clear. Handing back a new {}
+  // and [] each time made the effect that called it wake itself for ever —
+  // the iOS boot crash. Emptiness has to keep its identity.
+  it('changes nothing when there was nothing to clear', () => {
+    library.deactivate();
+    const songs = library.songs();
+    const playlists = library.playlists();
+
+    library.deactivate();
+    library.deactivate();
+
+    expect(library.songs()).toBe(songs);
+    expect(library.playlists()).toBe(playlists);
+  });
+
 });

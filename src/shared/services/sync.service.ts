@@ -1,4 +1,4 @@
-import { Injectable, computed, effect, signal } from '@angular/core';
+import { Injectable, computed, effect, signal, untracked } from '@angular/core';
 import { AuthService } from './auth.service';
 import { CloudLibraryService, isNetworkError } from './cloud-library.service';
 import { LibraryService } from './library.service';
@@ -53,14 +53,24 @@ export class SyncService {
     // have to turn over together when that user changes.
     effect(() => {
       const user = this.auth.user();
-      if (!user) {
-        this.lastSyncedUserId = null;
-        this.closeAccount();
-        return;
-      }
-      if (user.id === this.lastSyncedUserId) return;
-      this.lastSyncedUserId = user.id;
-      void this.openAccount(user.id);
+      // Only the user is tracked. Everything below is teardown and start-up
+      // that reads plenty of other signals on its way — the library's covers,
+      // the player's queue — and an effect re-runs when anything it read
+      // changes, not just what it meant to watch. Reading them here armed the
+      // effect against its own writes: closeAccount() sets _coverUrls to a
+      // fresh {}, which is never Object.is-equal to the last one, so the
+      // effect re-ran, cleared again, and spun the main thread allocating
+      // empty objects until the tab died. iOS killed it in about four seconds.
+      untracked(() => {
+        if (!user) {
+          this.lastSyncedUserId = null;
+          this.closeAccount();
+          return;
+        }
+        if (user.id === this.lastSyncedUserId) return;
+        this.lastSyncedUserId = user.id;
+        void this.openAccount(user.id);
+      });
     });
 
     // Coming back online is a good moment to reconcile.

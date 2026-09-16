@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, untracked } from '@angular/core';
 import { AuthService } from './auth.service';
 import { DbService } from './db.service';
 import {
@@ -75,14 +75,24 @@ export class LibraryService {
   }
 
   // Signing out has to land on an empty UI, not the previous user's library.
+  //
+  // Idempotent, and deliberately so: this runs from SyncService's auth effect,
+  // and on the signed-out path it runs with nothing to clear. Writing a fresh
+  // {} and [] every time would hand every reader a new identity for the same
+  // emptiness, waking anything watching them for no reason. Reading the
+  // signals untracked keeps the call safe to make from inside an effect.
   deactivate(): void {
-    // The object URLs point at the previous account's artwork; letting them
-    // leak would keep those blobs alive for the whole session.
-    for (const url of Object.values(this._coverUrls())) URL.revokeObjectURL(url);
-    this._coverUrls.set({});
+    const covers = untracked(this._coverUrls);
+    const urls = Object.values(covers);
+    if (urls.length) {
+      // The object URLs point at the previous account's artwork; letting them
+      // leak would keep those blobs alive for the whole session.
+      for (const url of urls) URL.revokeObjectURL(url);
+      this._coverUrls.set({});
+    }
     this.coversResolving.clear();
-    this._songs.set([]);
-    this._playlists.set([]);
+    if (untracked(this._songs).length) this._songs.set([]);
+    if (untracked(this._playlists).length) this._playlists.set([]);
     this.ready = Promise.resolve();
   }
 
