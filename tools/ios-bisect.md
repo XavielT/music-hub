@@ -101,3 +101,26 @@ phone — the one state none of the people testing it were ever in.
 - `npm run smoke:ios` — WebKit and Chromium, `/`, `/auth`, `/?safe=1`,
   `/?debug=1`: no crash, no pageerror, no CSP refusal, and the main thread
   answers every second throughout.
+
+## The preview handed over for the phone test
+
+`music-hub-xaviel-fwb4ea7ql-xavielts-projects.vercel.app`, built by Vercel from
+`3767bc3` on 16-09-2026. Its chunk hashes match a local `npm run build` exactly
+(`main-CPFF2NFC.js`, `styles-YCACXR7G.css`, initial total 680.87 kB), so what
+the phone loads is the build measured above.
+
+Checked here before it was sent:
+
+| Check | Result |
+|-------|--------|
+| `npm run build` | green, initial 680.87 kB against the 1 MB budget |
+| `npm test` | 267 specs, all passing (`CHROME_BIN` from Playwright's chromium) |
+| `npm run smoke:ios` | `/`, `/auth`, `/?safe=1`, `/?debug=1` — WebKit and Chromium, no crash, no pageerror, no CSP refusal, responsive 20/20 s |
+| `npx cap sync android` | green |
+| `?debug=1` in WebKit | overlay renders with version, device and the boot log |
+| `?safe=1` in WebKit | banner shown, 0 service worker registrations |
+| bundle blocked, as an iOS 16 Safari | the es/en "update iOS" screen appears, no crash |
+| `apple-touch-icon-180.png`, `manifest.webmanifest` | 200, `image/png` and `application/manifest+json` |
+
+The phone is the last word: production waits on Xaviel's Safari opening this
+preview.
