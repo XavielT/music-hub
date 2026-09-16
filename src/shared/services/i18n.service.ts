@@ -93,6 +93,11 @@ export class I18nService {
   // Bumped when a dictionary finishes loading. t() reads it so that anything
   // rendered through the pipe recomputes once the words are actually there.
   private _loadedAt = signal(0);
+  // Public so TPipe can key its cache on it. Without that the pipe would go on
+  // returning the answer it memoised — raw keys, if the first load failed —
+  // even after the words arrived, because a dictionary landing for the
+  // language already in use changes no other input the pipe looks at.
+  loadedAt = this._loadedAt.asReadonly();
 
   constructor() {
     // The device's last choice is the best guess available before any profile

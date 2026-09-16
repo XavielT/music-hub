@@ -22,6 +22,7 @@ import type { TranslationKey } from './en';
 export class TPipe implements PipeTransform {
   private lastKey?: string;
   private lastLang?: string;
+  private lastLoadedAt?: number;
   private lastParamsJson?: string;
   private lastValue = '';
 
@@ -29,13 +30,23 @@ export class TPipe implements PipeTransform {
 
   transform(key: TranslationKey | string, params?: Record<string, string | number>): string {
     const lang = this.i18n.lang();
+    // A dictionary arriving is as much a reason to recompute as a language
+    // change: when the first load fails and a later one succeeds, the language
+    // never changed, so this is the only input that moved.
+    const loadedAt = this.i18n.loadedAt();
     // Cheap when there are no parameters, which is the overwhelming majority.
     const paramsJson = params ? JSON.stringify(params) : '';
-    if (key === this.lastKey && lang === this.lastLang && paramsJson === this.lastParamsJson) {
+    if (
+      key === this.lastKey &&
+      lang === this.lastLang &&
+      loadedAt === this.lastLoadedAt &&
+      paramsJson === this.lastParamsJson
+    ) {
       return this.lastValue;
     }
     this.lastKey = key;
     this.lastLang = lang;
+    this.lastLoadedAt = loadedAt;
     this.lastParamsJson = paramsJson;
     this.lastValue = this.i18n.t(key, params);
     return this.lastValue;
