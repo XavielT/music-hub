@@ -1028,6 +1028,71 @@ installs will accept.
 A native iOS build requires a Mac with Xcode (`npx cap add ios && npx cap open ios`).
 The PWA above is the supported route without one.
 
+### The boot crash of September 2026 — what it was
+
+For several releases, opening the app on an iPhone as a **signed-out** visitor
+ended in WebKit's *"A problem repeatedly occurred"* a few seconds in. It looked
+like a bad deploy, because an already-installed, already-signed-in copy went on
+working; it was neither a deploy nor iOS.
+
+`SyncService` turns the account over inside an `effect()` on `auth.user()`. An
+Angular effect re-runs when any signal it *read* changes, and it tracks reads
+made anywhere it reaches, not only the signal it meant to watch.
+`LibraryService.deactivate()` read `_coverUrls` and then set it to a fresh
+`{}` — never `Object.is`-equal to the last one — so the effect kept waking
+itself: about 230 MB/s of empty objects with the main thread pinned. iOS kills a
+WebContent process for far less, in roughly four seconds.
+
+Signed in, the `lastSyncedUserId` guard returns early on the second pass and the
+cycle stops after one extra turn. Signed out there is no guard, so the teardown
+runs on every pass. Nobody had opened the signed-out path on a phone since the
+loop was completed in `e93fcea`.
+
+The fix is in two halves: the effect tracks only `auth.user()` and does its work
+inside `untracked()`, and `deactivate()` is idempotent, so emptiness keeps its
+identity. The full measurement trail is in `tools/ios-bisect.md`.
+
+**The lesson worth keeping:** anything called from inside an `effect()` is part
+of that effect's dependencies, however far away it lives. Teardown that writes
+signals belongs in `untracked()`.
+
+### Testing for it
+
+Linux WebKit reproduces this faithfully — the bug is not iOS-specific, iOS is
+just the first platform whose memory ceiling turns it into a crash.
+
+```bash
+npm run build
+npm run serve:dist      # serves dist with vercel.json's real headers, :4173
+npm run smoke:ios       # WebKit + Chromium: crashes, errors, CSP, responsiveness
+```
+
+`tools/serve-dist.mjs` matters as much as the smoke test: it applies the
+production CSP and cache headers, so a fault that only appears under them is
+reproducible before it is deployed. `npm test` needs a Chrome —
+`export CHROME_BIN=$(ls -d ~/.cache/ms-playwright/chromium-*/chrome-linux64/chrome | head -1)`
+after `npx playwright install chromium`, or it exits 0 having run nothing.
+
+### Troubleshooting on iPhone
+
+Three query flags, for when the app will not open and there is no Mac to attach
+a Web Inspector to. They work on any device, in a tab or in the installed app.
+
+| Flag | What it does |
+|------|--------------|
+| `?debug=1` | Shows a panel with the device, the version, and the boot log — **including the previous load's**, so a crash-and-reload still reveals how far the attempt that died had got. Sticky: Safari drops the query string on reload, so it stays on until turned off in Settings → Diagnostics. |
+| `?safe=1` | Boots with every service worker unregistered and the `ngsw:` caches deleted, and says so in a banner. Rules out a poisoned cache without waiting for one to expire. A diagnostic, not a setting — it lasts one load. |
+| `?reset=1` | Safe mode, plus every `music-hub.` key and the stored session cleared, then a reload onto a clean URL. **Downloaded songs are kept** — they live in IndexedDB, and a boot problem is never the listener's fault. |
+
+Settings → About shows the version and carries the same Diagnostics panel with
+a Copy button, which is the easiest thing to ask a family member for.
+
+If the app is opened by a browser too old to run it (Angular 19 needs iOS 17+),
+`index.html` shows an "update iOS" message in Spanish and English rather than
+letting WebKit show its own crash screen. It appears on its own after six
+seconds, because the code that would hide it is the very code such a browser
+cannot parse.
+
 ## Cover art and tags
 
 Adding a file from the device reads what it already knows about itself — title,

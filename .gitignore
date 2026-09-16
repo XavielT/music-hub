@@ -57,3 +57,8 @@ companion/.token
 # Supabase keys — service_role must never be committed.
 supa.env
 *.env
+
+# Smoke-test output: the log and screenshots are evidence for one run, not
+# something to carry in the repo. tools/ios-bisect.md is the record that stays.
+tools/ios-smoke.log
+tools/ios-smoke-shots/

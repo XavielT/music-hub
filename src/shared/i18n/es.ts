@@ -297,6 +297,16 @@ export const ES: Record<TranslationKey, string> = {
   'settings.coverArtNote':
     'Las portadas se leen de las etiquetas de cada archivo. Las canciones que no traen ninguna se pueden buscar en internet.',
   'settings.artworkAllDone': 'Todas las canciones tienen portada, o ya se buscó.',
+  'settings.about': 'Acerca de',
+  'settings.version': 'Versión',
+  'settings.diagnostics': 'Diagnóstico',
+  'settings.diagnosticsHint': 'Registra cómo arranca la aplicación, para poder revisar un fallo al abrirla.',
+  'settings.diagnosticsOn': 'Activar',
+  'settings.diagnosticsOff': 'Desactivar',
+  'settings.diagnosticsReport': 'Informe de arranque',
+  'settings.diagnosticsReportHint': 'Dispositivo, versión y qué pasó en los dos últimos arranques.',
+  'settings.diagnosticsCopied': 'Informe copiado.',
+  'settings.copy': 'Copiar',
   'settings.updates': 'Actualizaciones',
   'settings.allowInstalls': 'Permitir que Music Hub instale actualizaciones',
   'settings.allowInstallsHint':

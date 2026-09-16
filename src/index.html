@@ -22,8 +22,50 @@
        pages already pad with env(safe-area-inset-top). -->
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
+  <style>
+    /* See the note on #unsupported-browser in the body. Six seconds is long
+       enough that a slow phone downloading the bundle over a bad connection
+       never sees it, and short enough to be an answer rather than a wait. */
+    #unsupported-browser {
+      opacity: 0;
+      animation: unsupported-browser-appear 0s linear 6s forwards;
+      position: fixed;
+      inset: 0;
+      margin: 0;
+      padding: 2rem 1.5rem;
+      background: #0d0d0d;
+      color: #f4f4f5;
+      font-family: system-ui, -apple-system, sans-serif;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+    #unsupported-browser h1 { color: #f97316; margin: 0; font-size: 1.5rem; }
+    #unsupported-browser p { margin: 0; max-width: 28rem; line-height: 1.5; }
+    @keyframes unsupported-browser-appear { to { opacity: 1; } }
+  </style>
 </head>
 <body>
+  <!-- Shown only when main.ts never ran: a browser too old to parse the
+       bundle throws a SyntaxError and no script of ours executes, so nothing
+       can be waiting to render this. It is the last screen an iOS 15 or 16
+       visitor can be given, and "A problem repeatedly occurred" is a worse one.
+
+       The reveal is a pure-CSS delay rather than a script, because the CSP
+       allows inline styles and forbids inline scripts. main.ts removes this
+       element as its first act, long before the delay elapses, so a browser
+       that works never shows it — while one that cannot parse the bundle has
+       nothing to remove it and the message arrives on its own. Both languages,
+       since this is exactly the reader who cannot be asked to pick one. -->
+  <div id="unsupported-browser">
+    <h1>Music Hub</h1>
+    <p lang="es">Esta versión de Safari es demasiado antigua para abrir la aplicación. Actualiza iOS a la versión 17 o posterior y vuelve a abrir el enlace.</p>
+    <p lang="en">This version of Safari is too old to open the app. Update iOS to version 17 or later, then open the link again.</p>
+  </div>
+
   <app-root></app-root>
 </body>
 </html>

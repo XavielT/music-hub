@@ -113,7 +113,24 @@ export class I18nService {
    * does not finish until the first screen has words to render.
    */
   async init(): Promise<void> {
-    await ensure(this._lang());
+    try {
+      await ensure(this._lang());
+    } catch (err) {
+      // A dictionary is a lazy chunk now, so this is a failed network request:
+      // an old service worker pointing at a hash that no longer exists, or a
+      // phone that lost the connection between index.html and the chunk. One
+      // retry covers the second case, which is the common one.
+      console.warn('dictionary load failed, retrying', err);
+      try {
+        await ensure(this._lang());
+      } catch {
+        // Deliberately not fatal. app.config wraps initializers so a rejection
+        // here cannot stop the app opening, and t() answers with the key
+        // itself when it has no dictionary — a screen of terse English labels,
+        // which is a great deal better than no screen at all.
+        console.warn('dictionary unavailable; falling back to keys');
+      }
+    }
     this._loadedAt.set(this._loadedAt() + 1);
   }
 

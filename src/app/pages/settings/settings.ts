@@ -20,6 +20,9 @@ import { InstallHint } from '../../../shared/components/install-hint/install-hin
 import { InvitesPanel } from '../../../shared/components/invites-panel/invites-panel';
 import { CompanionPanel } from '../../../shared/components/companion-panel/companion-panel';
 import { TPipe } from '../../../shared/i18n/t.pipe';
+import { APP_VERSION } from '../../../version';
+import { debugEnabled, setDebug } from '../../../boot/flags';
+import { buildReport, showDebugOverlay } from '../../../boot/overlay';
 
 // Everything about the app and the account, so the library can be about music.
 @Component({
@@ -31,6 +34,13 @@ import { TPipe } from '../../../shared/i18n/t.pipe';
 })
 export class SettingsComponent implements OnInit {
   readonly isNative = Capacitor.isNativePlatform();
+  readonly appVersion = APP_VERSION;
+
+  // Diagnostics is off unless somebody turned it on, here or with ?debug=1.
+  // It is a signal because the row shows its own state, and the overlay is the
+  // same one main.ts can put up before Angular exists — one panel, so a boot
+  // that failed and a boot that worked are read the same way.
+  diagnostics = signal(debugEnabled());
 
   accountInitial = computed(() => (this.auth.displayName().trim()[0] || '?').toUpperCase());
 
@@ -169,5 +179,23 @@ export class SettingsComponent implements OnInit {
 
   back(): void {
     history.back();
+  }
+
+  toggleDiagnostics(): void {
+    const on = !this.diagnostics();
+    setDebug(on);
+    this.diagnostics.set(on);
+    if (on) showDebugOverlay();
+  }
+
+  async copyDiagnostics(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(buildReport());
+      this.toast.show(this.i18n.t('settings.diagnosticsCopied'));
+    } catch {
+      // No clipboard permission, or an insecure context: the panel shows the
+      // same text, so there is still a way to get at it.
+      showDebugOverlay();
+    }
   }
 }

@@ -44,3 +44,73 @@ input,
 textarea {
   user-select: text;
 }
+
+// --- Boot screens -----------------------------------------------------------
+// These belong to the moments when the app is not running: the watchdog's
+// timeout screen, and the safe-mode banner. Both are built from main.ts with
+// DOM calls, so they cannot use a component's styles.
+
+.boot-fallback {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem 1.5rem;
+  background: #0d0d0d;
+  color: #f4f4f5;
+  text-align: center;
+
+  section { max-width: 28rem; }
+  h1 { margin: 0 0 0.5rem; font-size: 1.35rem; color: #f97316; }
+  p { margin: 0; line-height: 1.5; }
+
+  .boot-fallback-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  a {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border: 1px solid #f97316;
+    border-radius: 999px;
+    color: #f97316;
+    text-decoration: none;
+  }
+}
+
+.safe-mode-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2147483645;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  // The status bar is drawn over by black-translucent, so the banner has to
+  // clear it itself or it lands under the clock.
+  padding: calc(0.5rem + env(safe-area-inset-top)) 1rem 0.5rem;
+  background: #f97316;
+  color: #0d0d0d;
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  button {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0 0.25rem;
+    cursor: pointer;
+  }
+}

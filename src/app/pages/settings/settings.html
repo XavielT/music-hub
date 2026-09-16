@@ -211,4 +211,38 @@
   <section class="settings-section">
     <app-install-hint></app-install-hint>
   </section>
+
+  <!-- About and diagnostics. The version is here because "which build are you
+       on?" is the first question of every support conversation, and a
+       screenshot of this row answers it. -->
+  <section class="settings-section">
+    <h2 class="settings-section-title">{{ 'settings.about' | t }}</h2>
+
+    <div class="settings-row">
+      <span>
+        <strong>{{ 'settings.version' | t }}</strong>
+        <em>{{ appVersion }}</em>
+      </span>
+    </div>
+
+    <div class="settings-row">
+      <span>
+        <strong>{{ 'settings.diagnostics' | t }}</strong>
+        <em>{{ 'settings.diagnosticsHint' | t }}</em>
+      </span>
+      <button class="settings-row-action-btn" (click)="toggleDiagnostics()">
+        {{ (diagnostics() ? 'settings.diagnosticsOff' : 'settings.diagnosticsOn') | t }}
+      </button>
+    </div>
+
+    <div class="settings-row" *ngIf="diagnostics()">
+      <span>
+        <strong>{{ 'settings.diagnosticsReport' | t }}</strong>
+        <em>{{ 'settings.diagnosticsReportHint' | t }}</em>
+      </span>
+      <button class="settings-row-action-btn" (click)="copyDiagnostics()">
+        {{ 'settings.copy' | t }}
+      </button>
+    </div>
+  </section>
 </div>

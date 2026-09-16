@@ -37,9 +37,44 @@ export class SupabaseService {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      storage: localStorage,
+      storage: safeStorage(),
       storageKey: AUTH_STORAGE_KEY,
       flowType: 'implicit',
     },
   });
+}
+
+/**
+ * localStorage, or something shaped like it that cannot throw.
+ *
+ * This is a class field on a root service that every other service reaches
+ * through, so anything it throws happens during bootstrap and takes the whole
+ * app with it — a blank screen, not a failed sign-in. Lockdown mode, blocked
+ * cookies and a handful of embedded WebViews all make `localStorage` throw on
+ * access rather than merely returning null, and Safari throws on setItem when
+ * the private-mode quota is zero.
+ *
+ * Falling back to memory means the session lasts for the tab instead of for the
+ * device: the user signs in again next launch, which is a small indignity next
+ * to an app that will not open.
+ */
+function safeStorage(): Storage {
+  try {
+    const probe = '__music-hub-probe__';
+    localStorage.setItem(probe, '1');
+    localStorage.removeItem(probe);
+    return localStorage;
+  } catch {
+    const memory = new Map<string, string>();
+    return {
+      getItem: key => memory.get(key) ?? null,
+      setItem: (key, value) => void memory.set(key, value),
+      removeItem: key => void memory.delete(key),
+      clear: () => memory.clear(),
+      key: index => Array.from(memory.keys())[index] ?? null,
+      get length() {
+        return memory.size;
+      },
+    } as Storage;
+  }
 }

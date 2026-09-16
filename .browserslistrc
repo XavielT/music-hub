@@ -1,0 +1,10 @@
+# The support floor is a decision, not whatever the default happened to be.
+# Angular 19 supports Safari 17 and newer, so an older iPhone cannot run this
+# bundle at all — index.html has a message for that case rather than letting
+# WebKit show its own crash screen.
+last 2 Safari major versions
+last 2 iOS major versions
+Chrome >= 110
+Firefox >= 115
+Edge >= 110
+not dead
