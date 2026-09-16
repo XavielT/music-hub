@@ -30,6 +30,18 @@ jobs:
       - name: Production build
         run: npm run build
 
+      # The unit suite runs in Chrome, which is not the engine that broke. A
+      # boot that loops or throws only on WebKit — the September 2026 iOS crash
+      # was exactly that — gets past everything above and reaches a phone.
+      - name: Install WebKit for the boot smoke test
+        run: npx playwright install --with-deps webkit chromium
+
+      - name: Boot smoke test (WebKit + Chromium)
+        run: |
+          npm run serve:dist &
+          npx wait-on http://localhost:4173 --timeout 30000
+          npm run smoke:ios -- --seconds 12
+
   # The Angular suite cannot see the Python service at all, so at minimum every
   # push should prove it still imports and its endpoints are wired.
   companion:

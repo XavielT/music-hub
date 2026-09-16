@@ -1,0 +1,18 @@
+# What Vercel does not need in the upload.
+#
+# Without this the CLI uploads the working directory whole — which meant 7.6 GB
+# and a deploy that never finished, almost all of it the Angular build cache.
+# The build runs `npm ci && npm run build` on Vercel's side, so none of this is
+# read there.
+node_modules
+.angular
+dist
+android
+companion
+.git
+.github
+supabase
+tools
+*.apk
+*.keystore
+*.env
