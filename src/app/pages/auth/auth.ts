@@ -9,6 +9,8 @@ import { TPipe } from '../../../shared/i18n/t.pipe';
 
 type AuthMode = 'login' | 'register' | 'forgot';
 
+const INVITE_KEY = 'music-hub.invite';
+
 @Component({
   selector: 'app-auth',
   standalone: true,
@@ -18,6 +20,8 @@ type AuthMode = 'login' | 'register' | 'forgot';
 })
 export class AuthComponent {
   mode = signal<AuthMode>('login');
+  // Non-empty when this visit came from an invite link.
+  inviteToken = signal('');
   busy = signal(false);
   error = signal('');
   notice = signal('');
@@ -36,6 +40,36 @@ export class AuthComponent {
     // signing out.
     const reason = this.auth.takeSignedOutReason();
     if (reason) this.error.set(reason);
+
+    // Arrived on an invite link. Open on the register form rather than the
+    // sign-in one, because somebody following an invite has no account yet.
+    const invited = this.readInviteToken();
+    if (invited) {
+      this.inviteToken.set(invited);
+      this.mode.set('register');
+    }
+  }
+
+  /**
+   * The token survives in sessionStorage as well as the URL: Safari drops the
+   * query string on some navigations, and losing it silently would put the
+   * invitee back in front of the wall the link exists to remove.
+   */
+  private readInviteToken(): string {
+    const fromUrl = this.route.snapshot.queryParamMap.get('invite')?.trim() ?? '';
+    if (fromUrl) {
+      try {
+        sessionStorage.setItem(INVITE_KEY, fromUrl);
+      } catch {
+        // Private mode, or storage is full. The URL still has it.
+      }
+      return fromUrl;
+    }
+    try {
+      return sessionStorage.getItem(INVITE_KEY)?.trim() ?? '';
+    } catch {
+      return '';
+    }
   }
 
   setMode(mode: AuthMode): void {
@@ -86,7 +120,7 @@ export class AuthComponent {
       case 'login':
         return this.auth.signIn(this.email, this.password);
       case 'register':
-        return this.auth.signUp(this.email, this.password, this.displayName);
+        return this.auth.signUp(this.email, this.password, this.displayName, this.inviteToken());
       case 'forgot':
         return this.auth.sendPasswordReset(this.email);
     }

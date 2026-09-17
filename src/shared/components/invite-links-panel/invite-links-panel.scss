@@ -1,0 +1,146 @@
+.ilinks-note {
+  margin: 8px 0;
+  font-size: 0.73rem;
+  line-height: 1.45;
+  color: var(--main-ultra-light);
+}
+
+.ilinks-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+
+  input {
+    flex: 1 1 140px;
+    min-width: 0;
+    background: var(--secondary);
+    border: 1px solid #2d2d2d;
+    border-radius: 10px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.82rem;
+    padding: 9px 12px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--Hub);
+    }
+  }
+
+  button {
+    background: var(--Hub);
+    border: none;
+    border-radius: 10px;
+    color: var(--on-Hub);
+    font-family: var(--font-btns);
+    font-size: 0.78rem;
+    padding: 9px 16px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+    }
+  }
+}
+
+// The one moment the token is visible. It is deliberately loud: there is no
+// second chance to read it, and a link nobody copied is a link nobody can use.
+.ilinks-fresh {
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  background: rgba(249, 115, 22, 0.08);
+}
+
+.ilinks-once {
+  margin: 0 0 8px;
+  font-size: 0.73rem;
+  line-height: 1.45;
+  color: var(--main-ultra-light);
+}
+
+.ilinks-url {
+  display: block;
+  // Long, and a phone is narrow: wrapping mid-token beats a scrollbar nobody
+  // finds, and it stays selectable for when the clipboard is refused.
+  word-break: break-all;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: #fff;
+  user-select: all;
+}
+
+.ilinks-copy {
+  margin-top: 10px;
+  background: var(--Hub);
+  border: none;
+  border-radius: 10px;
+  color: var(--on-Hub);
+  font-family: var(--font-btns);
+  font-size: 0.78rem;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.ilinks-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid #222;
+  font-size: 0.8rem;
+}
+
+.ilinks-who {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+
+  strong {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  em {
+    font-style: normal;
+    font-size: 0.72rem;
+    color: var(--main-ultra-light);
+  }
+}
+
+.ilinks-state {
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--main-ultra-light);
+
+  &.open {
+    color: var(--Hub);
+  }
+
+  &.used {
+    color: #4ade80;
+  }
+}
+
+.ilinks-revoke {
+  flex: 0 0 auto;
+  background: none;
+  border: 1px solid #2d2d2d;
+  border-radius: 8px;
+  color: var(--main-ultra-light);
+  font-family: var(--font-btns);
+  font-size: 0.72rem;
+  padding: 6px 10px;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}

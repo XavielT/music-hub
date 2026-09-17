@@ -84,13 +84,29 @@ export class AuthService {
     }
   }
 
-  async signUp(email: string, password: string, displayName: string): Promise<AuthResult> {
+  /**
+   * `inviteToken` is the one from an invite link. It travels as sign-up
+   * metadata because the only place it can be checked is inside the trigger on
+   * auth.users, which is the same statement that creates the account — so the
+   * link is spent exactly when the account is made, or not at all.
+   */
+  async signUp(
+    email: string,
+    password: string,
+    displayName: string,
+    inviteToken = ''
+  ): Promise<AuthResult> {
     this._loading.set(true);
     try {
       const { data, error } = await this.supabase.client.auth.signUp({
         email: email.trim(),
         password,
-        options: { data: { display_name: displayName.trim() } },
+        options: {
+          data: {
+            display_name: displayName.trim(),
+            ...(inviteToken.trim() ? { invite_token: inviteToken.trim() } : {}),
+          },
+        },
       });
       if (error) return { ok: false, message: this.friendlyError(error) };
 

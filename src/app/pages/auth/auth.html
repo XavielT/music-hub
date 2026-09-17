@@ -13,7 +13,8 @@
 
     <form class="auth-form" (ngSubmit)="submit()">
       <p class="auth-hint" *ngIf="mode() === 'forgot'">{{ 'auth.forgotHint' | t }}</p>
-      <p class="auth-hint" *ngIf="mode() === 'register'">{{ 'auth.inviteHint' | t }}</p>
+      <p class="auth-invited" *ngIf="mode() === 'register' && inviteToken()">{{ 'auth.invited' | t }}</p>
+      <p class="auth-hint" *ngIf="mode() === 'register' && !inviteToken()">{{ 'auth.inviteHint' | t }}</p>
 
       <input
         class="auth-input"

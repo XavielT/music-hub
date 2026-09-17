@@ -131,7 +131,12 @@
 
   <!-- Invites -->
   <section class="admin-section" *ngIf="tab() === 'invites'">
-    <p class="admin-note">
+    <!-- A link first, because it is the one that does not need their address
+         before they can start. The email list stays underneath for the people
+         already on it. -->
+    <app-invite-links-panel />
+
+    <p class="admin-note admin-note-sep">
       {{ 'admin.invitesNote' | t }}
     </p>
 

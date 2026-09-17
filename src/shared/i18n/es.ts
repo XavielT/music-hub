@@ -42,6 +42,8 @@ export const ES: Record<TranslationKey, string> = {
   'auth.signIn': 'Iniciar sesión',
   'auth.register': 'Crear cuenta',
   'auth.forgotHint': 'Escribe tu correo y te enviamos un enlace para poner una contraseña nueva.',
+  'auth.invited':
+    'Te han invitado. Elige una contraseña y ya estás dentro — nadie tiene que añadirte antes.',
   'auth.inviteHint':
     'Music Hub es solo por invitación — crea tu cuenta con un correo que Xaviel ya haya añadido.',
   'auth.email': 'Correo',
@@ -375,6 +377,26 @@ export const ES: Record<TranslationKey, string> = {
   'admin.roleNote.member': 'Escucha todo, tiene sus playlists, puede pedir canciones.',
   'admin.roleNote.listener':
     'Escucha y descarga. No puede añadir ni quitar nada de la biblioteca.',
+  'admin.inviteLinkNote':
+    'Un enlace que lleva su propio permiso. Envíaselo y podrá registrarse directamente — no necesitas su correo antes. De un solo uso, válido 7 días.',
+  'admin.inviteLinkWhoFor': '¿Para quién es?',
+  'admin.inviteLinkCreate': 'Crear enlace',
+  'admin.inviteLinkOnce': 'Cópialo ahora — se muestra una sola vez y no se puede volver a leer.',
+  'admin.inviteLinkCopy': 'Copiar enlace',
+  'admin.inviteLinkCopiedShort': 'Copiado',
+  'admin.inviteLinkCopied': 'Enlace de invitación copiado.',
+  'admin.inviteLinkCopyFailed': 'No se pudo copiar — selecciona el enlace y cópialo a mano.',
+  'admin.inviteLinkLoading': 'Cargando enlaces…',
+  'admin.inviteLinkNoNote': 'Enlace de invitación',
+  'admin.inviteLinkRevoke': 'Anular',
+  'admin.inviteLinkConfirmRevoke': '¿Seguro?',
+  'admin.inviteLinkRevoked': 'Enlace de invitación anulado.',
+  'admin.inviteLinkNotAdmin': 'Solo un administrador puede gestionar los enlaces de invitación.',
+  'admin.inviteLinkFailed': 'No se pudo crear el enlace de invitación.',
+  'admin.inviteLinkStatus.open': 'Activo',
+  'admin.inviteLinkStatus.used': 'Usado',
+  'admin.inviteLinkStatus.revoked': 'Anulado',
+  'admin.inviteLinkStatus.expired': 'Caducado',
   'admin.invitesNote':
     'Las cuentas son solo por invitación: un correo tiene que estar en esta lista antes de poder crear una cuenta con él. Retirar una invitación cierra la puerta a una cuenta nueva — no elimina a quien ya entró.',
   'admin.whoTheyAre': 'quién es (opcional)',

@@ -11,6 +11,7 @@ import { STORAGE_QUOTA_BYTES } from '../../../shared/services/cloud-library.serv
 import { UserRole } from '../../../shared/models/profile.model';
 import { I18nService } from '../../../shared/services/i18n.service';
 import { PendingSongsService, PendingSongRow } from '../../../shared/services/pending-songs.service';
+import { InviteLinksPanel } from '../../../shared/components/invite-links-panel/invite-links-panel';
 import { TPipe } from '../../../shared/i18n/t.pipe';
 
 /**
@@ -23,7 +24,7 @@ import { TPipe } from '../../../shared/i18n/t.pipe';
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, TPipe],
+  imports: [CommonModule, FormsModule, TPipe, InviteLinksPanel],
   templateUrl: './admin.html',
   styleUrl: './admin.scss',
 })

@@ -1,1 +1,14 @@
 @use './auth-card';
+
+// An invite is good news, so it reads as a welcome rather than as the warning
+// the plain hint is. Same box, different colour.
+.auth-invited {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  background: rgba(249, 115, 22, 0.1);
+  color: var(--main-ultra-light);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}

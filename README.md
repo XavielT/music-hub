@@ -39,11 +39,16 @@ npm start          # web preview at localhost:4200
 npm test           # unit tests, headless
 ```
 
-`ng test` needs a Chrome to drive. If there is no system Chrome, point it at
-the one Puppeteer already downloaded:
+`ng test` needs a Chrome to drive. Without one it prints `No binary for
+ChromeHeadless browser on your platform` and **still exits 0**, having run
+nothing — so point it at a Chrome that exists and check for the `TOTAL: N
+SUCCESS` line before believing a green run:
 
 ```bash
-export CHROME_BIN=$(ls -d ~/.cache/puppeteer/chrome/*/chrome-linux64/chrome | tail -1)
+# Playwright's, installed for `npm run smoke:ios`:
+export CHROME_BIN=$(ls -d ~/.cache/ms-playwright/chromium-*/chrome-linux64/chrome | tail -1)
+# or Puppeteer's, if that is the cache present:
+# export CHROME_BIN=$(ls -d ~/.cache/puppeteer/chrome/*/chrome-linux64/chrome | tail -1)
 npm test
 ```
 
@@ -929,6 +934,30 @@ still hold that `versionCode` — a rebuilt "same" version would carry the same
 number and Android would refuse it, with nothing in the UI explaining why. Skip
 the number and move on: `main` staying ahead of the newest tag is the harmless
 half of this, and `set-version.sh` keeps counting up from wherever it is.
+
+## Inviting somebody
+
+Music Hub is invite-only, and there are two ways in.
+
+**An invite link** (Settings → Admin → Invites → *Create link*) is the one to
+reach for. It carries its own permission, so it is one message: send the link,
+they open it, they register, they are in. Nobody has to hand over an email
+address first and nobody waits on an admin to be looking at their phone.
+
+A link is **single use**, expires after **7 days**, and can be revoked from the
+same panel while it is still open. Only a hash of it is stored, so it is shown
+exactly once, when it is made — there is no way to read an old one back. A lost
+link is revoked and replaced, not recovered.
+
+**An allowed email** (the list underneath) still works and is unchanged: add an
+address, and whoever owns it can register whenever they like, as many times as
+it takes to get the password right. Use it for the people who are permanently
+welcome; use a link for a one-off.
+
+Both are enforced in the same place — a trigger on `auth.users`, which is the
+same statement that creates the account. So a link is spent exactly when an
+account is made from it, or not at all, and two people racing the same link
+cannot both win it.
 
 ## Install as an app
 

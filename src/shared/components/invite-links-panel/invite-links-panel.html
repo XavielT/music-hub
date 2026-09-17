@@ -1,0 +1,42 @@
+<div class="ilinks" *ngIf="auth.isAdmin()">
+  <p class="ilinks-note">{{ 'admin.inviteLinkNote' | t }}</p>
+
+  <div class="ilinks-add">
+    <input
+      type="text"
+      [placeholder]="'admin.inviteLinkWhoFor' | t"
+      autocomplete="off"
+      [(ngModel)]="note"
+      (keyup.enter)="create()"
+    />
+    <button (click)="create()" [disabled]="inviteLinks.busy()">
+      {{ 'admin.inviteLinkCreate' | t }}
+    </button>
+  </div>
+
+  <div class="ilinks-fresh" *ngIf="inviteLinks.lastCreated() as url">
+    <p class="ilinks-once">{{ 'admin.inviteLinkOnce' | t }}</p>
+    <code class="ilinks-url">{{ url }}</code>
+    <button class="ilinks-copy" (click)="copy()">
+      {{ (copied() ? 'admin.inviteLinkCopiedShort' : 'admin.inviteLinkCopy') | t }}
+    </button>
+  </div>
+
+  <p class="ilinks-note" *ngIf="inviteLinks.loading()">{{ 'admin.inviteLinkLoading' | t }}</p>
+
+  <div class="ilinks-row" *ngFor="let link of inviteLinks.links()">
+    <span class="ilinks-who">
+      <strong>{{ link.note || ('admin.inviteLinkNoNote' | t) }}</strong>
+      <em>{{ link.created_at | date: 'mediumDate' }}</em>
+    </span>
+    <span class="ilinks-state" [class]="link.status">{{ statusKey(link.status) | t }}</span>
+    <button
+      class="ilinks-revoke"
+      *ngIf="link.status === 'open'"
+      (click)="revoke(link.id)"
+      [disabled]="inviteLinks.busy()"
+    >
+      {{ (confirming() === link.id ? 'admin.inviteLinkConfirmRevoke' : 'admin.inviteLinkRevoke') | t }}
+    </button>
+  </div>
+</div>
