@@ -1,9 +1,12 @@
 # The support floor is a decision, not whatever the default happened to be.
-# Angular 19 supports Safari 17 and newer, so an older iPhone cannot run this
-# bundle at all — index.html has a message for that case rather than letting
-# WebKit show its own crash screen.
-last 2 Safari major versions
-last 2 iOS major versions
+#
+# Angular 19 supports Safari 17 and newer, so that is what this says — in
+# versions, not in "last N majors". "last 2 iOS major versions" was here first
+# and it was a trap: in September 2026 it resolved to iOS 18 and iOS 26, which
+# quietly made the floor 18 and would emit syntax an iOS 17 phone cannot even
+# parse. A floor that moves when the calendar does is not a floor.
+Safari >= 17
+iOS >= 17
 Chrome >= 110
 Firefox >= 115
 Edge >= 110
