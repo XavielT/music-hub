@@ -8,8 +8,14 @@
   align-items: center;
   justify-content: center;
   padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(6px);
+  // Deliberately no backdrop-filter. This element is full-screen, and a
+  // full-screen blur asks iOS to composite the whole viewport every frame —
+  // the one moment it is on screen is a first start, on a phone that is also
+  // signing in, loading a dictionary and prefetching the offline cache. The
+  // extra opacity buys back the legibility the blur was there for, at no
+  // compositing cost. Linux WebKit renders this in software and would never
+  // have shown the difference.
+  background: rgba(0, 0, 0, 0.82);
 }
 
 .welcome-card {
